@@ -6,25 +6,26 @@
 // tree, read text, and verify that the values of widget properties are correct.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_life_goal_management/src/app.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flutter_life_goal_management/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  testWidgets('Go to login screen', (WidgetTester tester) async {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const MyApp());
 
     // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(find.text('Home Page'), findsOneWidget);
 
     // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    await tester.tap(find.byIcon(Icons.login));
+    // Rebuild the widget after the state has changed.
+    await tester.pumpAndSettle();
 
     // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.widgetWithText(ElevatedButton, 'Home Page'), findsNothing);
+    expect(find.text('Login Page'), findsOneWidget);
   });
 }
