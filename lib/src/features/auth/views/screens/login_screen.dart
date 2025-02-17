@@ -103,6 +103,21 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
                           // Handle login
+                          final authService = AuthService();
+                          final email = _emailController.text;
+                          final password = _passwordController.text;
+
+                          if (authService.logInWithCredentials(
+                              email, password)) {
+                            // Redirect to home page
+                            context.go('/');
+                          } else {
+                            // Show error message
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Invalid credentials')),
+                            );
+                          }
                         }
                       },
                       style: ElevatedButton.styleFrom(
