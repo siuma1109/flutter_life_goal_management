@@ -9,8 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/app.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:flutter_life_goal_management/main.dart';
-
 void main() {
   testWidgets('Go to login screen', (WidgetTester tester) async {
     // Build our app and trigger a frame.

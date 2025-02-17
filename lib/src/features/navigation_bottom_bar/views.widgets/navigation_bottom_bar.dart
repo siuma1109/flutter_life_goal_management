@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class BottomNavWidget extends StatefulWidget {
-  const BottomNavWidget({
+class NavigationBottomBarWidget extends StatefulWidget {
+  const NavigationBottomBarWidget({
     super.key,
     required this.navigationShell,
   });
@@ -10,13 +10,14 @@ class BottomNavWidget extends StatefulWidget {
   final StatefulNavigationShell navigationShell;
 
   @override
-  State<BottomNavWidget> createState() => _BottomNavWidgetState();
+  State<NavigationBottomBarWidget> createState() =>
+      _NavigationBottomBarWidgetState();
 }
 
-class _BottomNavWidgetState extends State<BottomNavWidget> {
+class _NavigationBottomBarWidgetState extends State<NavigationBottomBarWidget> {
   final List<int> _navigationStack = [];
 
-  void _onTap(BuildContext context, int index) {
+  void _onDestinationSelected(int index) {
     if (index != widget.navigationShell.currentIndex) {
       setState(() {
         _navigationStack.add(widget.navigationShell.currentIndex);
@@ -46,22 +47,37 @@ class _BottomNavWidgetState extends State<BottomNavWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: _navigationStack.isEmpty,
-      onPopInvokedWithResult: (bool didPop, Object? result) async {
-        if (!didPop) {
-          await _onWillPop();
-        }
-      },
+    return WillPopScope(
+      onWillPop: _onWillPop,
       child: Scaffold(
         body: widget.navigationShell,
         bottomNavigationBar: BottomNavigationBar(
-          onTap: (index) => _onTap(context, index),
-          backgroundColor: const Color(0xffe0b9f6),
+          type: BottomNavigationBarType.fixed,
           currentIndex: widget.navigationShell.currentIndex,
+          onTap: _onDestinationSelected,
+          selectedItemColor: Theme.of(context).primaryColor,
+          unselectedItemColor: Colors.grey,
           items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(Icons.login), label: 'Login'),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.explore),
+              label: 'Explore',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.add),
+              label: 'Add',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.group),
+              label: 'Community',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.account_circle),
+              label: 'Profile',
+            ),
           ],
         ),
       ),

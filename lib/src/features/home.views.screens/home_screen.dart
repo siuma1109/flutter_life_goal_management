@@ -10,18 +10,22 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  @override
+  // Add this method to check if user is logged in
+  bool isUserLoggedIn() {
+    // TODO: Implement actual auth check
+    return false; // Temporary return false
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+      ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'Home Page',
-            ),
-            TextField()
-          ],
+        child: Text(
+          isUserLoggedIn() ? 'Welcome back!' : 'Welcome Guest!',
+          style: Theme.of(context).textTheme.headlineSmall,
+          textAlign: TextAlign.start,
         ),
       ),
     );
