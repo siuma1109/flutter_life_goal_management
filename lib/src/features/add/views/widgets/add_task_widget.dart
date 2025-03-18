@@ -4,16 +4,16 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-class AddScreen extends StatefulWidget {
-  final String title;
-
-  const AddScreen({super.key, required this.title});
+class AddTaskWidget extends StatefulWidget {
+  const AddTaskWidget({
+    super.key,
+  });
 
   @override
-  State<AddScreen> createState() => _AddScreenState();
+  State<AddTaskWidget> createState() => _AddTaskWidgetState();
 }
 
-class _AddScreenState extends State<AddScreen> {
+class _AddTaskWidgetState extends State<AddTaskWidget> {
   final _formKey = GlobalKey<FormState>();
   final _taskController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -28,15 +28,6 @@ class _AddScreenState extends State<AddScreen> {
   final FocusNode _dateInputFocusNode = FocusNode();
   final LayerLink _layerLink = LayerLink();
   bool _isLoading = false; // Add this line to track loading state
-
-  // Dummy data for tasks
-  final Map<String, List<String>> _dummyTasks = {
-    '2024-03-15': ['週末大掃除', '準備下週報告', '買菜'],
-    '2024-03-16': ['看電影', '購物', '健身'],
-    '2024-03-17': ['週會準備', '整理衣櫃', '洗車'],
-    '2024-03-18': ['提交報告', '下午茶約會'],
-    '2024-03-19': ['牙醫預約', '修電腦'],
-  };
 
   @override
   void initState() {
@@ -71,9 +62,6 @@ class _AddScreenState extends State<AddScreen> {
     _removeOverlay();
 
     if (_suggestedDate != null) {
-      final dateString = _dateFormat.format(_suggestedDate!);
-      final tasks = _dummyTasks[dateString] ?? [];
-
       _overlayEntry = OverlayEntry(
         builder: (context) => CompositedTransformFollower(
           link: _layerLink,
@@ -89,19 +77,6 @@ class _AddScreenState extends State<AddScreen> {
                 children: [
                   _buildDatePreview(_suggestedDate!),
                   const SizedBox(height: 8),
-                  if (tasks.isNotEmpty) ...[
-                    Text(
-                      'Existing Tasks:',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 4),
-                    ...tasks.map((task) => ListTile(
-                          title: Text(task),
-                          leading: Icon(Icons.task_alt, size: 20),
-                        )),
-                  ] else ...[
-                    Text('No tasks for this date.'),
-                  ],
                 ],
               ),
             ),
@@ -425,7 +400,6 @@ class _AddScreenState extends State<AddScreen> {
   Widget _buildDatePreview(DateTime date) {
     final dateString = _dateFormat.format(date);
     final weekday = _getWeekdayInChinese(date.weekday);
-    final tasks = _dummyTasks[dateString] ?? [];
 
     return Container(
       decoration: BoxDecoration(
@@ -459,43 +433,6 @@ class _AddScreenState extends State<AddScreen> {
               child: const Text('選擇'),
             ),
           ),
-          if (tasks.isNotEmpty) ...[
-            const Divider(height: 1),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '當天任務：',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ...tasks.map((task) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Row(
-                          children: [
-                            Icon(Icons.task_alt,
-                                size: 16, color: Colors.grey[400]),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                task,
-                                style: const TextStyle(fontSize: 14),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )),
-                ],
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -509,6 +446,9 @@ class _AddScreenState extends State<AddScreen> {
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
       // TODO: Implement task creation logic
+      // Close the AddTaskWidget after successful submission
+      Navigator.of(context).pop(); // This will close the widget
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Task Created')),
       );
@@ -517,11 +457,8 @@ class _AddScreenState extends State<AddScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: _isLoading // Show loading indicator if loading
+    return Container(
+      child: _isLoading // Show loading indicator if loading
           ? Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
@@ -532,9 +469,11 @@ class _AddScreenState extends State<AddScreen> {
                   children: [
                     TextFormField(
                       controller: _taskController,
-                      decoration: const InputDecoration(
-                        labelText: 'Task Name',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        hintText: 'Enter task name',
+                        border: InputBorder.none,
+                        filled: true,
+                        fillColor: Colors.grey[200],
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -546,9 +485,11 @@ class _AddScreenState extends State<AddScreen> {
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _descriptionController,
-                      decoration: const InputDecoration(
-                        labelText: 'Description',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        hintText: 'Enter description',
+                        border: InputBorder.none,
+                        filled: true,
+                        fillColor: Colors.grey[200],
                       ),
                       maxLines: 3,
                     ),
@@ -616,23 +557,45 @@ class _AddScreenState extends State<AddScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: _submitForm,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.all(16),
-                      ),
-                      child: const Text('Create Task',
-                          style: TextStyle(fontSize: 16)),
-                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        SizedBox(
+                          width:
+                              80, // Set a specific width for the first button
+                          child: ElevatedButton(
+                            onPressed: () => _showAIPopup(context),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 4, horizontal: 8),
+                              backgroundColor: Colors.white,
+                            ),
+                            child: const Image(
+                              image: AssetImage("assets/gemini_ai_icon.png"),
+                              height: 23,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8), // Add spacing between buttons
+                        SizedBox(
+                          width:
+                              80, // Set a specific width for the second button
+                          child: ElevatedButton(
+                            onPressed: _submitForm,
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 4, horizontal: 8),
+                              backgroundColor: Colors.grey,
+                            ),
+                            child: const Icon(Icons.send, color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    )
                   ],
                 ),
               ),
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAIPopup(context),
-        child: const Icon(Icons.android),
-      ),
     );
   }
 

@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/features/auth/views/screens/login_screen.dart';
 import 'package:flutter_life_goal_management/src/features/auth/views/screens/forgot_password_screen.dart';
 import 'package:flutter_life_goal_management/src/features/auth/views/screens/sign_up_screen.dart';
-import 'package:flutter_life_goal_management/src/features/navigation_bottom_bar/views.widgets/navigation_bottom_bar.dart';
 import 'package:flutter_life_goal_management/src/features/home.views.screens/home_screen.dart';
 import 'package:flutter_life_goal_management/src/features/explore/views/screens/explore_screen.dart';
-import 'package:flutter_life_goal_management/src/features/add/views/screens/add_screen.dart';
 import 'package:flutter_life_goal_management/src/features/community/views/screens/community_screen.dart';
+import 'package:flutter_life_goal_management/src/features/navigation_bottom_bar/views/widgets/navigation_bottom_bar.dart';
 import 'package:flutter_life_goal_management/src/features/profile/views/screens/profile_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_life_goal_management/src/services/auth_service.dart';
@@ -76,17 +75,6 @@ final GoRouter router = GoRouter(
               path: '/explore',
               builder: (BuildContext context, GoRouterState state) {
                 return const ExploreScreen(title: 'Explore Screen');
-              },
-            ),
-          ],
-        ),
-        // Add branch
-        StatefulShellBranch(
-          routes: [
-            GoRoute(
-              path: '/add',
-              builder: (BuildContext context, GoRouterState state) {
-                return const AddScreen(title: 'Add Screen');
               },
             ),
           ],

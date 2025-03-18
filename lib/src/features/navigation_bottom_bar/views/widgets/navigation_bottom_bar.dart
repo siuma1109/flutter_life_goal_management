@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_life_goal_management/src/features/add/views/widgets/add_task_widget.dart';
 import 'package:go_router/go_router.dart';
 
 class NavigationBottomBarWidget extends StatefulWidget {
@@ -67,10 +68,6 @@ class _NavigationBottomBarWidgetState extends State<NavigationBottomBarWidget> {
               label: 'Explore',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.add),
-              label: 'Add',
-            ),
-            BottomNavigationBarItem(
               icon: Icon(Icons.group),
               label: 'Community',
             ),
@@ -79,6 +76,18 @@ class _NavigationBottomBarWidgetState extends State<NavigationBottomBarWidget> {
               label: 'Profile',
             ),
           ],
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              builder: (BuildContext context) {
+                return const AddTaskWidget(); // Open AddTaskWidget
+              },
+            );
+          },
+          child: const Icon(Icons.add),
         ),
       ),
     );
