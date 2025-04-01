@@ -36,20 +36,10 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  Icon(
-                    Icons.lock,
-                    size: 100,
-                    color: Theme.of(context).colorScheme.primary,
+                  const Image(
+                    image: AssetImage("assets/logo.png"),
+                    height: 380,
                   ),
-                  const SizedBox(height: 40),
-                  Text(
-                    'Welcome',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface,
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: 40),
                   TextFormField(
                     controller: _emailController,
                     decoration: InputDecoration(
