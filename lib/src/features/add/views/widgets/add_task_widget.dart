@@ -3,10 +3,19 @@ import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../../../../services/database_helper.dart';
+import '../../../../models/task.dart';
 
 class AddTaskWidget extends StatefulWidget {
+  final Task? task;
+  final List<Task>? subtasks;
+  final bool isEditMode;
+
   const AddTaskWidget({
     super.key,
+    this.task,
+    this.subtasks,
+    this.isEditMode = false,
   });
 
   @override
@@ -18,6 +27,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
   final _taskController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _dateInputController = TextEditingController();
+  final _subtaskController = TextEditingController();
   final _dateFormat = DateFormat('yyyy-MM-dd');
   final _timeFormat = DateFormat('hh:mm a');
   DateTime? _dueDate;
@@ -27,13 +37,25 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
   OverlayEntry? _overlayEntry;
   final FocusNode _dateInputFocusNode = FocusNode();
   final LayerLink _layerLink = LayerLink();
-  bool _isLoading = false; // Add this line to track loading state
+  bool _isLoading = false;
+  List<Task> _subtasks = [];
 
   @override
   void initState() {
     super.initState();
     _dateInputFocusNode.addListener(_onFocusChange);
     dotenv.load();
+
+    if (widget.isEditMode && widget.task != null) {
+      _taskController.text = widget.task!.title;
+      _descriptionController.text = widget.task!.description ?? '';
+      _dueDate = widget.task!.dueDate;
+      _priority = widget.task!.priority;
+      if (_dueDate != null) {
+        _dateInputController.text = _dateFormat.format(_dueDate!);
+      }
+      _subtasks = widget.subtasks ?? [];
+    }
   }
 
   @override
@@ -443,22 +465,105 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
     return '週${weekdays[weekday - 1]}';
   }
 
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      // TODO: Implement task creation logic
-      // Close the AddTaskWidget after successful submission
-      Navigator.of(context).pop(); // This will close the widget
+  void _addSubtask() {
+    if (_subtaskController.text.trim().isNotEmpty) {
+      setState(() {
+        _subtasks.add(Task(
+          title: _subtaskController.text,
+          priority: 1,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ));
+        _subtaskController.clear();
+      });
+    }
+  }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Task Created')),
-      );
+  void _removeSubtask(int index) {
+    setState(() {
+      _subtasks.removeAt(index);
+    });
+  }
+
+  void _submitForm() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      try {
+        final now = DateTime.now();
+        final task = Task(
+          id: widget.task?.id,
+          title: _taskController.text,
+          description: _descriptionController.text,
+          dueDate: _dueDate,
+          priority: _priority,
+          parentId: widget.task?.parentId,
+          createdAt: widget.task?.createdAt ?? now,
+          updatedAt: now,
+        );
+
+        final dbHelper = DatabaseHelper();
+
+        if (widget.isEditMode && widget.task != null) {
+          // Update the main task
+          await dbHelper.updateTask(task.toMap());
+
+          // // Get existing subtasks
+          // final subtaskMaps = await dbHelper.getSubtasks(widget.task!.id!);
+
+          // // Delete existing subtasks
+          // for (var subtaskMap in subtaskMaps) {
+          //   await dbHelper.deleteTask(subtaskMap['id']);
+          // }
+
+          // // Insert new subtasks
+          // for (var subtask in _subtasks) {
+          //   final subtaskMap = subtask.toMap();
+          //   subtaskMap['parent_id'] =
+          //       widget.task!.id; // Use the original task ID
+          //   await dbHelper.insertTask(subtaskMap);
+          // }
+        } else {
+          final parentId = await dbHelper.insertTask(task.toMap());
+          for (var subtask in _subtasks) {
+            final subtaskMap = subtask.toMap();
+            subtaskMap['parent_id'] = parentId;
+            await dbHelper.insertTask(subtaskMap);
+          }
+        }
+
+        // Close the AddTaskWidget after successful submission
+        Navigator.of(context).pop({
+          'task': task,
+          'subtasks': _subtasks,
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(widget.isEditMode
+                  ? 'Task Updated Successfully'
+                  : 'Task Created Successfully')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  'Error ${widget.isEditMode ? 'updating' : 'creating'} task: $e')),
+        );
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      child: _isLoading // Show loading indicator if loading
+      child: _isLoading
           ? Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
@@ -548,12 +653,54 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                         ],
                       ),
                     ),
+                    if (widget.isEditMode) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        'Subtasks',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _subtaskController,
+                              decoration: const InputDecoration(
+                                hintText: 'Add subtask',
+                                border: OutlineInputBorder(),
+                              ),
+                              onSubmitted: (_) => _addSubtask(),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            icon: const Icon(Icons.add),
+                            onPressed: _addSubtask,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _subtasks.length,
+                        itemBuilder: (context, index) {
+                          final subtask = _subtasks[index];
+                          return ListTile(
+                            title: Text(subtask.title),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () => _removeSubtask(index),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         SizedBox(
-                          width:
-                              80, // Set a specific width for the first button
+                          width: 80,
                           child: ElevatedButton(
                             onPressed: () => _showAIPopup(context),
                             style: ElevatedButton.styleFrom(
@@ -567,10 +714,9 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8), // Add spacing between buttons
+                        const SizedBox(width: 8),
                         SizedBox(
-                          width:
-                              80, // Set a specific width for the second button
+                          width: 80,
                           child: ElevatedButton(
                             onPressed: _submitForm,
                             style: ElevatedButton.styleFrom(
@@ -578,7 +724,10 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                                   vertical: 4, horizontal: 8),
                               backgroundColor: Colors.grey,
                             ),
-                            child: const Icon(Icons.send, color: Colors.white),
+                            child: Icon(
+                              widget.isEditMode ? Icons.save : Icons.send,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ],

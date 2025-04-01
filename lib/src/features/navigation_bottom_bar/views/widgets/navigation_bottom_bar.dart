@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/features/add/views/widgets/add_task_widget.dart';
+import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:go_router/go_router.dart';
 
 class NavigationBottomBarWidget extends StatefulWidget {
@@ -49,47 +50,54 @@ class _NavigationBottomBarWidgetState extends State<NavigationBottomBarWidget> {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: _onWillPop,
-      child: Scaffold(
-        body: widget.navigationShell,
-        bottomNavigationBar: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          currentIndex: widget.navigationShell.currentIndex,
-          onTap: _onDestinationSelected,
-          selectedItemColor: Theme.of(context).primaryColor,
-          unselectedItemColor: Colors.grey,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'Home',
+        onWillPop: _onWillPop,
+        child: Scaffold(
+            body: widget.navigationShell,
+            bottomNavigationBar: BottomNavigationBar(
+              type: BottomNavigationBarType.fixed,
+              currentIndex: widget.navigationShell.currentIndex,
+              onTap: _onDestinationSelected,
+              selectedItemColor: Theme.of(context).primaryColor,
+              unselectedItemColor: Colors.grey,
+              items: const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.home),
+                  label: 'Home',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.explore),
+                  label: 'Explore',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.group),
+                  label: 'Community',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.account_circle),
+                  label: 'Profile',
+                ),
+              ],
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.explore),
-              label: 'Explore',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.group),
-              label: 'Community',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.account_circle),
-              label: 'Profile',
-            ),
-          ],
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              builder: (BuildContext context) {
-                return const AddTaskWidget(); // Open AddTaskWidget
+            floatingActionButton: FloatingActionButton(
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (BuildContext context) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(20),
+                        ),
+                      ),
+                      child: const AddTaskWidget(),
+                    );
+                  },
+                );
               },
-            );
-          },
-          child: const Icon(Icons.add),
-        ),
-      ),
-    );
+              child: const Icon(Icons.add),
+            )));
   }
 }
