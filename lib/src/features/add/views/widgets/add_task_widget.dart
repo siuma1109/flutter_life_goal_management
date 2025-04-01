@@ -161,7 +161,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 4),
                   defaultDatePicker(
                       context: context,
                       onDateSelected: (date) {
@@ -174,7 +174,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                           _dueDate = date;
                         });
                       }),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 4),
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(8),
@@ -310,7 +310,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                 color: Colors.indigo,
                 onDateSelected: onDateSelected,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 4),
               Text(
                 '${initialDate.year}年 ${initialDate.month}月',
                 style: const TextStyle(
@@ -470,11 +470,9 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                     TextFormField(
                       controller: _taskController,
                       decoration: InputDecoration(
-                        hintText: 'Enter task name',
-                        border: InputBorder.none,
-                        filled: true,
-                        fillColor: Colors.grey[200],
-                      ),
+                          hintText: 'Enter task name',
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.all(16.0)),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter a task name';
@@ -482,18 +480,17 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 4),
                     TextFormField(
                       controller: _descriptionController,
                       decoration: InputDecoration(
                         hintText: 'Enter description',
                         border: InputBorder.none,
-                        filled: true,
-                        fillColor: Colors.grey[200],
+                        contentPadding: const EdgeInsets.all(16.0),
                       ),
                       maxLines: 3,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 4),
                     ListTile(
                       title: const Text('Due Date'),
                       subtitle: Text(
@@ -506,55 +503,49 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                       ),
                       trailing: const Icon(Icons.calendar_today),
                       onTap: () => _showDatePicker(context),
-                      tileColor: Colors.grey[200],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
                     ),
-                    const SizedBox(height: 16),
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Priority',
-                                style: TextStyle(fontSize: 16)),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: List.generate(4, (index) {
-                                final priority = index + 1;
-                                return Expanded(
-                                  child: GestureDetector(
-                                    onTap: () =>
-                                        setState(() => _priority = priority),
-                                    child: Container(
-                                      margin: const EdgeInsets.symmetric(
-                                          horizontal: 4),
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: _priority == priority
-                                            ? _getPriorityColor(priority)
-                                            : Colors.grey[200],
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          'P$priority',
-                                          style: TextStyle(
-                                            color: _priority == priority
-                                                ? Colors.white
-                                                : Colors.black,
-                                          ),
+                    const SizedBox(height: 4),
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Priority',
+                              style: TextStyle(fontSize: 16)),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: List.generate(4, (index) {
+                              final priority = index + 1;
+                              return Expanded(
+                                child: GestureDetector(
+                                  onTap: () =>
+                                      setState(() => _priority = priority),
+                                  child: Container(
+                                    margin: const EdgeInsets.symmetric(
+                                        horizontal: 4),
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: _priority == priority
+                                          ? _getPriorityColor(priority)
+                                          : Colors.grey[200],
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        'P$priority',
+                                        style: TextStyle(
+                                          color: _priority == priority
+                                              ? Colors.white
+                                              : Colors.black,
                                         ),
                                       ),
                                     ),
                                   ),
-                                );
-                              }),
-                            ),
-                          ],
-                        ),
+                                ),
+                              );
+                            }),
+                          ),
+                        ],
                       ),
                     ),
                     Row(
