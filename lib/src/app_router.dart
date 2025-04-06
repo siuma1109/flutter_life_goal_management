@@ -5,7 +5,7 @@ import 'package:flutter_life_goal_management/src/features/auth/views/screens/sig
 import 'package:flutter_life_goal_management/src/features/home.views.screens/home_screen.dart';
 import 'package:flutter_life_goal_management/src/features/explore/views/screens/explore_screen.dart';
 import 'package:flutter_life_goal_management/src/features/community/views/screens/community_screen.dart';
-import 'package:flutter_life_goal_management/src/features/navigation_bottom_bar/views/widgets/navigation_bottom_bar.dart';
+import 'package:flutter_life_goal_management/src/features/scaffold_with_navigation_bottom_bar/views/widgets/scaffold_with_bottom_navbar_widget.dart';
 import 'package:flutter_life_goal_management/src/features/profile/views/screens/profile_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_life_goal_management/src/services/auth_service.dart';
@@ -54,7 +54,7 @@ final GoRouter router = GoRouter(
     // Main shell route for bottom navigation
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
-        return NavigationBottomBarWidget(navigationShell: navigationShell);
+        return ScaffoldWithBottomNavBarWidget(navigationShell: navigationShell);
       },
       branches: [
         // Home branch

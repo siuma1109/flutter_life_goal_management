@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/features/add/views/widgets/add_task_widget.dart';
-import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:go_router/go_router.dart';
 
-class NavigationBottomBarWidget extends StatefulWidget {
-  const NavigationBottomBarWidget({
+class ScaffoldWithBottomNavBarWidget extends StatefulWidget {
+  const ScaffoldWithBottomNavBarWidget({
     super.key,
     required this.navigationShell,
   });
@@ -12,11 +11,12 @@ class NavigationBottomBarWidget extends StatefulWidget {
   final StatefulNavigationShell navigationShell;
 
   @override
-  State<NavigationBottomBarWidget> createState() =>
-      _NavigationBottomBarWidgetState();
+  State<ScaffoldWithBottomNavBarWidget> createState() =>
+      _ScaffoldWithBottomNavBarWidgetState();
 }
 
-class _NavigationBottomBarWidgetState extends State<NavigationBottomBarWidget> {
+class _ScaffoldWithBottomNavBarWidgetState
+    extends State<ScaffoldWithBottomNavBarWidget> {
   final List<int> _navigationStack = [];
 
   void _onDestinationSelected(int index) {
@@ -79,8 +79,8 @@ class _NavigationBottomBarWidgetState extends State<NavigationBottomBarWidget> {
               ],
             ),
             floatingActionButton: FloatingActionButton(
-              onPressed: () {
-                showModalBottomSheet(
+              onPressed: () async {
+                final result = await showModalBottomSheet<bool>(
                   context: context,
                   isScrollControlled: true,
                   backgroundColor: Colors.transparent,

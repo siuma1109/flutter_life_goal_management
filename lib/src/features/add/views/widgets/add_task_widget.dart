@@ -36,6 +36,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
   int _priority = 4; // 4 is lowest priority, 1 is highest
   OverlayEntry? _overlayEntry;
   final FocusNode _dateInputFocusNode = FocusNode();
+  final FocusNode _taskFocusNode = FocusNode();
   final LayerLink _layerLink = LayerLink();
   bool _isLoading = false;
   List<Task> _subtasks = [];
@@ -44,6 +45,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
   void initState() {
     super.initState();
     _dateInputFocusNode.addListener(_onFocusChange);
+    _taskFocusNode.requestFocus();
     dotenv.load();
 
     if (widget.isEditMode && widget.task != null) {
@@ -63,8 +65,10 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
     _taskController.dispose();
     _descriptionController.dispose();
     _dateInputController.dispose();
+    _subtaskController.dispose();
     _dateInputFocusNode.removeListener(_onFocusChange);
     _dateInputFocusNode.dispose();
+    _taskFocusNode.dispose();
     _removeOverlay();
     super.dispose();
   }
@@ -80,37 +84,8 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
     _overlayEntry = null;
   }
 
-  void manualDatePicker(BuildContext context) {
-    _removeOverlay();
-
-    if (_suggestedDate != null) {
-      _overlayEntry = OverlayEntry(
-        builder: (context) => CompositedTransformFollower(
-          link: _layerLink,
-          showWhenUnlinked: false,
-          offset: const Offset(0, 4),
-          child: Material(
-            elevation: 4.0,
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildDatePreview(_suggestedDate!),
-                  const SizedBox(height: 8),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-
-      Overlay.of(context).insert(_overlayEntry!);
-    }
-  }
-
   void _showDatePicker(BuildContext context) {
+    _dateInputFocusNode.requestFocus();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -140,46 +115,27 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                                 try {
                                   final date = _dateFormat.parse(value);
                                   _suggestedDate = date;
-                                  if (_dateInputFocusNode.hasFocus) {
-                                    manualDatePicker(context);
-                                  }
                                 } catch (e) {
                                   _suggestedDate = null;
                                   _removeOverlay();
                                 }
                               });
                             },
-                            onTap: () => _dateInputFocusNode.hasFocus
-                                ? manualDatePicker(context)
-                                : defaultDatePicker(
-                                    context: context,
-                                    onDateSelected: (date) {
-                                      setDatePickerState(() {
-                                        _dueDate = date;
-                                        _dateInputController.text =
-                                            _dateFormat.format(date);
-                                      });
-                                    }),
+                            onTap: () {
+                              _dateInputFocusNode.requestFocus();
+                            },
                             decoration: InputDecoration(
-                              hintText: 'Input a date (YYYY-MM-DD)',
-                              prefixIcon: const Icon(Icons.search, size: 20),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 12,
-                                horizontal: 16,
-                              ),
-                              isDense: false,
-                            ),
+                                hintText: 'Input a date (YYYY-MM-DD)',
+                                prefixIcon: const Icon(Icons.search, size: 20),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                  horizontal: 12,
+                                ),
+                                isDense: false,
+                                border: InputBorder.none),
                             style: const TextStyle(fontSize: 14),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.pop(context),
                       ),
                     ],
                   ),
@@ -360,6 +316,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                         _dateInputController.text = _dateFormat.format(value);
                       });
                       onDateSelected(value);
+                      Navigator.pop(context);
                     },
                   ),
                 ),
@@ -509,22 +466,6 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
         if (widget.isEditMode && widget.task != null) {
           // Update the main task
           await dbHelper.updateTask(task.toMap());
-
-          // // Get existing subtasks
-          // final subtaskMaps = await dbHelper.getSubtasks(widget.task!.id!);
-
-          // // Delete existing subtasks
-          // for (var subtaskMap in subtaskMaps) {
-          //   await dbHelper.deleteTask(subtaskMap['id']);
-          // }
-
-          // // Insert new subtasks
-          // for (var subtask in _subtasks) {
-          //   final subtaskMap = subtask.toMap();
-          //   subtaskMap['parent_id'] =
-          //       widget.task!.id; // Use the original task ID
-          //   await dbHelper.insertTask(subtaskMap);
-          // }
         } else {
           final parentId = await dbHelper.insertTask(task.toMap());
           for (var subtask in _subtasks) {
@@ -535,23 +476,25 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
         }
 
         // Close the AddTaskWidget after successful submission
-        Navigator.of(context).pop({
-          'task': task,
-          'subtasks': _subtasks,
-        });
+        if (mounted) {
+          Navigator.of(context)
+              .pop(true); // Indicate that a task was added/updated
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(widget.isEditMode
-                  ? 'Task Updated Successfully'
-                  : 'Task Created Successfully')),
-        );
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(widget.isEditMode
+                    ? 'Task Updated Successfully'
+                    : 'Task Created Successfully')),
+          );
+        }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(
-                  'Error ${widget.isEditMode ? 'updating' : 'creating'} task: $e')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(
+                    'Error ${widget.isEditMode ? 'updating' : 'creating'} task: $e')),
+          );
+        }
       } finally {
         setState(() {
           _isLoading = false;
@@ -574,8 +517,9 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                   children: [
                     TextFormField(
                       controller: _taskController,
+                      focusNode: _taskFocusNode,
                       decoration: InputDecoration(
-                          hintText: 'Enter task name',
+                          hintText: 'Task Name',
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.all(16.0)),
                       validator: (value) {
@@ -589,70 +533,92 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                     TextFormField(
                       controller: _descriptionController,
                       decoration: InputDecoration(
-                        hintText: 'Enter description',
+                        hintText: 'Description',
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.all(16.0),
                       ),
-                      maxLines: 3,
+                      maxLines: 6,
+                      minLines: 1,
                     ),
-                    const SizedBox(height: 4),
-                    ListTile(
-                      title: const Text('Due Date'),
-                      subtitle: Text(
-                        _dueDate == null
-                            ? 'Not Set'
-                            : '${_dateFormat.format(_dueDate!)} ${_getWeekdayInChinese(_dueDate!.weekday)}' +
-                                (_dueTime != null
-                                    ? ' ${_timeFormat.format(DateTime(2024, 1, 1, _dueTime!.hour, _dueTime!.minute))}'
-                                    : ''),
-                      ),
-                      trailing: const Icon(Icons.calendar_today),
-                      onTap: () => _showDatePicker(context),
-                    ),
-                    const SizedBox(height: 4),
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Priority',
-                              style: TextStyle(fontSize: 16)),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: List.generate(4, (index) {
-                              final priority = index + 1;
-                              return Expanded(
-                                child: GestureDetector(
-                                  onTap: () =>
-                                      setState(() => _priority = priority),
-                                  child: Container(
-                                    margin: const EdgeInsets.symmetric(
-                                        horizontal: 4),
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: _priority == priority
-                                          ? _getPriorityColor(priority)
-                                          : Colors.grey[200],
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        'P$priority',
-                                        style: TextStyle(
-                                          color: _priority == priority
-                                              ? Colors.white
-                                              : Colors.black,
-                                        ),
-                                      ),
-                                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () => _showDatePicker(context),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.calendar_today,
+                                color: _dueDate != null
+                                    ? Colors.green
+                                    : Colors.black,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _dueDate == null
+                                    ? 'Due Date'
+                                    : '${_dateFormat.format(_dueDate!)}',
+                                style: TextStyle(
+                                  color: _dueDate != null
+                                      ? Colors.green
+                                      : Colors.black,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              if (_dueDate != null)
+                                SizedBox(
+                                  width: 12,
+                                  height: 24,
+                                  child: IconButton(
+                                    icon: const Icon(Icons.close,
+                                        color: Colors.red),
+                                    padding: EdgeInsets.zero,
+                                    onPressed: () {
+                                      setState(() {
+                                        _dueDate = null;
+                                        _dateInputController.clear();
+                                      });
+                                    },
                                   ),
                                 ),
-                              );
-                            }),
+                            ],
                           ),
-                        ],
-                      ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        ElevatedButton(
+                          onPressed: () => _showPriorityDialog(context),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.flag,
+                                color: _getPriorityColor(_priority),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'P$_priority',
+                                style: TextStyle(
+                                  color: _getPriorityColor(_priority),
+                                ),
+                              ),
+                            ],
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
+                    const SizedBox(height: 4),
                     if (widget.isEditMode) ...[
                       const SizedBox(height: 16),
                       Text(
@@ -739,19 +705,36 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
     );
   }
 
-  Color _getPriorityColor(int priority) {
-    switch (priority) {
-      case 1:
-        return Colors.red;
-      case 2:
-        return Colors.orange;
-      case 3:
-        return Colors.blue;
-      case 4:
-        return Colors.grey;
-      default:
-        return Colors.grey;
-    }
+  void _showPriorityDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Select Priority'),
+          content: SingleChildScrollView(
+            child: ListBody(
+                children: List.generate(4, (index) {
+              final priority = index + 1;
+              return ListTile(
+                title: Text('P$priority'),
+                onTap: () {
+                  setState(() {
+                    _priority = priority;
+                  });
+                  Navigator.of(context).pop();
+                },
+              );
+            })),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _showAIPopup(BuildContext context) {
@@ -786,7 +769,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
 
   Future<void> _fetchAIDetails(String goal) async {
     setState(() {
-      _isLoading = true; // Set loading state to true
+      _isLoading = true;
     });
 
     try {
@@ -805,18 +788,16 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
         }),
       );
 
-      print('Response status: ${response.statusCode}'); // Debug print
-      print('Response body: ${response.body}'); // Debug print
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        final answer = data['answer']; // Extract the answer field
+        final answer = data['answer'];
 
-        // Clean the answer string to remove code block formatting
         final cleanedAnswer =
             answer.replaceAll(RegExp(r'```json|```'), '').trim();
 
-        // Parse the cleaned answer JSON string
         final answerData = json.decode(cleanedAnswer);
 
         setState(() {
@@ -832,14 +813,29 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
         );
       }
     } catch (e) {
-      print('Error: $e'); // Debug print for any exceptions
+      print('Error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('An error occurred')),
       );
     } finally {
       setState(() {
-        _isLoading = false; // Set loading state to false after the API call
+        _isLoading = false;
       });
+    }
+  }
+
+  Color _getPriorityColor(int priority) {
+    switch (priority) {
+      case 1:
+        return Colors.red;
+      case 2:
+        return Colors.orange;
+      case 3:
+        return Colors.yellow;
+      case 4:
+        return Colors.green;
+      default:
+        return Colors.black;
     }
   }
 }
