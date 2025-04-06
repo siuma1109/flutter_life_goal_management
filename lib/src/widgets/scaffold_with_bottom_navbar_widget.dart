@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_life_goal_management/src/features/add/views/widgets/add_task_widget.dart';
+import 'package:flutter_life_goal_management/src/widgets/task/add_task_widget.dart';
 import 'package:go_router/go_router.dart';
 
 class ScaffoldWithBottomNavBarWidget extends StatefulWidget {
@@ -77,27 +77,6 @@ class _ScaffoldWithBottomNavBarWidgetState
                   label: 'Profile',
                 ),
               ],
-            ),
-            floatingActionButton: FloatingActionButton(
-              onPressed: () async {
-                final result = await showModalBottomSheet<bool>(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (BuildContext context) {
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).scaffoldBackgroundColor,
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(20),
-                        ),
-                      ),
-                      child: const AddTaskWidget(),
-                    );
-                  },
-                );
-              },
-              child: const Icon(Icons.add),
             )));
   }
 }

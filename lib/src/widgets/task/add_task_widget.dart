@@ -3,19 +3,21 @@ import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../../../../services/database_helper.dart';
-import '../../../../models/task.dart';
+import '../../services/database_helper.dart';
+import '../../models/task.dart';
 
 class AddTaskWidget extends StatefulWidget {
   final Task? task;
   final List<Task>? subtasks;
   final bool isEditMode;
+  final VoidCallback? onRefresh;
 
   const AddTaskWidget({
     super.key,
     this.task,
     this.subtasks,
     this.isEditMode = false,
+    this.onRefresh,
   });
 
   @override

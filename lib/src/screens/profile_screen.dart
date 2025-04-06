@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_life_goal_management/src/features/add/views/widgets/add_task_widget.dart';
-import '../../../../models/task.dart';
-import '../../../../services/database_helper.dart';
+import 'package:flutter_life_goal_management/src/widgets/task/add_task_floating_button_widget.dart';
+import 'package:flutter_life_goal_management/src/widgets/task/add_task_widget.dart';
+import '../models/task.dart';
+import '../services/database_helper.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String title;
@@ -183,6 +184,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   );
                 },
               ),
+      ),
+      floatingActionButton: AddTaskFloatingButtonWidget(
+        onRefresh: _loadTasks,
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/widgets/post_card.dart';
-import 'package:flutter_life_goal_management/src/widgets/task_card.dart';
+import 'package:flutter_life_goal_management/src/widgets/task/add_task_floating_button_widget.dart';
+import 'package:flutter_life_goal_management/src/widgets/task/task_card.dart';
 
 class HomeScreen extends StatefulWidget {
   final String title;
@@ -50,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+      floatingActionButton: AddTaskFloatingButtonWidget(),
     );
   }
 

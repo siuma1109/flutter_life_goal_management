@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_life_goal_management/src/widgets/task/add_task_floating_button_widget.dart';
 
 class ExploreScreen extends StatelessWidget {
   final String title;
@@ -14,6 +15,7 @@ class ExploreScreen extends StatelessWidget {
       body: Center(
         child: Text('Explore Screen Content'),
       ),
+      floatingActionButton: AddTaskFloatingButtonWidget(),
     );
   }
 }
