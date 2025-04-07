@@ -47,7 +47,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (!mounted) return;
 
-    final result = await showModalBottomSheet<Map<String, dynamic>>(
+    final result = await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -64,35 +64,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         );
       },
-      useRootNavigator: true,
     );
 
-    if (!mounted) return;
-
-    if (result != null && result['success'] == true) {
-      final updatedTask = result['task'] as Task;
-      final newSubtasks = result['subtasks'] as List<Task>;
-
-      if (task == null) {
-        final parentId = await _databaseHelper.insertTask(updatedTask.toMap());
-        for (var subtask in newSubtasks) {
-          final subtaskMap = subtask.toMap();
-          subtaskMap['parent_id'] = parentId;
-          await _databaseHelper.insertTask(subtaskMap);
-        }
-      } else {
-        await _databaseHelper.updateTask(updatedTask.toMap());
-        // Insert new subtasks
-        for (var subtask in newSubtasks) {
-          final subtaskMap = subtask.toMap();
-          subtaskMap['parent_id'] = task.id;
-          await _databaseHelper.insertTask(subtaskMap);
-        }
-      }
-
-      if (mounted) {
-        await _loadTasks();
-      }
+    if (result == true) {
+      _loadTasks();
     }
   }
 
@@ -173,11 +148,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         IconButton(
                           icon: const Icon(Icons.edit),
-                          onPressed: () => _showTaskEditForm(task),
+                          onPressed: () async => _showTaskEditForm(task),
                         ),
                         IconButton(
                           icon: const Icon(Icons.delete),
-                          onPressed: () => _deleteTask(task),
+                          onPressed: () async => _deleteTask(task),
                         ),
                       ],
                     ),

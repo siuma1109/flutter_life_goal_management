@@ -129,6 +129,43 @@ class _LoginScreenState extends State<LoginScreen> {
                   SizedBox(
                     width: double.infinity,
                     height: 50,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        // Handle login
+                        final authService = AuthService();
+                        final email = 'user@example.com';
+                        final password = 'password123';
+
+                        if (authService.logInWithCredentials(email, password)) {
+                          // Redirect to home page
+                          context.go('/');
+                        } else {
+                          // Show error message
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text('Invalid credentials')),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Auto Login',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
                     child: OutlinedButton(
                       onPressed: () {
                         context.push('/login/sign-up');
