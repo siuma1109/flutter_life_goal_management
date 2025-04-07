@@ -143,60 +143,63 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                     ),
-                    child: ListTile(
-                      leading: Transform.scale(
-                        scale: 1.2, // Adjust the scale factor as needed
-                        child: Checkbox(
-                          value: task.isChecked,
-                          side: BorderSide(
-                            color:
-                                TaskService().getPriorityColor(task.priority),
-                            width: 2.0, // Adjust the width as needed
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(50),
+                    child: GestureDetector(
+                      onTap: () async => _showTaskEditForm(task),
+                      child: ListTile(
+                        leading: Transform.scale(
+                          scale: 1.2, // Adjust the scale factor as needed
+                          child: Checkbox(
+                            value: task.isChecked,
                             side: BorderSide(
                               color:
                                   TaskService().getPriorityColor(task.priority),
-                              width: 2.0,
+                              width: 2.0, // Adjust the width as needed
                             ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(50),
+                              side: BorderSide(
+                                color: TaskService()
+                                    .getPriorityColor(task.priority),
+                                width: 2.0,
+                              ),
+                            ),
+                            activeColor:
+                                TaskService().getPriorityColor(task.priority),
+                            onChanged: (bool? newValue) {
+                              task.isChecked = !task.isChecked;
+                              setState(() {
+                                _tasks[index] = task;
+                                _databaseHelper.updateTask(task.toMap());
+                              });
+                            },
                           ),
-                          activeColor:
-                              TaskService().getPriorityColor(task.priority),
-                          onChanged: (bool? newValue) {
-                            task.isChecked = !task.isChecked;
-                            setState(() {
-                              _tasks[index] = task;
-                              _databaseHelper.updateTask(task.toMap());
-                            });
-                          },
                         ),
-                      ),
-                      title: Text(task.title),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (task.description != null &&
-                              task.description != '')
-                            Text(task.description!),
-                          if (task.dueDate != null)
-                            Text(
-                                'Due: ${task.dueDate!.toString().split(' ')[0]}'),
-                          Text('Priority: ${task.priority}'),
-                        ],
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        // children: [
-                        //   IconButton(
-                        //     icon: const Icon(Icons.edit),
-                        //     onPressed: () async => _showTaskEditForm(task),
-                        //   ),
-                        //   IconButton(
-                        //     icon: const Icon(Icons.delete),
-                        //     onPressed: () async => _deleteTask(task),
-                        //   ),
-                        // ],
+                        title: Text(task.title),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (task.description != null &&
+                                task.description != '')
+                              Text(task.description!),
+                            if (task.dueDate != null)
+                              Text(
+                                  'Due: ${task.dueDate!.toString().split(' ')[0]}'),
+                            Text('Priority: ${task.priority}'),
+                          ],
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          // children: [
+                          //   IconButton(
+                          //     icon: const Icon(Icons.edit),
+                          //     onPressed: () async => _showTaskEditForm(task),
+                          //   ),
+                          //   IconButton(
+                          //     icon: const Icon(Icons.delete),
+                          //     onPressed: () async => _deleteTask(task),
+                          //   ),
+                          // ],
+                        ),
                       ),
                     ),
                   );
