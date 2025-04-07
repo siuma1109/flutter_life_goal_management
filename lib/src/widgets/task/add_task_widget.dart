@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../services/database_helper.dart';
 import '../../models/task.dart';
+import '../../services/task_service.dart';
 
 class AddTaskWidget extends StatefulWidget {
   final Task? task;
@@ -600,13 +601,15 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                             children: [
                               Icon(
                                 Icons.flag,
-                                color: _getPriorityColor(_priority),
+                                color:
+                                    TaskService().getPriorityColor(_priority),
                               ),
                               const SizedBox(width: 4),
                               Text(
                                 'P$_priority',
                                 style: TextStyle(
-                                  color: _getPriorityColor(_priority),
+                                  color:
+                                      TaskService().getPriorityColor(_priority),
                                 ),
                               ),
                             ],
@@ -823,21 +826,6 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
       setState(() {
         _isLoading = false;
       });
-    }
-  }
-
-  Color _getPriorityColor(int priority) {
-    switch (priority) {
-      case 1:
-        return Colors.red;
-      case 2:
-        return Colors.orange;
-      case 3:
-        return Colors.yellow;
-      case 4:
-        return Colors.green;
-      default:
-        return Colors.black;
     }
   }
 }

@@ -30,11 +30,12 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE tasks(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        parent_id INTEGER,
         title TEXT NOT NULL,
         description TEXT,
         due_date TEXT,
         priority INTEGER,
-        parent_id INTEGER,
+        is_checked BOOLEAN NOT NULL DEFAULT false,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         FOREIGN KEY (parent_id) REFERENCES tasks (id)
@@ -44,6 +45,8 @@ class DatabaseHelper {
 
   // Insert a task
   Future<int> insertTask(Map<String, dynamic> task) async {
+    print("Insert Task::");
+    print(task.toString());
     final db = await database;
     return await db.insert('tasks', task);
   }
@@ -81,7 +84,7 @@ class DatabaseHelper {
     final db = await database;
     final id = task['id'];
     task.remove("id");
-    print("LOGOGOGOGOGOG");
+    print("Update Task::");
     print(task.toString());
     print("ID");
     print(id);

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_life_goal_management/src/services/task_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/add_task_floating_button_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/add_task_widget.dart';
 import '../models/task.dart';
@@ -33,6 +34,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadTasks() async {
     final tasks = await _databaseHelper.getAllTasks(false);
+    print('Tasks::');
+    print(tasks.map((task) => Task.fromMap(task)).toList());
     setState(() {
       _tasks = tasks.map((task) => Task.fromMap(task)).toList();
     });
@@ -131,30 +134,70 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 itemCount: _tasks.length,
                 itemBuilder: (context, index) {
                   final task = _tasks[index];
-                  return ListTile(
-                    title: Text(task.title),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (task.description != null) Text(task.description!),
-                        if (task.dueDate != null)
-                          Text(
-                              'Due: ${task.dueDate!.toString().split(' ')[0]}'),
-                        Text('Priority: ${task.priority}'),
-                      ],
+                  return Container(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color: Colors.black12, // Change color as needed
+                          width: 1.0, // Adjust width as needed
+                        ),
+                      ),
                     ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () async => _showTaskEditForm(task),
+                    child: ListTile(
+                      leading: Transform.scale(
+                        scale: 1.2, // Adjust the scale factor as needed
+                        child: Checkbox(
+                          value: task.isChecked,
+                          side: BorderSide(
+                            color:
+                                TaskService().getPriorityColor(task.priority),
+                            width: 2.0, // Adjust the width as needed
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(50),
+                            side: BorderSide(
+                              color:
+                                  TaskService().getPriorityColor(task.priority),
+                              width: 2.0,
+                            ),
+                          ),
+                          activeColor:
+                              TaskService().getPriorityColor(task.priority),
+                          onChanged: (bool? newValue) {
+                            task.isChecked = !task.isChecked;
+                            setState(() {
+                              _tasks[index] = task;
+                              _databaseHelper.updateTask(task.toMap());
+                            });
+                          },
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () async => _deleteTask(task),
-                        ),
-                      ],
+                      ),
+                      title: Text(task.title),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (task.description != null &&
+                              task.description != '')
+                            Text(task.description!),
+                          if (task.dueDate != null)
+                            Text(
+                                'Due: ${task.dueDate!.toString().split(' ')[0]}'),
+                          Text('Priority: ${task.priority}'),
+                        ],
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        // children: [
+                        //   IconButton(
+                        //     icon: const Icon(Icons.edit),
+                        //     onPressed: () async => _showTaskEditForm(task),
+                        //   ),
+                        //   IconButton(
+                        //     icon: const Icon(Icons.delete),
+                        //     onPressed: () async => _deleteTask(task),
+                        //   ),
+                        // ],
+                      ),
                     ),
                   );
                 },
