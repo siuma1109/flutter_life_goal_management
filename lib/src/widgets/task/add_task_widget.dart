@@ -623,33 +623,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
                     if (widget.isEditMode) ...[
-                      const SizedBox(height: 16),
-                      Text(
-                        'Subtasks',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _subtaskController,
-                              decoration: const InputDecoration(
-                                hintText: 'Add subtask',
-                                border: OutlineInputBorder(),
-                              ),
-                              onSubmitted: (_) => _addSubtask(),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          IconButton(
-                            icon: const Icon(Icons.add),
-                            onPressed: _addSubtask,
-                          ),
-                        ],
-                      ),
                       const SizedBox(height: 8),
                       ListView.builder(
                         shrinkWrap: true,
@@ -666,6 +640,49 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                           );
                         },
                       ),
+                      const SizedBox(height: 8),
+                      InkWell(
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.add,
+                              size: 32,
+                            ),
+                            Text(
+                              "Add sub task",
+                              style: TextStyle(fontSize: 20),
+                            ),
+                          ],
+                        ),
+                        onTap: () async {
+                          final result = await showModalBottomSheet(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context)
+                                        .scaffoldBackgroundColor,
+                                    borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(20),
+                                    ),
+                                  ),
+                                  child: AddTaskWidget(
+                                    task: Task(
+                                      id: widget.task?.id,
+                                      title: "",
+                                      priority: 4,
+                                      createdAt: DateTime.now(),
+                                      updatedAt: DateTime.now(),
+                                    ),
+                                    isEditMode: true,
+                                    onRefresh: () {
+                                      // Logic to refresh the subtasks list
+                                    },
+                                  ),
+                                );
+                              });
+                        },
+                      )
                     ],
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,

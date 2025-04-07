@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/services/task_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/add_task_floating_button_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/add_task_widget.dart';
+import 'package:flutter_life_goal_management/src/widgets/task/view_task_widget.dart';
 import '../models/task.dart';
 import '../services/database_helper.dart';
 
@@ -41,7 +42,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-  Future<void> _showTaskEditForm([Task? task]) async {
+  Future<void> _showTaskEditForm(Task task) async {
     List<Task>? subtasks;
     if (task?.id != null) {
       final subtaskMaps = await _databaseHelper.getSubtasks(task!.id!);
@@ -60,10 +61,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          child: AddTaskWidget(
+          child: ViewTaskWidget(
             task: task,
-            subtasks: subtasks,
-            isEditMode: true,
+            onRefresh: _loadTasks,
           ),
         );
       },
