@@ -125,20 +125,6 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
     );
   }
 
-  void _addSubtask() {
-    if (_subtaskController.text.trim().isNotEmpty) {
-      setState(() {
-        _subtasks.add(Task(
-          title: _subtaskController.text,
-          priority: 1,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ));
-        _subtaskController.clear();
-      });
-    }
-  }
-
   void _removeSubtask(int index) {
     setState(() {
       _subtasks.removeAt(index);
@@ -154,24 +140,18 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
       try {
         final now = DateTime.now();
         final task = Task(
-          id: widget.task?.id,
+          parentId: widget.task?.id,
           title: _taskController.text,
           description: _descriptionController.text,
           dueDate: _dueDate,
           priority: _priority,
-          parentId: widget.task?.parentId,
           createdAt: widget.task?.createdAt ?? now,
           updatedAt: now,
         );
 
         final dbHelper = DatabaseHelper();
 
-        final parentId = await dbHelper.insertTask(task.toMap());
-        for (var subtask in _subtasks) {
-          final subtaskMap = subtask.toMap();
-          subtaskMap['parent_id'] = parentId;
-          await dbHelper.insertTask(subtaskMap);
-        }
+        await dbHelper.insertTask(task.toMap());
 
         // Close the AddTaskWidget after successful submission
         if (mounted) {

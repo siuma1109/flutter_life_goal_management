@@ -40,12 +40,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _showTaskEditForm(Task task) async {
-    List<Task>? subtasks;
-    if (task?.id != null) {
-      final subtaskMaps = await _databaseHelper.getSubtasks(task!.id!);
-      subtasks = subtaskMaps.map((map) => Task.fromMap(map)).toList();
-    }
-
     if (!mounted) return;
 
     final result = await showModalBottomSheet(
