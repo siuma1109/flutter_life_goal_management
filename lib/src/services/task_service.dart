@@ -8,9 +8,9 @@ class TaskService {
       case 2:
         return Colors.orange;
       case 3:
-        return Colors.yellow;
+        return Colors.blue;
       case 4:
-        return Colors.green;
+        return Colors.grey;
       default:
         return Colors.black;
     }

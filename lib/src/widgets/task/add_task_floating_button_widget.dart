@@ -24,6 +24,7 @@ class _AddTaskFloatingButtonWidgetState
           context: context,
           isScrollControlled: true,
           backgroundColor: Colors.transparent,
+          useRootNavigator: true,
           builder: (BuildContext context) {
             return Container(
               decoration: BoxDecoration(
