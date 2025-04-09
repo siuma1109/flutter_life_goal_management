@@ -267,13 +267,14 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
   }
 
   Widget _buildSubtasksSection() {
+    final completeSubTasks = _subTasks.where((task) => task.isChecked).length;
     return Column(
       children: [
         _buildTaskRow(
           icon: const Icon(Icons.list),
-          content: const Text(
-            "Sub Tasks",
-            style: TextStyle(fontSize: 16),
+          content: Text(
+            "Sub Tasks ($completeSubTasks/${_subTasks.length})",
+            style: const TextStyle(fontSize: 16),
           ),
         ),
         ListView.builder(
