@@ -178,10 +178,12 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding:
+          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: _isLoading
           ? Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(8, 24, 8, 48),
+              padding: const EdgeInsets.fromLTRB(8, 16, 8, 16),
               child: Form(
                 key: _formKey,
                 child: Column(

@@ -116,25 +116,23 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
         top: 8,
         bottom: 16,
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header with delete option
-            _buildHeader(),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header with delete option
+          _buildHeader(),
 
-            // Main task content
-            _buildTaskContent(),
+          // Main task content
+          _buildTaskContent(),
 
-            const Divider(thickness: 5),
+          const Divider(thickness: 5),
 
-            // Subtasks section
-            if (_subTasks.isNotEmpty) _buildSubtasksSection(),
+          // Subtasks section
+          if (_subTasks.isNotEmpty) _buildSubtasksSection(),
 
-            // Add subtask button
-            _buildAddSubtaskButton(),
-          ],
-        ),
+          // Add subtask button
+          _buildAddSubtaskButton(),
+        ],
       ),
     );
   }
@@ -296,7 +294,8 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
                     : null,
               ),
               child: GestureDetector(
-                onTap: () => _showTaskEditForm(task),
+                onTap: () => TaskService()
+                    .showTaskEditForm(context, task, _loadSubTasksById),
                 child: ListTile(
                   leading: Transform.scale(
                     scale: 1.2,
@@ -397,27 +396,6 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
     setState(() {
       _subTasks = tasks.map((task) => Task.fromMap(task)).toList();
     });
-  }
-
-  void _showTaskEditForm(Task task) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      useRootNavigator: true,
-      builder: (BuildContext context) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: ViewTaskWidget(
-            task: task,
-            onRefresh: _loadSubTasksById,
-          ),
-        );
-      },
-    );
   }
 
   void _showPriorityDialog(BuildContext context) {
