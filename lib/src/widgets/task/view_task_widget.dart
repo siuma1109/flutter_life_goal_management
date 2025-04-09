@@ -111,326 +111,281 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.only(top: 12, bottom: 36),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    return Padding(
+      padding: const EdgeInsets.only(
+        top: 8,
+        bottom: 16,
       ),
       child: SingleChildScrollView(
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert),
-                    onSelected: (value) {
-                      if (value == 'delete') {
-                        _showDeleteConfirmationDialog(context);
-                      }
-                    },
-                    itemBuilder: (BuildContext context) => [
-                      const PopupMenuItem<String>(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete, color: Colors.red),
-                            SizedBox(width: 8),
-                            Text('Delete Task'),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            // Title row
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 48,
-                    height: 50,
-                    child: Transform.scale(
-                      scale: 1.2,
-                      child: Checkbox(
-                        value: widget.task.isChecked,
-                        side: BorderSide(
-                          color: TaskService()
-                              .getPriorityColor(widget.task.priority),
-                          width: 2.0,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(50),
-                          side: BorderSide(
-                            color: TaskService()
-                                .getPriorityColor(widget.task.priority),
-                            width: 2.0,
-                          ),
-                        ),
-                        activeColor: TaskService()
-                            .getPriorityColor(widget.task.priority),
-                        onChanged: (bool? newValue) {
-                          setState(() {
-                            widget.task.isChecked = !widget.task.isChecked;
-                            _updateTask();
-                            widget.onRefresh?.call();
-                          });
-                        },
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: _titleController,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(borderSide: BorderSide.none),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // Header with delete option
+            _buildHeader(),
 
-            // Description row
-            if (widget.task.description != null &&
-                widget.task.description != '')
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+            // Main task content
+            _buildTaskContent(),
+
+            const Divider(thickness: 5),
+
+            // Subtasks section
+            if (_subTasks.isNotEmpty) _buildSubtasksSection(),
+
+            // Add subtask button
+            _buildAddSubtaskButton(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              if (value == 'delete') {
+                _showDeleteConfirmationDialog(context);
+              }
+            },
+            itemBuilder: (BuildContext context) => [
+              const PopupMenuItem<String>(
+                value: 'delete',
                 child: Row(
                   children: [
-                    SizedBox(
-                      width: 48,
-                      height: 50,
-                      child: Icon(Icons.description),
-                    ),
-                    Expanded(
-                      child: TextField(
-                        controller: _descriptionController,
-                        decoration: const InputDecoration(
-                          border:
-                              OutlineInputBorder(borderSide: BorderSide.none),
-                        ),
-                        minLines: 1,
-                        maxLines: 3,
-                      ),
-                    ),
+                    Icon(Icons.delete, color: Colors.red),
+                    SizedBox(width: 8),
+                    Text('Delete Task'),
                   ],
                 ),
               ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
-            // Date row
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 48,
-                    height: 50,
-                    child: Icon(Icons.calendar_month),
-                  ),
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => _showDatePicker(context),
-                      child: Text(
-                        _dueDate != null
-                            ? _dateFormat.format(_dueDate!)
-                            : 'Date',
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ),
-                  ),
-                ],
+  Widget _buildTaskContent() {
+    return Column(
+      children: [
+        // Title with checkbox
+        _buildTaskRow(
+          icon: Transform.scale(
+            scale: 1.2,
+            child: Checkbox(
+              value: widget.task.isChecked,
+              side: BorderSide(
+                color: TaskService().getPriorityColor(widget.task.priority),
+                width: 2.0,
               ),
-            ),
-
-            // Priority row
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 48,
-                    height: 50,
-                    child: Icon(
-                      Icons.flag,
-                      color: TaskService().getPriorityColor(_priority),
-                    ),
-                  ),
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => _showPriorityDialog(context),
-                      child: Text(
-                        'Priority $_priority',
-                        style: TextStyle(
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(50),
+                side: BorderSide(
+                  color: TaskService().getPriorityColor(widget.task.priority),
+                  width: 2.0,
+                ),
               ),
-            ),
-
-            Divider(
-              thickness: 5,
-            ),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 48,
-                    height: 50,
-                    child: Icon(Icons.list),
-                  ),
-                  Expanded(
-                    child: Text(
-                      "Sub Tasks",
-                      style: TextStyle(
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: _subTasks.isEmpty
-                  ? Container(
-                      height: 200,
-                      child: ListView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        children: const [
-                          Center(
-                            child: Text('No tasks found'),
-                          ),
-                        ],
-                      ),
-                    )
-                  : Container(
-                      height: 200,
-                      child: ListView.builder(
-                        itemCount: _subTasks.length,
-                        itemBuilder: (context, index) {
-                          final task = _subTasks[index];
-                          return Container(
-                            decoration: BoxDecoration(
-                              border: Border(
-                                bottom: BorderSide(
-                                  color:
-                                      Colors.black12, // Change color as needed
-                                  width: 1.0, // Adjust width as needed
-                                ),
-                              ),
-                            ),
-                            child: GestureDetector(
-                              onTap: () => _showTaskEditForm(task),
-                              child: ListTile(
-                                leading: Transform.scale(
-                                  scale:
-                                      1.2, // Adjust the scale factor as needed
-                                  child: Checkbox(
-                                    value: task.isChecked,
-                                    side: BorderSide(
-                                      color: TaskService()
-                                          .getPriorityColor(task.priority),
-                                      width: 2.0, // Adjust the width as needed
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(50),
-                                      side: BorderSide(
-                                        color: TaskService()
-                                            .getPriorityColor(task.priority),
-                                        width: 2.0,
-                                      ),
-                                    ),
-                                    activeColor: TaskService()
-                                        .getPriorityColor(task.priority),
-                                    onChanged: (bool? newValue) {
-                                      task.isChecked = !task.isChecked;
-                                      setState(() {
-                                        _subTasks[index] = task;
-                                        _databaseHelper
-                                            .updateTask(task.toMap());
-                                      });
-                                    },
-                                  ),
-                                ),
-                                title: Text(task.title),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    if (task.description != null &&
-                                        task.description != '')
-                                      Text(task.description!),
-                                    if (task.dueDate != null)
-                                      Text(
-                                          'Due: ${task.dueDate!.toString().split(' ')[0]}'),
-                                    Text('Priority: ${task.priority}'),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-            ),
-
-            InkWell(
-              child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 48,
-                        height: 50,
-                        child: Icon(
-                          Icons.add,
-                          color: Colors.redAccent,
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          "Add sub task",
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.redAccent,
-                          ),
-                        ),
-                      ),
-                    ],
-                  )),
-              onTap: () async {
-                final result = await showModalBottomSheet(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).scaffoldBackgroundColor,
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(20),
-                          ),
-                        ),
-                        child: AddTaskWidget(
-                            task: widget.task, onRefresh: _loadSubTasksById),
-                      );
-                    });
-
-                if (result == true) {
+              activeColor: TaskService().getPriorityColor(widget.task.priority),
+              onChanged: (bool? newValue) {
+                setState(() {
+                  widget.task.isChecked = !widget.task.isChecked;
+                  _updateTask();
                   widget.onRefresh?.call();
-                }
+                });
               },
-            )
+            ),
+          ),
+          content: TextField(
+            controller: _titleController,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(borderSide: BorderSide.none),
+            ),
+          ),
+        ),
+
+        // Description
+        if (widget.task.description != null && widget.task.description != '')
+          _buildTaskRow(
+            icon: const Icon(Icons.description),
+            content: TextField(
+              controller: _descriptionController,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(borderSide: BorderSide.none),
+              ),
+              minLines: 1,
+              maxLines: 3,
+            ),
+          ),
+
+        // Due date
+        _buildTaskRow(
+          icon: const Icon(Icons.calendar_month),
+          content: InkWell(
+            onTap: () => _showDatePicker(context),
+            child: Text(
+              _dueDate != null ? _dateFormat.format(_dueDate!) : 'Date',
+              style: const TextStyle(fontSize: 16),
+            ),
+          ),
+        ),
+
+        // Priority
+        _buildTaskRow(
+          icon: Icon(
+            Icons.flag,
+            color: TaskService().getPriorityColor(_priority),
+          ),
+          content: InkWell(
+            onTap: () => _showPriorityDialog(context),
+            child: Text(
+              'Priority $_priority',
+              style: const TextStyle(fontSize: 16),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTaskRow({required Widget icon, required Widget content}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 48,
+            height: 50,
+            child: icon,
+          ),
+          Expanded(child: content),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubtasksSection() {
+    return Column(
+      children: [
+        _buildTaskRow(
+          icon: const Icon(Icons.list),
+          content: const Text(
+            "Sub Tasks",
+            style: TextStyle(fontSize: 16),
+          ),
+        ),
+        ListView.builder(
+          shrinkWrap: true,
+          itemCount: _subTasks.length,
+          physics: const NeverScrollableScrollPhysics(),
+          itemBuilder: (context, index) {
+            final task = _subTasks[index];
+            return Container(
+              decoration: BoxDecoration(
+                border: index < _subTasks.length - 1
+                    ? Border(
+                        bottom: BorderSide(
+                          color: Colors.black12,
+                          width: 1.0,
+                        ),
+                      )
+                    : null,
+              ),
+              child: GestureDetector(
+                onTap: () => _showTaskEditForm(task),
+                child: ListTile(
+                  leading: Transform.scale(
+                    scale: 1.2,
+                    child: Checkbox(
+                      value: task.isChecked,
+                      side: BorderSide(
+                        color: TaskService().getPriorityColor(task.priority),
+                        width: 2.0,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(50),
+                        side: BorderSide(
+                          color: TaskService().getPriorityColor(task.priority),
+                          width: 2.0,
+                        ),
+                      ),
+                      activeColor:
+                          TaskService().getPriorityColor(task.priority),
+                      onChanged: (bool? newValue) {
+                        task.isChecked = !task.isChecked;
+                        setState(() {
+                          _subTasks[index] = task;
+                          _databaseHelper.updateTask(task.toMap());
+                        });
+                      },
+                    ),
+                  ),
+                  title: Text(task.title),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (task.description != null && task.description != '')
+                        Text(task.description!),
+                      if (task.dueDate != null)
+                        Text('Due: ${task.dueDate!.toString().split(' ')[0]}'),
+                      Text('Priority: ${task.priority}'),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAddSubtaskButton() {
+    return InkWell(
+      onTap: () {
+        showModalBottomSheet(
+          context: context,
+          builder: (BuildContext context) {
+            return Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
+              ),
+              child: AddTaskWidget(
+                task: widget.task,
+                onRefresh: _loadSubTasksById,
+              ),
+            );
+          },
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 48,
+              height: 50,
+              child: Icon(
+                Icons.add,
+                color: Colors.redAccent,
+              ),
+            ),
+            Expanded(
+              child: Text(
+                "Add sub task",
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.redAccent,
+                ),
+              ),
+            ),
           ],
         ),
       ),

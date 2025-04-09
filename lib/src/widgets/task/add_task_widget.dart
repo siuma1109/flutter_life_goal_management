@@ -153,10 +153,9 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
 
         await dbHelper.insertTask(task.toMap());
 
-        // Close the AddTaskWidget after successful submission
         if (mounted) {
-          Navigator.of(context)
-              .pop(true); // Indicate that a task was added/updated
+          widget.onRefresh?.call();
+          Navigator.of(context).pop(true);
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Task Created Successfully')),
