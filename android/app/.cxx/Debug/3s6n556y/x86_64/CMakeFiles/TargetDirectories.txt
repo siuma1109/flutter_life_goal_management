@@ -1,2 +1,0 @@
-/Users/user/projects/flutter_life_goal_management/android/app/.cxx/Debug/3s6n556y/x86_64/CMakeFiles/edit_cache.dir
-/Users/user/projects/flutter_life_goal_management/android/app/.cxx/Debug/3s6n556y/x86_64/CMakeFiles/rebuild_cache.dir

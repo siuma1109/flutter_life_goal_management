@@ -116,18 +116,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                         title: Text(task.title),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (task.description != null &&
+                        subtitle: (task.description != null &&
                                 task.description != '')
-                              Text(task.description!),
-                            if (task.dueDate != null)
-                              Text(
-                                  'Due: ${task.dueDate!.toString().split(' ')[0]}'),
-                            Text('Priority: ${task.priority}'),
-                          ],
-                        ),
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(task.description!),
+                                  if (task.dueDate != null)
+                                    Text(
+                                        task.dueDate!.toString().split(' ')[0]),
+                                ],
+                              )
+                            : null,
                       ),
                     ),
                   );
