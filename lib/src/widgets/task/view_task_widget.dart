@@ -53,6 +53,8 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
     final updatedTask = Task(
       id: widget.task.id,
       parentId: widget.task.parentId,
+      userId: widget.task.userId,
+      projectId: widget.task.projectId,
       title: _titleController.text,
       description: _descriptionController.text,
       dueDate: _dueDate,
@@ -76,6 +78,9 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
         return TaskDatePickerWidget(
           task: Task(
             id: widget.task.id,
+            parentId: widget.task.parentId,
+            userId: widget.task.userId,
+            projectId: widget.task.projectId,
             title: widget.task.title,
             description: widget.task.description,
             dueDate: _dueDate,

@@ -90,14 +90,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         if (_formKey.currentState!.validate()) {
                           // Handle login
                           final authService = AuthService();
                           final email = _emailController.text;
                           final password = _passwordController.text;
 
-                          if (authService.logInWithCredentials(
+                          if (await authService.logInWithCredentials(
                               email, password)) {
                             // Redirect to home page
                             context.go('/');
@@ -130,13 +130,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         // Handle login
                         final authService = AuthService();
                         final email = 'user@example.com';
                         final password = 'password123';
 
-                        if (authService.logInWithCredentials(email, password)) {
+                        if (await authService.logInWithCredentials(
+                            email, password)) {
                           // Redirect to home page
                           context.go('/');
                         } else {

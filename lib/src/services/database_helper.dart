@@ -1,3 +1,4 @@
+import 'package:flutter_life_goal_management/src/models/user.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -28,18 +29,52 @@ class DatabaseHelper {
 
   Future<void> _createDb(Database db, int version) async {
     await db.execute('''
+      CREATE TABLE users(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NULL UNIQUE,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        password TEXT NOT NULL,
+        avatar TEXT,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+    ''');
+
+    await db.execute('''
+      CREATE TABLE projects(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        description TEXT,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+      );
+    ''');
+
+    await db.execute('''
       CREATE TABLE tasks(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         parent_id INTEGER,
+        user_id INTEGER NOT NULL,
+        project_id INTEGER,
         title TEXT NOT NULL,
         description TEXT,
         due_date TEXT,
         priority INTEGER,
         is_checked BOOLEAN NOT NULL DEFAULT false,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        FOREIGN KEY (parent_id) REFERENCES tasks (id)
-      )
+
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (parent_id) REFERENCES tasks (id),
+        FOREIGN KEY (user_id) REFERENCES users (id),
+        FOREIGN KEY (project_id) REFERENCES projects (id)
+      );
+    ''');
+
+    await db.execute('''
+        INSERT INTO users (username, name, email, password) VALUES ('test_user', 'Test User', 'user@example.com', 'password123');
     ''');
   }
 
@@ -51,13 +86,33 @@ class DatabaseHelper {
     return await db.insert('tasks', task);
   }
 
-  // Get all tasks (including subtasks)
-  Future<List<Map<String, dynamic>>> getAllTasks(bool withSubTask) async {
+  Future<User?> getUserByEmailOrUsername(String emailOrUsername) async {
     final db = await database;
-    if (withSubTask) {
-      return await db.query('tasks');
+    final result = await db.query(
+      'users',
+      where: 'email = ? OR username = ?',
+      whereArgs: [emailOrUsername, emailOrUsername],
+    );
+    return result.isNotEmpty ? User.fromMap(result.first) : null;
+  }
+
+  // Get all tasks (including subtasks)
+  Future<List<Map<String, dynamic>>> getAllTasks(
+      bool withSubTask, int? userId) async {
+    final db = await database;
+    var whereClauses = [];
+    var whereArgs = [];
+
+    if (userId != null) {
+      whereClauses.add('user_id = ?');
+      whereArgs.add(userId);
     }
-    return await db.query('tasks', where: 'parent_id IS NULL');
+    if (withSubTask) {
+      whereClauses.add('parent_id IS NOT NULL');
+    }
+
+    return await db.query('tasks',
+        where: whereClauses.join(' AND '), whereArgs: whereArgs);
   }
 
   // Get tasks by parent_id (for subtasks)

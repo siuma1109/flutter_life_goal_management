@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -90,6 +91,9 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
           task: widget.task ??
               Task(
                 id: null,
+                parentId: null,
+                userId: AuthService().getLoggedInUser()?.id ?? 0,
+                projectId: widget.task?.projectId ?? null,
                 title: "",
                 priority: _priority,
                 dueDate: _dueDate,
@@ -141,6 +145,8 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
         final now = DateTime.now();
         final task = Task(
           parentId: widget.task?.id,
+          userId: AuthService().getLoggedInUser()?.id ?? 0,
+          projectId: widget.task?.projectId ?? null,
           title: _taskController.text,
           description: _descriptionController.text,
           dueDate: _dueDate,

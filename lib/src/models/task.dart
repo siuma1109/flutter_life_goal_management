@@ -6,12 +6,16 @@ class Task {
   final DateTime? dueDate;
   final int priority;
   bool isChecked;
+  final int userId;
+  final int? projectId;
   final DateTime createdAt;
   final DateTime updatedAt;
 
   Task({
     this.id,
     this.parentId,
+    required this.userId,
+    this.projectId,
     required this.title,
     this.description,
     this.dueDate,
@@ -25,6 +29,8 @@ class Task {
     return {
       'id': id,
       'parent_id': parentId,
+      'user_id': userId,
+      'project_id': projectId,
       'title': title,
       'description': description,
       'due_date': dueDate?.toIso8601String(),
@@ -39,6 +45,8 @@ class Task {
     return Task(
       id: map['id'],
       parentId: map['parent_id'],
+      userId: map['user_id'],
+      projectId: map['project_id'],
       title: map['title'],
       description: map['description'],
       dueDate: map['due_date'] != null ? DateTime.parse(map['due_date']) : null,
@@ -52,6 +60,8 @@ class Task {
   Task copyWith({
     int? id,
     int? parentId,
+    int? userId,
+    int? projectId,
     String? title,
     String? description,
     DateTime? dueDate,
@@ -63,6 +73,8 @@ class Task {
     return Task(
       id: id ?? this.id,
       parentId: parentId ?? this.parentId,
+      userId: userId ?? this.userId,
+      projectId: projectId ?? this.projectId,
       title: title ?? this.title,
       description: description ?? this.description,
       dueDate: dueDate ?? this.dueDate,

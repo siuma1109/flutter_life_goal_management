@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_life_goal_management/src/services/task_service.dart';
-import 'package:flutter_life_goal_management/src/widgets/task/add_task_floating_button_widget.dart';
+import 'package:flutter_life_goal_management/src/services/auth_service.dart';
+import 'package:flutter_life_goal_management/src/widgets/profile_info_widget.dart';
 import '../models/task.dart';
 import '../services/database_helper.dart';
+import '../widgets/task/add_task_floating_button_widget.dart';
+import '../widgets/task/task_list_widget.dart';
 
 class ProfileScreen extends StatefulWidget {
-  final String title;
-
-  const ProfileScreen({super.key, required this.title});
+  const ProfileScreen({super.key});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -15,7 +15,6 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
-  final TaskService _taskService = TaskService();
   List<Task> _tasks = [];
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
       GlobalKey<RefreshIndicatorState>();
@@ -33,7 +32,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadTasks() async {
-    final tasks = await _databaseHelper.getAllTasks(false);
+    final tasks = await _databaseHelper.getAllTasks(
+        false, AuthService().getLoggedInUser()?.id);
     setState(() {
       _tasks = tasks.map((task) => Task.fromMap(task)).toList();
     });
@@ -43,96 +43,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text(AuthService().getLoggedInUser()?.username ?? 'Profile'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.settings),
             onPressed: () {
-              _refreshIndicatorKey.currentState?.show();
+              // TODO: Implement settings
             },
           ),
         ],
       ),
-      body: RefreshIndicator(
-        key: _refreshIndicatorKey,
-        onRefresh: _loadTasks,
-        child: _tasks.isEmpty
-            ? ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                children: const [
-                  SizedBox(height: 100),
-                  Center(
-                    child: Text('No tasks found. Pull down to refresh.'),
+      body: DefaultTabController(
+        length: 3,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Profile Section
+            ProfileInfoWidget(),
+            const TabBar(
+              tabs: [
+                Tab(icon: Icon(Icons.show_chart)),
+                Tab(icon: Icon(Icons.task)),
+              ],
+            ),
+            Expanded(
+              child: TabBarView(
+                children: [
+                  Text("Dashboard"),
+                  RefreshIndicator(
+                    key: _refreshIndicatorKey,
+                    onRefresh: _loadTasks,
+                    child: TaskListWidget(
+                      tasks: _tasks,
+                      onRefresh: _loadTasks,
+                    ),
                   ),
                 ],
-              )
-            : ListView.builder(
-                itemCount: _tasks.length,
-                itemBuilder: (context, index) {
-                  final task = _tasks[index];
-                  return Container(
-                    decoration: BoxDecoration(
-                      border: index < _tasks.length - 1
-                          ? Border(
-                              bottom: BorderSide(
-                                color: Colors.black12, // Change color as needed
-                                width: 1.0, // Adjust width as needed
-                              ),
-                            )
-                          : null,
-                    ),
-                    child: GestureDetector(
-                      onTap: () async {
-                        _taskService.showTaskEditForm(
-                            context, task, _loadTasks);
-                      },
-                      child: ListTile(
-                        leading: Transform.scale(
-                          scale: 1.2, // Adjust the scale factor as needed
-                          child: Checkbox(
-                            value: task.isChecked,
-                            side: BorderSide(
-                              color:
-                                  TaskService().getPriorityColor(task.priority),
-                              width: 2.0, // Adjust the width as needed
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(50),
-                              side: BorderSide(
-                                color: TaskService()
-                                    .getPriorityColor(task.priority),
-                                width: 2.0,
-                              ),
-                            ),
-                            activeColor:
-                                TaskService().getPriorityColor(task.priority),
-                            onChanged: (bool? newValue) {
-                              task.isChecked = !task.isChecked;
-                              setState(() {
-                                _tasks[index] = task;
-                                _databaseHelper.updateTask(task.toMap());
-                              });
-                            },
-                          ),
-                        ),
-                        title: Text(task.title),
-                        subtitle: (task.description != null &&
-                                task.description != '')
-                            ? Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(task.description!),
-                                  if (task.dueDate != null)
-                                    Text(
-                                        task.dueDate!.toString().split(' ')[0]),
-                                ],
-                              )
-                            : null,
-                      ),
-                    ),
-                  );
-                },
               ),
+            ),
+          ],
+        ),
       ),
       floatingActionButton: AddTaskFloatingButtonWidget(
         onRefresh: _loadTasks,
