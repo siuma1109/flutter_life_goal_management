@@ -1,4 +1,4 @@
-import '../services/database_helper.dart';
+import 'package:flutter_life_goal_management/src/services/user_service.dart';
 import '../models/user.dart';
 
 class AuthService {
@@ -42,8 +42,7 @@ class AuthService {
   // Method to log in the user with fake credentials
   Future<bool> logInWithCredentials(
       String emailOrUsername, String password) async {
-    final databaseHelper = DatabaseHelper();
-    final user = await databaseHelper.getUserByEmailOrUsername(emailOrUsername);
+    final user = await UserService().getUserByEmailOrUsername(emailOrUsername);
     if (user != null && user.password == password) {
       _isLoggedIn = true;
       _loggedInUser = user; // Store the logged-in user's information

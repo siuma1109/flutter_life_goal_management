@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/add_task_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/task_date_picker_widget.dart';
 import '../../models/task.dart';
@@ -8,10 +9,13 @@ import 'package:intl/intl.dart';
 
 class ViewTaskWidget extends StatefulWidget {
   final Task task;
-  final VoidCallback? onRefresh;
+  final VoidCallback? onRefresh; // Keep for backward compatibility
 
-  const ViewTaskWidget(
-      {super.key, required this.task, required this.onRefresh});
+  const ViewTaskWidget({
+    super.key,
+    required this.task,
+    this.onRefresh,
+  });
 
   @override
   _ViewTaskWidgetState createState() => _ViewTaskWidgetState();
@@ -45,6 +49,14 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
     super.dispose();
   }
 
+  void _notifyChanges() {
+    // Call onRefresh for backward compatibility
+    widget.onRefresh?.call();
+
+    // Broadcast the change
+    TaskBroadcast().notifyTasksChanged();
+  }
+
   void _updateTask() async {
     setState(() {
       _isLoading = true; // Set loading to true
@@ -64,7 +76,8 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
       updatedAt: DateTime.now(),
     );
 
-    await _databaseHelper.updateTask(updatedTask.toMap());
+    await TaskService().updateTask(updatedTask.toMap());
+    _notifyChanges();
   }
 
   void _showDatePicker(BuildContext context) {
@@ -94,7 +107,6 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
               _dueDate = date;
             });
             _updateTask();
-            widget.onRefresh?.call();
           },
           onTimeSelected: (newTime) {
             setState(() {
@@ -198,7 +210,6 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
                 setState(() {
                   widget.task.isChecked = !widget.task.isChecked;
                   _updateTask();
-                  widget.onRefresh?.call();
                 });
               },
             ),
@@ -300,8 +311,10 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
                     : null,
               ),
               child: GestureDetector(
-                onTap: () => TaskService()
-                    .showTaskEditForm(context, task, _loadSubTasksById),
+                onTap: () => TaskService().showTaskEditForm(context, task, () {
+                  _loadSubTasksById();
+                  _notifyChanges();
+                }),
                 child: ListTile(
                   leading: Transform.scale(
                     scale: 1.2,
@@ -324,7 +337,8 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
                         task.isChecked = !task.isChecked;
                         setState(() {
                           _subTasks[index] = task;
-                          _databaseHelper.updateTask(task.toMap());
+                          TaskService().updateTask(task.toMap());
+                          _notifyChanges();
                         });
                       },
                     ),
@@ -364,7 +378,10 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
               ),
               child: AddTaskWidget(
                 task: widget.task,
-                onRefresh: _loadSubTasksById,
+                onRefresh: () {
+                  _loadSubTasksById();
+                  _notifyChanges();
+                },
               ),
             );
           },
@@ -398,7 +415,7 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
   }
 
   Future<void> _loadSubTasksById() async {
-    final tasks = await _databaseHelper.getSubtasks(widget.task.id!);
+    final tasks = await TaskService().getSubtasks(widget.task.id!);
     setState(() {
       _subTasks = tasks.map((task) => Task.fromMap(task)).toList();
     });
@@ -421,7 +438,6 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
                       _priority = priority;
                     });
                     _updateTask();
-                    widget.onRefresh?.call();
                     Navigator.of(context).pop();
                   },
                 );
@@ -442,22 +458,22 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
   void _showDeleteConfirmationDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Delete Task'),
           content: const Text('Are you sure you want to delete this task?'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () async {
                 if (widget.task.id != null) {
-                  await _databaseHelper.deleteTask(widget.task.id!);
-                  Navigator.of(context).pop(); // Close the dialog
+                  await TaskService().deleteTask(widget.task.id!);
+                  _notifyChanges();
+                  Navigator.of(dialogContext).pop(); // Close the dialog
                   Navigator.of(context).pop(); // Close the view task widget
-                  widget.onRefresh?.call();
                 }
               },
               child: const Text('Delete'),

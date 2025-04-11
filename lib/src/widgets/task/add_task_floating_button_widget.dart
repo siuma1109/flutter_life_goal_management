@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/add_task_widget.dart';
 
 class AddTaskFloatingButtonWidget extends StatefulWidget {
-  final VoidCallback? onRefresh;
-
-  const AddTaskFloatingButtonWidget({
-    super.key,
-    this.onRefresh,
-  });
+  const AddTaskFloatingButtonWidget({super.key});
 
   @override
   State<AddTaskFloatingButtonWidget> createState() =>
@@ -23,7 +19,7 @@ class _AddTaskFloatingButtonWidgetState
         var result = await showModalBottomSheet(
           context: context,
           isScrollControlled: true,
-          backgroundColor: Colors.transparent,
+          backgroundColor: Colors.white,
           useRootNavigator: true,
           builder: (BuildContext context) {
             return Container(
@@ -39,7 +35,8 @@ class _AddTaskFloatingButtonWidgetState
         );
 
         if (result == true) {
-          widget.onRefresh?.call();
+          // Broadcast task changes to all listeners
+          TaskBroadcast().notifyTasksChanged();
         }
       },
       child: const Icon(Icons.add),

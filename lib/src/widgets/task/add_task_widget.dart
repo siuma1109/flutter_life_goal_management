@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
+import 'package:flutter_life_goal_management/src/models/project.dart';
 import 'package:flutter_life_goal_management/src/services/auth_service.dart';
+import 'package:flutter_life_goal_management/src/services/project_service.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../../services/database_helper.dart';
 import '../../models/task.dart';
 import '../../services/task_service.dart';
 import '../../widgets/task/task_date_picker_widget.dart';
@@ -45,6 +47,8 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
   final LayerLink _layerLink = LayerLink();
   bool _isLoading = false;
   List<Task> _subtasks = [];
+  List<Project> _projects = [];
+  int? _projectId;
 
   @override
   void initState() {
@@ -52,6 +56,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
     _dateInputFocusNode.addListener(_onFocusChange);
     _taskFocusNode.requestFocus();
     dotenv.load();
+    _loadProjects();
   }
 
   @override
@@ -76,6 +81,14 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
   void _removeOverlay() {
     _overlayEntry?.remove();
     _overlayEntry = null;
+  }
+
+  Future<void> _loadProjects() async {
+    final projects = await ProjectService()
+        .getAllProjectsByUserId(AuthService().getLoggedInUser()?.id ?? 0);
+    setState(() {
+      _projects = projects.map((project) => Project.fromMap(project)).toList();
+    });
   }
 
   void _showDatePicker(BuildContext context) {
@@ -135,6 +148,19 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
     });
   }
 
+  void _notifyChanges() {
+    // Call onRefresh for backward compatibility
+    widget.onRefresh?.call();
+
+    // Broadcast the change
+    TaskBroadcast().notifyTasksChanged();
+
+    // If it's a task with a project, also notify project changes
+    if (_projectId != null) {
+      TaskBroadcast().notifyProjectChanged(_projectId);
+    }
+  }
+
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -146,7 +172,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
         final task = Task(
           parentId: widget.task?.id,
           userId: AuthService().getLoggedInUser()?.id ?? 0,
-          projectId: widget.task?.projectId ?? null,
+          projectId: _projectId,
           title: _taskController.text,
           description: _descriptionController.text,
           dueDate: _dueDate,
@@ -155,12 +181,10 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
           updatedAt: now,
         );
 
-        final dbHelper = DatabaseHelper();
-
-        await dbHelper.insertTask(task.toMap());
+        await TaskService().insertTask(task.toMap());
 
         if (mounted) {
-          widget.onRefresh?.call();
+          _notifyChanges();
           Navigator.of(context).pop(true);
 
           ScaffoldMessenger.of(context).showSnackBar(
@@ -304,45 +328,78 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                       height: 8,
                     ),
                     Divider(),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        SizedBox(
-                          width: 50,
-                          child: ElevatedButton(
-                            onPressed: () => _showAIPopup(context),
-                            style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 4, horizontal: 4),
-                                backgroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8))),
-                            child: const Image(
-                              image: AssetImage("assets/gemini_ai_icon.png"),
-                              height: 24,
-                            ),
+                    Padding(
+                      padding: EdgeInsets.only(left: 18, right: 18),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              DropdownButton(
+                                  items: [
+                                    DropdownMenuItem(
+                                      value: null,
+                                      child: Text('Inbox'),
+                                    ),
+                                    ...List.generate(
+                                      _projects.length,
+                                      (index) => DropdownMenuItem(
+                                        value: _projects[index].id,
+                                        child: Text(_projects[index].name),
+                                      ),
+                                    ),
+                                  ],
+                                  value: _projectId ?? widget.task?.projectId,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _projectId = value;
+                                    });
+                                  }),
+                            ],
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        SizedBox(
-                          width: 50,
-                          child: ElevatedButton(
-                            onPressed: _submitForm,
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 4, horizontal: 4),
-                              backgroundColor: Colors.grey,
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8)),
-                            ),
-                            child: Icon(
-                              Icons.send,
-                              color: Colors.white,
-                              size: 24,
-                            ),
+                          Row(
+                            children: [
+                              SizedBox(
+                                width: 50,
+                                child: ElevatedButton(
+                                  onPressed: () => _showAIPopup(context),
+                                  style: ElevatedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 4, horizontal: 4),
+                                      backgroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8))),
+                                  child: const Image(
+                                    image:
+                                        AssetImage("assets/gemini_ai_icon.png"),
+                                    height: 24,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              SizedBox(
+                                width: 50,
+                                child: ElevatedButton(
+                                  onPressed: _submitForm,
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 4, horizontal: 4),
+                                    backgroundColor: Colors.grey,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8)),
+                                  ),
+                                  child: Icon(
+                                    Icons.send,
+                                    color: Colors.white,
+                                    size: 24,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     )
                   ],
                 ),

@@ -46,7 +46,6 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
         name TEXT NOT NULL,
-        description TEXT,
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users (id)
@@ -58,7 +57,7 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         parent_id INTEGER,
         user_id INTEGER NOT NULL,
-        project_id INTEGER,
+        project_id INTEGER NULLABLE DEFAULT NULL,
         title TEXT NOT NULL,
         description TEXT,
         due_date TEXT,
@@ -78,97 +77,7 @@ class DatabaseHelper {
     ''');
   }
 
-  // Insert a task
-  Future<int> insertTask(Map<String, dynamic> task) async {
-    print("Insert Task::");
-    print(task.toString());
-    final db = await database;
-    return await db.insert('tasks', task);
-  }
-
-  Future<User?> getUserByEmailOrUsername(String emailOrUsername) async {
-    final db = await database;
-    final result = await db.query(
-      'users',
-      where: 'email = ? OR username = ?',
-      whereArgs: [emailOrUsername, emailOrUsername],
-    );
-    return result.isNotEmpty ? User.fromMap(result.first) : null;
-  }
-
-  // Get all tasks (including subtasks)
-  Future<List<Map<String, dynamic>>> getAllTasks(
-      bool withSubTask, int? userId) async {
-    final db = await database;
-    var whereClauses = [];
-    var whereArgs = [];
-
-    if (userId != null) {
-      whereClauses.add('user_id = ?');
-      whereArgs.add(userId);
-    }
-    if (withSubTask) {
-      whereClauses.add('parent_id IS NOT NULL');
-    }
-
-    return await db.query('tasks',
-        where: whereClauses.join(' AND '), whereArgs: whereArgs);
-  }
-
-  // Get tasks by parent_id (for subtasks)
-  Future<List<Map<String, dynamic>>> getSubtasks(int parentId) async {
-    final db = await database;
-    return await db.query(
-      'tasks',
-      where: 'parent_id = ?',
-      whereArgs: [parentId],
-    );
-  }
-
-  // Get main tasks (tasks without parent)
-  Future<List<Map<String, dynamic>>> getMainTasks() async {
-    final db = await database;
-    return await db.query(
-      'tasks',
-      where: 'parent_id IS NULL',
-    );
-  }
-
-  // Update a task
-  Future<int> updateTask(Map<String, dynamic> task) async {
-    final db = await database;
-    final id = task['id'];
-    task.remove("id");
-    print("Update Task::");
-    print(task.toString());
-    print("ID");
-    print(id);
-    return await db.update(
-      'tasks',
-      task,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
-
-  // Delete a task and its subtasks
-  Future<int> deleteTask(int id) async {
-    print("DELETE");
-    print(id);
-    final db = await database;
-    // First delete all subtasks
-    await db.delete(
-      'tasks',
-      where: 'parent_id = ?',
-      whereArgs: [id],
-    );
-    // Then delete the main task
-    return await db.delete(
-      'tasks',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
+  // Task Part End
 
   // Close the database
   Future<void> close() async {

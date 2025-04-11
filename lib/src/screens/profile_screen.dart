@@ -1,10 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
 import 'package:flutter_life_goal_management/src/services/auth_service.dart';
+import 'package:flutter_life_goal_management/src/services/task_service.dart';
+import 'package:flutter_life_goal_management/src/widgets/profile/ProfileMenuWidget.dart';
 import 'package:flutter_life_goal_management/src/widgets/profile_info_widget.dart';
-import '../models/task.dart';
-import '../services/database_helper.dart';
 import '../widgets/task/add_task_floating_button_widget.dart';
-import '../widgets/task/task_list_widget.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -13,30 +14,79 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
-  List<Task> _tasks = [];
-  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
-      GlobalKey<RefreshIndicatorState>();
+class _ProfileScreenState extends State<ProfileScreen>
+    with WidgetsBindingObserver {
+  int _inboxTaskCount = 0;
+  bool _isLoading = false;
+  StreamSubscription? _inboxCountSubscription;
+  StreamSubscription? _taskChangedSubscription;
 
   @override
   void initState() {
     super.initState();
-    _loadTasks();
+    WidgetsBinding.instance.addObserver(this);
+
+    // Listen for inbox count updates
+    _inboxCountSubscription = TaskBroadcast().inboxCountStream.listen((count) {
+      setState(() {
+        _inboxTaskCount = count;
+      });
+    });
+
+    // Listen for task changes
+    _taskChangedSubscription = TaskBroadcast().taskChangedStream.listen((_) {
+      _loadInboxTaskCount();
+    });
+
+    _loadInboxTaskCount();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _loadTasks();
+    _loadInboxTaskCount();
   }
 
-  Future<void> _loadTasks() async {
-    final tasks = await _databaseHelper.getAllTasks(
-        false, AuthService().getLoggedInUser()?.id);
+  @override
+  void dispose() {
+    _inboxCountSubscription?.cancel();
+    _taskChangedSubscription?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadInboxTaskCount();
+    }
+  }
+
+  Future<void> _loadInboxTaskCount() async {
+    if (_isLoading) return;
+
     setState(() {
-      _tasks = tasks.map((task) => Task.fromMap(task)).toList();
+      _isLoading = true;
     });
+
+    try {
+      final tasks = await TaskService()
+          .getInboxTasks(AuthService().getLoggedInUser()?.id ?? 0);
+      if (mounted) {
+        setState(() {
+          _inboxTaskCount = tasks.length;
+        });
+
+        // Update the broadcast with the latest count
+        TaskBroadcast().updateInboxCount(_inboxTaskCount);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -54,7 +104,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
       body: DefaultTabController(
-        length: 3,
+        length: 2,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -63,20 +113,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const TabBar(
               tabs: [
                 Tab(icon: Icon(Icons.show_chart)),
-                Tab(icon: Icon(Icons.task)),
+                Tab(icon: Icon(Icons.menu)),
               ],
             ),
             Expanded(
               child: TabBarView(
                 children: [
-                  Text("Dashboard"),
-                  RefreshIndicator(
-                    key: _refreshIndicatorKey,
-                    onRefresh: _loadTasks,
-                    child: TaskListWidget(
-                      tasks: _tasks,
-                      onRefresh: _loadTasks,
-                    ),
+                  const Center(child: Text("Dashboard")),
+                  ProfileMenuWidget(
+                    inboxTaskCount: _inboxTaskCount,
                   ),
                 ],
               ),
@@ -84,9 +129,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
       ),
-      floatingActionButton: AddTaskFloatingButtonWidget(
-        onRefresh: _loadTasks,
-      ),
+      floatingActionButton: const AddTaskFloatingButtonWidget(),
     );
   }
 }
