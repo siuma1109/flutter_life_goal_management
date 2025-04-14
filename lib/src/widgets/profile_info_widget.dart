@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 
 class ProfileInfoWidget extends StatefulWidget {
-  const ProfileInfoWidget({super.key});
+  final int taskCount;
+  const ProfileInfoWidget({super.key, required this.taskCount});
 
   @override
   State<ProfileInfoWidget> createState() => _ProfileInfoWidgetState();
@@ -40,21 +41,21 @@ class _ProfileInfoWidgetState extends State<ProfileInfoWidget> {
                     children: [
                       Column(
                         children: [
-                          Text('100'),
+                          Text(widget.taskCount.toString()),
                           Text('Tasks'),
                         ],
                       ),
                       SizedBox(width: 16),
                       Column(
                         children: [
-                          Text('100'),
+                          Text('0'),
                           Text('Followers'),
                         ],
                       ),
                       SizedBox(width: 16),
                       Column(
                         children: [
-                          Text('150'),
+                          Text('0'),
                           Text('Following'),
                         ],
                       ),

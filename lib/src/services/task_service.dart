@@ -131,6 +131,26 @@ class TaskService {
         where: whereClauses.join(' AND '), whereArgs: whereArgs);
   }
 
+  // Get task count
+  Future<int> getTaskCount(int userId) async {
+    final db = await _databaseHelper.database;
+    final result = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM tasks WHERE user_id = ? AND parent_id IS NULL',
+        [userId]);
+
+    return result.first['count'] as int;
+  }
+
+  // Get inbox task count
+  Future<int> getInboxTaskCount(int userId) async {
+    final db = await _databaseHelper.database;
+    final result = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM tasks WHERE user_id = ? AND project_id IS NULL AND parent_id IS NULL',
+        [userId]);
+
+    return result.first['count'] as int;
+  }
+
   // Get tasks by project_id
   Future<List<Map<String, dynamic>>> getTasksByProjectId(int projectId) async {
     final db = await _databaseHelper.database;

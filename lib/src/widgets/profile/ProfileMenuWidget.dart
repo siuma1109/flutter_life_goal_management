@@ -69,9 +69,7 @@ class _ProfileMenuWidgetState extends State<ProfileMenuWidget> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => InboxScreen(
-          inboxTaskCount: widget.inboxTaskCount,
-        ),
+        builder: (context) => InboxScreen(),
       ),
     );
   }

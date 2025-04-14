@@ -16,9 +16,9 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen>
     with WidgetsBindingObserver {
+  int _taskCount = 0;
   int _inboxTaskCount = 0;
   bool _isLoading = false;
-  StreamSubscription? _inboxCountSubscription;
   StreamSubscription? _taskChangedSubscription;
 
   @override
@@ -26,30 +26,22 @@ class _ProfileScreenState extends State<ProfileScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    // Listen for inbox count updates
-    _inboxCountSubscription = TaskBroadcast().inboxCountStream.listen((count) {
-      setState(() {
-        _inboxTaskCount = count;
-      });
-    });
-
     // Listen for task changes
     _taskChangedSubscription = TaskBroadcast().taskChangedStream.listen((_) {
-      _loadInboxTaskCount();
+      _loadTaskCount();
     });
 
-    _loadInboxTaskCount();
+    _loadTaskCount();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _loadInboxTaskCount();
+    _loadTaskCount();
   }
 
   @override
   void dispose() {
-    _inboxCountSubscription?.cancel();
     _taskChangedSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -58,11 +50,11 @@ class _ProfileScreenState extends State<ProfileScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _loadInboxTaskCount();
+      _loadTaskCount();
     }
   }
 
-  Future<void> _loadInboxTaskCount() async {
+  Future<void> _loadTaskCount() async {
     if (_isLoading) return;
 
     setState(() {
@@ -70,15 +62,15 @@ class _ProfileScreenState extends State<ProfileScreen>
     });
 
     try {
-      final tasks = await TaskService()
-          .getInboxTasks(AuthService().getLoggedInUser()?.id ?? 0);
+      final taskCount = await TaskService()
+          .getTaskCount(AuthService().getLoggedInUser()?.id ?? 0);
+      final inboxTaskCount = await TaskService()
+          .getInboxTaskCount(AuthService().getLoggedInUser()?.id ?? 0);
       if (mounted) {
         setState(() {
-          _inboxTaskCount = tasks.length;
+          _taskCount = taskCount;
+          _inboxTaskCount = inboxTaskCount;
         });
-
-        // Update the broadcast with the latest count
-        TaskBroadcast().updateInboxCount(_inboxTaskCount);
       }
     } finally {
       if (mounted) {
@@ -109,7 +101,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Profile Section
-            ProfileInfoWidget(),
+            ProfileInfoWidget(taskCount: _taskCount),
             const TabBar(
               tabs: [
                 Tab(icon: Icon(Icons.show_chart)),

@@ -8,8 +8,7 @@ import 'package:flutter_life_goal_management/src/widgets/task/add_task_floating_
 import 'package:flutter_life_goal_management/src/widgets/task/task_list_widget.dart';
 
 class InboxScreen extends StatefulWidget {
-  final int inboxTaskCount;
-  const InboxScreen({super.key, required this.inboxTaskCount});
+  const InboxScreen({super.key});
 
   @override
   State<InboxScreen> createState() => _InboxScreenState();
@@ -50,9 +49,6 @@ class _InboxScreenState extends State<InboxScreen> {
       setState(() {
         _tasks = tasks.map((task) => Task.fromMap(task)).toList();
       });
-
-      // Update broadcast with task count
-      TaskBroadcast().updateInboxCount(_tasks.length);
     } finally {
       setState(() {
         _isLoading = false;
