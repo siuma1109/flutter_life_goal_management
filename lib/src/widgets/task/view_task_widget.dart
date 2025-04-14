@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/add_task_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/task_date_picker_widget.dart';
-import 'package:flutter_life_goal_management/src/widgets/task/task_priority_selector_widget.dart';
 import '../../models/task.dart';
 import '../../services/task_service.dart';
 import 'package:intl/intl.dart';

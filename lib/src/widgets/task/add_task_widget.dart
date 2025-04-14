@@ -3,25 +3,23 @@ import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart'
 import 'package:flutter_life_goal_management/src/models/project.dart';
 import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/services/project_service.dart';
-import 'package:flutter_life_goal_management/src/widgets/task/task_priority_selector_widget.dart';
 import 'package:intl/intl.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../models/task.dart';
 import '../../services/task_service.dart';
 import '../../widgets/task/task_date_picker_widget.dart';
+import '../../widgets/task/add_task_ai_widget.dart';
 
 class AddTaskWidget extends StatefulWidget {
   final Task? task;
-  final List<Task>? subtasks;
-  final bool isAddSubTask;
+  final List<Task> subTasks;
+  final Function? onRefresh;
 
   const AddTaskWidget({
     super.key,
     this.task,
-    this.subtasks,
-    this.isAddSubTask = false,
+    this.subTasks = const [],
+    this.onRefresh,
   });
 
   @override
@@ -45,7 +43,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
   final FocusNode _taskFocusNode = FocusNode();
   final LayerLink _layerLink = LayerLink();
   bool _isLoading = false;
-  List<Task> _subtasks = [];
+  List<Task> _subTasks = [];
   List<Project> _projects = [];
   int? _projectId;
 
@@ -141,12 +139,6 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
     );
   }
 
-  void _removeSubtask(int index) {
-    setState(() {
-      _subtasks.removeAt(index);
-    });
-  }
-
   void _notifyChanges() {
     // Broadcast the change
     TaskBroadcast().notifyTasksChanged();
@@ -177,14 +169,24 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
           updatedAt: now,
         );
 
-        await TaskService().insertTask(task.toMap());
+        // Insert the main task and get its ID
+        final taskId = await TaskService().insertTask(task.toMap());
+
+        // Insert subtasks if there are any
+        if (_subTasks.isNotEmpty) {
+          for (var subtask in _subTasks) {
+            // Create a new task with the parent ID set
+            final newSubtask = subtask.copyWith(parentId: taskId);
+            await TaskService().insertTask(newSubtask.toMap());
+          }
+        }
 
         if (mounted) {
           _notifyChanges();
           Navigator.of(context).pop(true);
 
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Task Created Successfully')),
+            const SnackBar(content: Text('Task Created Successfully')),
           );
         }
       } catch (e) {
@@ -245,6 +247,12 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                       children: [
                         ElevatedButton(
                           onPressed: () => _showDatePicker(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -284,12 +292,6 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                                 ),
                             ],
                           ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
                         ),
                         SizedBox(width: 10),
                         ElevatedButton(
@@ -299,6 +301,12 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                               _priority = priority;
                             });
                           }),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
                           child: Row(
                             children: [
                               Icon(
@@ -316,18 +324,14 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                               ),
                             ],
                           ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
                         ),
                       ],
                     ),
                     SizedBox(
                       height: 8,
                     ),
+                    // Subtasks section
+                    if (_subTasks.isNotEmpty) _buildSubtasksSection(),
                     Divider(),
                     Padding(
                       padding: EdgeInsets.only(left: 18, right: 18),
@@ -409,90 +413,139 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
     );
   }
 
-  void _showAIPopup(BuildContext context) {
-    final TextEditingController aiInputController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('AI Task Suggestion'),
-          content: TextField(
-            controller: aiInputController,
-            decoration: const InputDecoration(hintText: 'Enter your goal...'),
+  Widget _buildTaskRow({required Widget icon, required Widget content}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 48,
+            height: 50,
+            child: icon,
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _fetchAIDetails(aiInputController.text);
-              },
-              child: const Text('Submit'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-          ],
-        );
-      },
+          Expanded(child: content),
+        ],
+      ),
     );
   }
 
-  Future<void> _fetchAIDetails(String goal) async {
-    setState(() {
-      _isLoading = true;
-    });
+  Widget _buildSubtasksSection() {
+    final completeSubTasks = _subTasks.where((task) => task.isChecked).length;
+    return Column(
+      children: [
+        _buildTaskRow(
+          icon: const Icon(Icons.list),
+          content: Text(
+            "Sub Tasks ($completeSubTasks/${_subTasks.length})",
+            style: const TextStyle(fontSize: 16),
+          ),
+        ),
+        ListView.builder(
+          shrinkWrap: true,
+          itemCount: _subTasks.length,
+          physics: const NeverScrollableScrollPhysics(),
+          itemBuilder: (context, index) {
+            final task = _subTasks[index];
+            return Container(
+              decoration: BoxDecoration(
+                border: index < _subTasks.length - 1
+                    ? Border(
+                        bottom: BorderSide(
+                          color: Colors.black12,
+                          width: 1.0,
+                        ),
+                      )
+                    : null,
+              ),
+              child: GestureDetector(
+                onTap: () => TaskService().showTaskEditForm(context, task),
+                child: ListTile(
+                  leading: Transform.scale(
+                    scale: 1.2,
+                    child: Checkbox(
+                      value: task.isChecked,
+                      side: BorderSide(
+                        color: TaskService().getPriorityColor(task.priority),
+                        width: 2.0,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(50),
+                        side: BorderSide(
+                          color: TaskService().getPriorityColor(task.priority),
+                          width: 2.0,
+                        ),
+                      ),
+                      activeColor:
+                          TaskService().getPriorityColor(task.priority),
+                      onChanged: (bool? newValue) {
+                        task.isChecked = !task.isChecked;
+                        setState(() {
+                          _subTasks[index] = task;
+                          TaskService().updateTask(task.toMap());
+                        });
+                      },
+                    ),
+                  ),
+                  title: Text(task.title),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (task.description != null && task.description != '')
+                        Text(task.description!),
+                      if (task.dueDate != null)
+                        Text('Due: ${task.dueDate!.toString().split(' ')[0]}'),
+                      Text('Priority: ${task.priority}'),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
 
-    try {
-      final API_KEY = dotenv.env['DIFY_API_KEY'];
+  void _showAIPopup(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return AddTaskAIWidget(
+          onAccept: (String taskName, String description,
+              List<Map<String, dynamic>> subTasks) {
+            setState(() {
+              _taskController.text = taskName;
+              _descriptionController.text = description;
 
-      final response = await http.post(
-        Uri.parse('https://api.dify.ai/v1/chat-messages'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $API_KEY'
-        },
-        body: json.encode({
-          'query': goal,
-          'user': 1,
-          'inputs': {'goal': goal}
-        }),
-      );
+              // Clear existing subtasks
+              _subTasks.clear();
 
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
+              // Add new subtasks
+              final now = DateTime.now();
+              for (Map<String, dynamic> subTask in subTasks) {
+                final subtask = Task(
+                  id: null,
+                  parentId: null, // Will be set when the parent task is created
+                  userId: AuthService().getLoggedInUser()?.id ?? 0,
+                  projectId: _projectId,
+                  title: subTask['task_name'],
+                  description: subTask['description'],
+                  priority: _priority,
+                  dueDate: _dueDate,
+                  createdAt: now,
+                  updatedAt: now,
+                );
+                _subTasks.add(subtask);
+              }
+            });
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final answer = data['answer'];
-
-        final cleanedAnswer =
-            answer.replaceAll(RegExp(r'```json|```'), '').trim();
-
-        final answerData = json.decode(cleanedAnswer);
-
-        setState(() {
-          _taskController.text = answerData['task_name'] ?? '';
-          _descriptionController.text = answerData['description'] ?? '';
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('AI suggestions fetched successfully')),
+            // Show a success message
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('AI suggestions applied')),
+            );
+          },
         );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to fetch AI suggestions')),
-        );
-      }
-    } catch (e) {
-      print('Error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occurred')),
-      );
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+      },
+    );
   }
 }

@@ -79,7 +79,7 @@ class _ProfileInfoWidgetState extends State<ProfileInfoWidget> {
                     borderRadius: BorderRadius.circular(8.0),
                   ),
                 ),
-                child: Text('Edit Profile'),
+                child: Text('Edit Profile (TODO)'),
               ),
             ],
           ),

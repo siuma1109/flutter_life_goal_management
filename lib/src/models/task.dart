@@ -8,8 +8,8 @@ class Task {
   bool isChecked;
   final int userId;
   final int? projectId;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   Task({
     this.id,
@@ -19,10 +19,10 @@ class Task {
     required this.title,
     this.description,
     this.dueDate,
-    required this.priority,
+    this.priority = 4,
     this.isChecked = false,
-    required this.createdAt,
-    required this.updatedAt,
+    this.createdAt,
+    this.updatedAt,
   });
 
   Map<String, dynamic> toMap() {
@@ -36,8 +36,8 @@ class Task {
       'due_date': dueDate?.toIso8601String(),
       'priority': priority,
       'is_checked': isChecked,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
+      'created_at': createdAt?.toIso8601String(),
+      'updated_at': updatedAt?.toIso8601String(),
     };
   }
 
@@ -52,8 +52,10 @@ class Task {
       dueDate: map['due_date'] != null ? DateTime.parse(map['due_date']) : null,
       priority: map['priority'],
       isChecked: map['is_checked'] == 1 ? true : false,
-      createdAt: DateTime.parse(map['created_at']),
-      updatedAt: DateTime.parse(map['updated_at']),
+      createdAt:
+          map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
+      updatedAt:
+          map['updated_at'] != null ? DateTime.parse(map['updated_at']) : null,
     );
   }
 
