@@ -22,25 +22,16 @@ class _AddTaskFloatingButtonWidgetState
           backgroundColor: Colors.transparent,
           useRootNavigator: true,
           builder: (BuildContext context) {
-            return DraggableScrollableSheet(
-              initialChildSize: 0.3,
-              minChildSize: 0.25,
-              maxChildSize: 0.95,
-              expand: false,
-              builder: (context, scrollController) {
-                return Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).scaffoldBackgroundColor,
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(20),
-                    ),
-                  ),
-                  child: SingleChildScrollView(
-                    controller: scrollController,
-                    child: const AddTaskWidget(),
-                  ),
-                );
-              },
+            return Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
+              ),
+              child: SingleChildScrollView(
+                child: const AddTaskWidget(),
+              ),
             );
           },
         );
