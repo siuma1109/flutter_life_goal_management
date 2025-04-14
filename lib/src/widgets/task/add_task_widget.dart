@@ -15,14 +15,12 @@ class AddTaskWidget extends StatefulWidget {
   final Task? task;
   final List<Task>? subtasks;
   final bool isAddSubTask;
-  final VoidCallback? onRefresh;
 
   const AddTaskWidget({
     super.key,
     this.task,
     this.subtasks,
     this.isAddSubTask = false,
-    this.onRefresh,
   });
 
   @override
@@ -149,9 +147,6 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
   }
 
   void _notifyChanges() {
-    // Call onRefresh for backward compatibility
-    widget.onRefresh?.call();
-
     // Broadcast the change
     TaskBroadcast().notifyTasksChanged();
 

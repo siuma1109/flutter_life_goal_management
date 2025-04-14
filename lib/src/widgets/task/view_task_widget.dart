@@ -1,20 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/add_task_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/task_date_picker_widget.dart';
 import '../../models/task.dart';
-import '../../services/database_helper.dart';
 import '../../services/task_service.dart';
 import 'package:intl/intl.dart';
 
 class ViewTaskWidget extends StatefulWidget {
   final Task task;
-  final VoidCallback? onRefresh; // Keep for backward compatibility
 
   const ViewTaskWidget({
     super.key,
     required this.task,
-    this.onRefresh,
   });
 
   @override
@@ -22,7 +21,6 @@ class ViewTaskWidget extends StatefulWidget {
 }
 
 class _ViewTaskWidgetState extends State<ViewTaskWidget> {
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
   List<Task> _subTasks = [];
@@ -30,6 +28,7 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
   int _priority = 4; // Default priority
   final _dateFormat = DateFormat('yyyy-MM-dd');
   bool _isLoading = false; // Loading state
+  StreamSubscription<void>? _taskChangedSubscription;
 
   @override
   void initState() {
@@ -40,6 +39,10 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
     _dueDate = widget.task.dueDate;
     _priority = widget.task.priority;
     _loadSubTasksById();
+    // Listen for task changes
+    _taskChangedSubscription = TaskBroadcast().taskChangedStream.listen((_) {
+      _loadSubTasksById();
+    });
   }
 
   @override
@@ -47,14 +50,7 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
     _titleController.dispose();
     _descriptionController.dispose();
     super.dispose();
-  }
-
-  void _notifyChanges() {
-    // Call onRefresh for backward compatibility
-    widget.onRefresh?.call();
-
-    // Broadcast the change
-    TaskBroadcast().notifyTasksChanged();
+    _taskChangedSubscription?.cancel();
   }
 
   void _updateTask() async {
@@ -77,7 +73,6 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
     );
 
     await TaskService().updateTask(updatedTask.toMap());
-    _notifyChanges();
   }
 
   void _showDatePicker(BuildContext context) {
@@ -311,10 +306,7 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
                     : null,
               ),
               child: GestureDetector(
-                onTap: () => TaskService().showTaskEditForm(context, task, () {
-                  _loadSubTasksById();
-                  _notifyChanges();
-                }),
+                onTap: () => TaskService().showTaskEditForm(context, task),
                 child: ListTile(
                   leading: Transform.scale(
                     scale: 1.2,
@@ -338,7 +330,6 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
                         setState(() {
                           _subTasks[index] = task;
                           TaskService().updateTask(task.toMap());
-                          _notifyChanges();
                         });
                       },
                     ),
@@ -378,10 +369,6 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
               ),
               child: AddTaskWidget(
                 task: widget.task,
-                onRefresh: () {
-                  _loadSubTasksById();
-                  _notifyChanges();
-                },
               ),
             );
           },
@@ -471,7 +458,6 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
               onPressed: () async {
                 if (widget.task.id != null) {
                   await TaskService().deleteTask(widget.task.id!);
-                  _notifyChanges();
                   Navigator.of(dialogContext).pop(); // Close the dialog
                   Navigator.of(context).pop(); // Close the view task widget
                 }

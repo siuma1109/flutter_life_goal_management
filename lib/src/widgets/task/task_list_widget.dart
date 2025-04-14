@@ -2,16 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
 import '../../models/task.dart';
 import '../../services/task_service.dart';
-import '../../services/database_helper.dart';
 
 class TaskListWidget extends StatefulWidget {
   final List<Task> tasks;
-  final Function? onRefresh; // Make it optional
 
   const TaskListWidget({
     super.key,
     required this.tasks,
-    this.onRefresh,
   });
 
   @override
@@ -19,13 +16,9 @@ class TaskListWidget extends StatefulWidget {
 }
 
 class _TaskListWidgetState extends State<TaskListWidget> {
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
   final TaskService _taskService = TaskService();
 
   void _refreshTasks() {
-    // Use the callback if provided (for backward compatibility)
-    widget.onRefresh?.call();
-
     // Broadcast the change
     TaskBroadcast().notifyTasksChanged();
   }
@@ -59,7 +52,7 @@ class _TaskListWidgetState extends State<TaskListWidget> {
                 ),
                 child: GestureDetector(
                   onTap: () async {
-                    _taskService.showTaskEditForm(context, task, _refreshTasks);
+                    _taskService.showTaskEditForm(context, task);
                   },
                   child: ListTile(
                     leading: Transform.scale(

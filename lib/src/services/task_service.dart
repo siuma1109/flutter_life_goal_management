@@ -22,8 +22,7 @@ class TaskService {
     }
   }
 
-  void showTaskEditForm(
-      BuildContext context, Task task, VoidCallback? onRefresh) {
+  void showTaskEditForm(BuildContext context, Task task) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -59,7 +58,6 @@ class TaskService {
                         padding: const EdgeInsets.symmetric(horizontal: 16.0),
                         child: ViewTaskWidget(
                           task: task,
-                          onRefresh: onRefresh,
                         ),
                       ),
                     ),
