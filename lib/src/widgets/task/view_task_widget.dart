@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/add_task_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/task_date_picker_widget.dart';
+import 'package:flutter_life_goal_management/src/widgets/task/task_priority_selector_widget.dart';
 import '../../models/task.dart';
 import '../../services/task_service.dart';
 import 'package:intl/intl.dart';
@@ -250,7 +251,13 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
             color: TaskService().getPriorityColor(_priority),
           ),
           content: InkWell(
-            onTap: () => _showPriorityDialog(context),
+            onTap: () =>
+                TaskService().showPriorityPopUp(context, _priority, (priority) {
+              setState(() {
+                _priority = priority;
+              });
+              _updateTask();
+            }),
             child: Text(
               'Priority $_priority',
               style: const TextStyle(fontSize: 16),
@@ -406,40 +413,6 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
     setState(() {
       _subTasks = tasks.map((task) => Task.fromMap(task)).toList();
     });
-  }
-
-  void _showPriorityDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Select Priority'),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: List.generate(4, (index) {
-                final priority = index + 1;
-                return ListTile(
-                  title: Text('P$priority'),
-                  onTap: () {
-                    setState(() {
-                      _priority = priority;
-                    });
-                    _updateTask();
-                    Navigator.of(context).pop();
-                  },
-                );
-              }),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   void _showDeleteConfirmationDialog(BuildContext context) {

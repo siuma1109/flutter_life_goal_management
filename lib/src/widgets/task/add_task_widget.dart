@@ -3,6 +3,7 @@ import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart'
 import 'package:flutter_life_goal_management/src/models/project.dart';
 import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/services/project_service.dart';
+import 'package:flutter_life_goal_management/src/widgets/task/task_priority_selector_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -292,7 +293,12 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                         ),
                         SizedBox(width: 10),
                         ElevatedButton(
-                          onPressed: () => _showPriorityDialog(context),
+                          onPressed: () => TaskService().showPriorityPopUp(
+                              context, _priority, (priority) {
+                            setState(() {
+                              _priority = priority;
+                            });
+                          }),
                           child: Row(
                             children: [
                               Icon(
@@ -400,38 +406,6 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                 ),
               ),
             ),
-    );
-  }
-
-  void _showPriorityDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Select Priority'),
-          content: SingleChildScrollView(
-            child: ListBody(
-                children: List.generate(4, (index) {
-              final priority = index + 1;
-              return ListTile(
-                title: Text('P$priority'),
-                onTap: () {
-                  setState(() {
-                    _priority = priority;
-                  });
-                  Navigator.of(context).pop();
-                },
-              );
-            })),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-          ],
-        );
-      },
     );
   }
 

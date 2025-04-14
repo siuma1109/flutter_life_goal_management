@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
 import 'package:flutter_life_goal_management/src/services/database_helper.dart';
+import 'package:flutter_life_goal_management/src/widgets/task/task_priority_selector_widget.dart';
 import '../models/task.dart';
 import '../widgets/task/view_task_widget.dart';
 
@@ -66,6 +67,19 @@ class TaskService {
               ),
             );
           },
+        );
+      },
+    );
+  }
+
+  void showPriorityPopUp(
+      BuildContext context, int priority, Function(int) onPriorityChanged) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return TaskPrioritySelectorWidget(
+          priority: priority,
+          onPriorityChanged: onPriorityChanged,
         );
       },
     );
