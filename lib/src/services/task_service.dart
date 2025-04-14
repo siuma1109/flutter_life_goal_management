@@ -108,7 +108,8 @@ class TaskService {
   Future<List<Map<String, dynamic>>> getInboxTasks(int userId) async {
     final db = await _databaseHelper.database;
     return await db.query('tasks',
-        where: 'user_id = ? AND project_id IS NULL', whereArgs: [userId]);
+        where: 'user_id = ? AND project_id IS NULL AND parent_id IS NULL',
+        whereArgs: [userId]);
   }
 
   // Get all tasks (including subtasks)
