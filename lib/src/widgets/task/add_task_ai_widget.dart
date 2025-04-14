@@ -22,6 +22,15 @@ class _AddTaskAIWidgetState extends State<AddTaskAIWidget> {
   bool _isLoading = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Request focus on the goal prompt text field when the widget is opened
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FocusScope.of(context).requestFocus(_goalPromptFocusNode);
+    });
+  }
+
+  @override
   void dispose() {
     _goalPrompt.dispose();
     _goalPromptFocusNode.dispose();
