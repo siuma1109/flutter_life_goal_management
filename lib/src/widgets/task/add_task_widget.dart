@@ -3,6 +3,8 @@ import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart'
 import 'package:flutter_life_goal_management/src/models/project.dart';
 import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/services/project_service.dart';
+import 'package:flutter_life_goal_management/src/widgets/task/add_sub_task_widget.dart';
+import 'package:flutter_life_goal_management/src/widgets/task/sub_tasks_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../models/task.dart';
@@ -12,13 +14,13 @@ import '../../widgets/task/add_task_ai_widget.dart';
 
 class AddTaskWidget extends StatefulWidget {
   final Task? task;
-  final List<Task> subTasks;
+  final bool isSubTask;
   final Function? onRefresh;
 
   const AddTaskWidget({
     super.key,
     this.task,
-    this.subTasks = const [],
+    this.isSubTask = false,
     this.onRefresh,
   });
 
@@ -36,15 +38,13 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
   final _timeFormat = DateFormat('hh:mm a');
   DateTime? _dueDate;
   TimeOfDay? _dueTime;
-  DateTime? _suggestedDate;
   int _priority = 4; // 4 is lowest priority, 1 is highest
   OverlayEntry? _overlayEntry;
   final FocusNode _dateInputFocusNode = FocusNode();
   final FocusNode _taskFocusNode = FocusNode();
-  final LayerLink _layerLink = LayerLink();
   bool _isLoading = false;
-  List<Task> _subTasks = [];
-  List<Project> _projects = [];
+  late Task _task;
+  late List<Project> _projects;
   int? _projectId;
 
   @override
@@ -54,6 +54,15 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
     _taskFocusNode.requestFocus();
     dotenv.load();
     _loadProjects();
+    _task = widget.task ??
+        Task(
+          id: null,
+          parentId: widget.task?.id,
+          userId: AuthService().getLoggedInUser()?.id ?? 0,
+          projectId: widget.task?.projectId ?? null,
+          title: "",
+          subTasks: [],
+        );
   }
 
   @override
@@ -98,18 +107,12 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
       ),
       builder: (BuildContext context) {
         return TaskDatePickerWidget(
-          task: widget.task ??
-              Task(
-                id: null,
-                parentId: null,
-                userId: AuthService().getLoggedInUser()?.id ?? 0,
-                projectId: widget.task?.projectId ?? null,
-                title: "",
-                priority: _priority,
-                dueDate: _dueDate,
-                createdAt: DateTime.now(),
-                updatedAt: DateTime.now(),
-              ),
+          task: _task.copyWith(
+            priority: _priority,
+            dueDate: _dueDate,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
           onDateSelected: (date) {
             setState(() {
               _dueDate = date;
@@ -156,38 +159,39 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
       });
 
       try {
-        final now = DateTime.now();
         final task = Task(
-          parentId: widget.task?.id,
+          parentId: _task.id,
           userId: AuthService().getLoggedInUser()?.id ?? 0,
           projectId: _projectId,
           title: _taskController.text,
           description: _descriptionController.text,
           dueDate: _dueDate,
           priority: _priority,
-          createdAt: widget.task?.createdAt ?? now,
-          updatedAt: now,
+          subTasks: [],
         );
 
-        // Insert the main task and get its ID
-        final taskId = await TaskService().insertTask(task.toMap());
+        if (_task.id != null || !widget.isSubTask) {
+          // Insert the main task and get its ID
+          final taskId = await TaskService().insertTask(task.toMap());
 
-        // Insert subtasks if there are any
-        if (_subTasks.isNotEmpty) {
-          for (var subtask in _subTasks) {
-            // Create a new task with the parent ID set
-            final newSubtask = subtask.copyWith(parentId: taskId);
-            await TaskService().insertTask(newSubtask.toMap());
+          // Insert subtasks recursively if there are any
+          if (_task.subTasks.isNotEmpty) {
+            await _insertSubTasksRecursively(_task.subTasks, taskId);
           }
+        } else {
+          widget.onRefresh?.call(task);
         }
 
         if (mounted) {
-          _notifyChanges();
+          if (_task.id != null || !widget.isSubTask) {
+            _notifyChanges();
+          }
           Navigator.of(context).pop(true);
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Task Created Successfully')),
-          );
+          if (_task.id != null || !widget.isSubTask) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Task Created Successfully')),
+            );
+          }
         }
       } catch (e) {
         if (mounted) {
@@ -199,6 +203,20 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
         setState(() {
           _isLoading = false;
         });
+      }
+    }
+  }
+
+  Future<void> _insertSubTasksRecursively(
+      List<Task> subTasks, int parentId) async {
+    for (var subTask in subTasks) {
+      // Create a new task with the parent ID set
+      final newSubtask = subTask.copyWith(parentId: parentId);
+      final newId = await TaskService().insertTask(newSubtask.toMap());
+
+      // Recursively insert nested subtasks if they exist
+      if (subTask.subTasks.isNotEmpty) {
+        await _insertSubTasksRecursively(subTask.subTasks, newId);
       }
     }
   }
@@ -331,7 +349,17 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                       height: 8,
                     ),
                     // Subtasks section
-                    if (_subTasks.isNotEmpty) _buildSubtasksSection(),
+
+                    SubTasksWidget(
+                      task: _task,
+                    ),
+                    AddSubTaskWidget(
+                        task: _task,
+                        onRefresh: (returnTask) {
+                          setState(() {
+                            _task.subTasks.add(returnTask);
+                          });
+                        }),
                     Divider(),
                     Padding(
                       padding: EdgeInsets.only(left: 18, right: 18),
@@ -340,26 +368,27 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                         children: [
                           Row(
                             children: [
-                              DropdownButton(
-                                  items: [
-                                    DropdownMenuItem(
-                                      value: null,
-                                      child: Text('Inbox'),
-                                    ),
-                                    ...List.generate(
-                                      _projects.length,
-                                      (index) => DropdownMenuItem(
-                                        value: _projects[index].id,
-                                        child: Text(_projects[index].name),
+                              if (!widget.isSubTask)
+                                DropdownButton(
+                                    items: [
+                                      DropdownMenuItem(
+                                        value: null,
+                                        child: Text('Inbox'),
                                       ),
-                                    ),
-                                  ],
-                                  value: _projectId ?? widget.task?.projectId,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _projectId = value;
-                                    });
-                                  }),
+                                      ...List.generate(
+                                        _projects.length,
+                                        (index) => DropdownMenuItem(
+                                          value: _projects[index].id,
+                                          child: Text(_projects[index].name),
+                                        ),
+                                      ),
+                                    ],
+                                    value: _projectId ?? _task.projectId,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _projectId = value;
+                                      });
+                                    }),
                             ],
                           ),
                           Row(
@@ -413,99 +442,6 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
     );
   }
 
-  Widget _buildTaskRow({required Widget icon, required Widget content}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 48,
-            height: 50,
-            child: icon,
-          ),
-          Expanded(child: content),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSubtasksSection() {
-    final completeSubTasks = _subTasks.where((task) => task.isChecked).length;
-    return Column(
-      children: [
-        _buildTaskRow(
-          icon: const Icon(Icons.list),
-          content: Text(
-            "Sub Tasks ($completeSubTasks/${_subTasks.length})",
-            style: const TextStyle(fontSize: 16),
-          ),
-        ),
-        ListView.builder(
-          shrinkWrap: true,
-          itemCount: _subTasks.length,
-          physics: const NeverScrollableScrollPhysics(),
-          itemBuilder: (context, index) {
-            final task = _subTasks[index];
-            return Container(
-              decoration: BoxDecoration(
-                border: index < _subTasks.length - 1
-                    ? Border(
-                        bottom: BorderSide(
-                          color: Colors.black12,
-                          width: 1.0,
-                        ),
-                      )
-                    : null,
-              ),
-              child: GestureDetector(
-                onTap: () => TaskService().showTaskEditForm(context, task),
-                child: ListTile(
-                  leading: Transform.scale(
-                    scale: 1.2,
-                    child: Checkbox(
-                      value: task.isChecked,
-                      side: BorderSide(
-                        color: TaskService().getPriorityColor(task.priority),
-                        width: 2.0,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(50),
-                        side: BorderSide(
-                          color: TaskService().getPriorityColor(task.priority),
-                          width: 2.0,
-                        ),
-                      ),
-                      activeColor:
-                          TaskService().getPriorityColor(task.priority),
-                      onChanged: (bool? newValue) {
-                        task.isChecked = !task.isChecked;
-                        setState(() {
-                          _subTasks[index] = task;
-                          TaskService().updateTask(task.toMap());
-                        });
-                      },
-                    ),
-                  ),
-                  title: Text(task.title),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (task.description != null && task.description != '')
-                        Text(task.description!),
-                      if (task.dueDate != null)
-                        Text('Due: ${task.dueDate!.toString().split(' ')[0]}'),
-                      Text('Priority: ${task.priority}'),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
   void _showAIPopup(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -518,7 +454,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
               _descriptionController.text = description;
 
               // Clear existing subtasks
-              _subTasks.clear();
+              _task.subTasks.clear();
 
               // Add new subtasks
               final now = DateTime.now();
@@ -534,8 +470,9 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                   dueDate: _dueDate,
                   createdAt: now,
                   updatedAt: now,
+                  subTasks: [],
                 );
-                _subTasks.add(subtask);
+                _task.subTasks.add(subtask);
               }
             });
 

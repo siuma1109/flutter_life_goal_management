@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
 import '../../models/task.dart';
 import '../../services/task_service.dart';
 
@@ -17,15 +16,17 @@ class TaskListWidget extends StatefulWidget {
 
 class _TaskListWidgetState extends State<TaskListWidget> {
   final TaskService _taskService = TaskService();
+  late List<Task> _tasks;
 
-  void _refreshTasks() {
-    // Broadcast the change
-    TaskBroadcast().notifyTasksChanged();
+  @override
+  void initState() {
+    super.initState();
+    _tasks = widget.tasks;
   }
 
   @override
   Widget build(BuildContext context) {
-    return widget.tasks.isEmpty
+    return _tasks.isEmpty
         ? ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             children: const [
@@ -36,12 +37,12 @@ class _TaskListWidgetState extends State<TaskListWidget> {
             ],
           )
         : ListView.builder(
-            itemCount: widget.tasks.length,
+            itemCount: _tasks.length,
             itemBuilder: (context, index) {
-              final task = widget.tasks[index];
+              final _task = _tasks[index];
               return Container(
                 decoration: BoxDecoration(
-                  border: index < widget.tasks.length - 1
+                  border: index < _tasks.length - 1
                       ? Border(
                           bottom: BorderSide(
                             color: Colors.black12,
@@ -52,44 +53,49 @@ class _TaskListWidgetState extends State<TaskListWidget> {
                 ),
                 child: GestureDetector(
                   onTap: () async {
-                    _taskService.showTaskEditForm(context, task);
+                    _taskService.showTaskEditForm(context, _task, false,
+                        (task) {
+                      setState(() {
+                        _tasks[index] = task;
+                      });
+                    });
                   },
                   child: ListTile(
                     leading: Transform.scale(
                       scale: 1.2,
                       child: Checkbox(
-                        value: task.isChecked,
+                        value: _task.isChecked,
                         side: BorderSide(
-                          color: _taskService.getPriorityColor(task.priority),
+                          color: _taskService.getPriorityColor(_task.priority),
                           width: 2.0,
                         ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(50),
                           side: BorderSide(
-                            color: _taskService.getPriorityColor(task.priority),
+                            color:
+                                _taskService.getPriorityColor(_task.priority),
                             width: 2.0,
                           ),
                         ),
                         activeColor:
-                            _taskService.getPriorityColor(task.priority),
+                            _taskService.getPriorityColor(_task.priority),
                         onChanged: (bool? newValue) {
                           setState(() {
-                            task.isChecked = !task.isChecked;
-                            _taskService.updateTask(task.toMap());
-                            _refreshTasks();
+                            _task.isChecked = !_task.isChecked;
+                            _taskService.updateTask(_task.toMap());
                           });
                         },
                       ),
                     ),
-                    title: Text(task.title),
-                    subtitle: (task.description != null &&
-                            task.description != '')
+                    title: Text(_task.title),
+                    subtitle: (_task.description != null &&
+                            _task.description != '')
                         ? Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(task.description!),
-                              if (task.dueDate != null)
-                                Text(task.dueDate!.toString().split(' ')[0]),
+                              Text(_task.description!),
+                              if (_task.dueDate != null)
+                                Text(_task.dueDate!.toString().split(' ')[0]),
                             ],
                           )
                         : null,

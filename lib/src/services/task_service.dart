@@ -23,7 +23,8 @@ class TaskService {
     }
   }
 
-  void showTaskEditForm(BuildContext context, Task task) {
+  void showTaskEditForm(BuildContext context, Task task, bool isSubTask,
+      Function(Task)? onRefresh) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -54,6 +55,8 @@ class TaskService {
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: ViewTaskWidget(
                         task: task,
+                        isSubTask: isSubTask,
+                        onRefresh: onRefresh,
                       ),
                     ),
                   ),
@@ -85,8 +88,11 @@ class TaskService {
   // Insert a task
   Future<int> insertTask(Map<String, dynamic> task) async {
     final db = await _databaseHelper.database;
+    task.remove("id");
+    task.remove("sub_tasks");
+    task.remove("created_at");
+    task.remove("updated_at");
     final result = await db.insert('tasks', task);
-
     // Broadcast task changes
     TaskBroadcast().notifyTasksChanged();
 
@@ -179,6 +185,8 @@ class TaskService {
     final db = await _databaseHelper.database;
     final id = task['id'];
     task.remove("id");
+    task.remove("sub_tasks");
+    task.remove("created_at");
 
     final result = await db.update(
       'tasks',

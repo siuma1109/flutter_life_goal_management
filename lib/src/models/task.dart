@@ -10,6 +10,7 @@ class Task {
   final int? projectId;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  List<Task> subTasks = [];
 
   Task({
     this.id,
@@ -23,6 +24,7 @@ class Task {
     this.isChecked = false,
     this.createdAt,
     this.updatedAt,
+    this.subTasks = const [],
   });
 
   Map<String, dynamic> toMap() {
@@ -36,8 +38,9 @@ class Task {
       'due_date': dueDate?.toIso8601String(),
       'priority': priority,
       'is_checked': isChecked,
-      'created_at': createdAt?.toIso8601String(),
+      'created_at': createdAt,
       'updated_at': updatedAt?.toIso8601String(),
+      'sub_tasks': subTasks,
     };
   }
 
@@ -56,6 +59,9 @@ class Task {
           map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
       updatedAt:
           map['updated_at'] != null ? DateTime.parse(map['updated_at']) : null,
+      subTasks: map['sub_tasks'] != null
+          ? map['sub_tasks'].map((task) => Task.fromMap(task)).toList()
+          : [],
     );
   }
 
@@ -84,6 +90,7 @@ class Task {
       isChecked: isChecked ?? this.isChecked,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      subTasks: subTasks ?? this.subTasks,
     );
   }
 }
