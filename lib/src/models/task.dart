@@ -10,6 +10,7 @@ class Task {
   final int? projectId;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  List<Task> subTasks;
 
   Task({
     this.id,
@@ -23,7 +24,8 @@ class Task {
     this.isChecked = false,
     this.createdAt,
     this.updatedAt,
-  });
+    List<Task>? subTasks,
+  }) : subTasks = subTasks ?? [];
 
   Map<String, dynamic> toMap() {
     return {
@@ -71,6 +73,7 @@ class Task {
     bool? isChecked,
     DateTime? createdAt,
     DateTime? updatedAt,
+    List<Task>? subTasks,
   }) {
     return Task(
       id: id ?? this.id,
@@ -84,6 +87,7 @@ class Task {
       isChecked: isChecked ?? this.isChecked,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      subTasks: subTasks ?? this.subTasks,
     );
   }
 }

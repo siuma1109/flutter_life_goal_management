@@ -52,7 +52,11 @@ class _TaskListWidgetState extends State<TaskListWidget> {
                 ),
                 child: GestureDetector(
                   onTap: () async {
-                    _taskService.showTaskEditForm(context, task);
+                    _taskService.showTaskEditForm(context, task, (subTask) {
+                      setState(() {
+                        widget.tasks[index] = subTask;
+                      });
+                    });
                   },
                   child: ListTile(
                     leading: Transform.scale(

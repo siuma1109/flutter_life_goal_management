@@ -12,13 +12,13 @@ import '../../widgets/task/add_task_ai_widget.dart';
 
 class AddTaskWidget extends StatefulWidget {
   final Task? task;
-  final List<Task> subTasks;
+  final bool isParentTask;
   final Function? onRefresh;
 
   const AddTaskWidget({
     super.key,
     this.task,
-    this.subTasks = const [],
+    this.isParentTask = true,
     this.onRefresh,
   });
 
@@ -43,7 +43,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
   final FocusNode _taskFocusNode = FocusNode();
   final LayerLink _layerLink = LayerLink();
   bool _isLoading = false;
-  List<Task> _subTasks = [];
+  late Task _task;
   List<Project> _projects = [];
   int? _projectId;
 
@@ -53,6 +53,11 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
     _dateInputFocusNode.addListener(_onFocusChange);
     _taskFocusNode.requestFocus();
     dotenv.load();
+    _task = widget.task ??
+        Task(
+          userId: AuthService().getLoggedInUser()?.id ?? 0,
+          title: "",
+        );
     _loadProjects();
   }
 
@@ -157,7 +162,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
 
       try {
         final now = DateTime.now();
-        final task = Task(
+        final task = _task.copyWith(
           parentId: widget.task?.id,
           userId: AuthService().getLoggedInUser()?.id ?? 0,
           projectId: _projectId,
@@ -168,21 +173,18 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
           createdAt: widget.task?.createdAt ?? now,
           updatedAt: now,
         );
+        widget.onRefresh?.call(task);
 
-        // Insert the main task and get its ID
-        final taskId = await TaskService().insertTask(task.toMap());
+        if (widget.isParentTask) {
+          // Insert the main task and get its ID
+          final taskId = await TaskService().insertTask(task.toMap());
 
-        // Insert subtasks if there are any
-        if (_subTasks.isNotEmpty) {
-          for (var subtask in _subTasks) {
-            // Create a new task with the parent ID set
-            final newSubtask = subtask.copyWith(parentId: taskId);
-            await TaskService().insertTask(newSubtask.toMap());
-          }
+          // Insert subtasks recursively
+          await _insertSubtasks(task.subTasks, taskId);
+          _notifyChanges();
         }
 
         if (mounted) {
-          _notifyChanges();
           Navigator.of(context).pop(true);
 
           ScaffoldMessenger.of(context).showSnackBar(
@@ -199,6 +201,20 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
         setState(() {
           _isLoading = false;
         });
+      }
+    }
+  }
+
+  Future<void> _insertSubtasks(List<Task> subTasks, int parentId) async {
+    print("Inserting subtasks: ${subTasks.length}");
+    for (var subTask in subTasks) {
+      // Create a new task with the parent ID set
+      final newSubtask = subTask.copyWith(parentId: parentId);
+      final newSubtaskId = await TaskService().insertTask(newSubtask.toMap());
+
+      // If the subtask has its own subtasks, insert them recursively
+      if (subTask.subTasks.isNotEmpty) {
+        await _insertSubtasks(subTask.subTasks, newSubtaskId);
       }
     }
   }
@@ -331,7 +347,8 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                       height: 8,
                     ),
                     // Subtasks section
-                    if (_subTasks.isNotEmpty) _buildSubtasksSection(),
+                    if (_task.subTasks.isNotEmpty) _buildSubtasksSection(),
+                    _buildAddSubtaskButton(),
                     Divider(),
                     Padding(
                       padding: EdgeInsets.only(left: 18, right: 18),
@@ -430,25 +447,26 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
   }
 
   Widget _buildSubtasksSection() {
-    final completeSubTasks = _subTasks.where((task) => task.isChecked).length;
+    final completeSubTasks =
+        _task.subTasks.where((task) => task.isChecked).length;
     return Column(
       children: [
         _buildTaskRow(
           icon: const Icon(Icons.list),
           content: Text(
-            "Sub Tasks ($completeSubTasks/${_subTasks.length})",
+            "Sub Tasks ($completeSubTasks/${_task.subTasks.length})",
             style: const TextStyle(fontSize: 16),
           ),
         ),
         ListView.builder(
           shrinkWrap: true,
-          itemCount: _subTasks.length,
+          itemCount: _task.subTasks.length,
           physics: const NeverScrollableScrollPhysics(),
           itemBuilder: (context, index) {
-            final task = _subTasks[index];
+            final task = _task.subTasks[index];
             return Container(
               decoration: BoxDecoration(
-                border: index < _subTasks.length - 1
+                border: index < _task.subTasks.length - 1
                     ? Border(
                         bottom: BorderSide(
                           color: Colors.black12,
@@ -458,7 +476,12 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                     : null,
               ),
               child: GestureDetector(
-                onTap: () => TaskService().showTaskEditForm(context, task),
+                onTap: () =>
+                    TaskService().showTaskEditForm(context, task, (subTask) {
+                  setState(() {
+                    _task.subTasks[index] = subTask;
+                  });
+                }),
                 child: ListTile(
                   leading: Transform.scale(
                     scale: 1.2,
@@ -480,7 +503,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                       onChanged: (bool? newValue) {
                         task.isChecked = !task.isChecked;
                         setState(() {
-                          _subTasks[index] = task;
+                          _task.subTasks[index] = task;
                           TaskService().updateTask(task.toMap());
                         });
                       },
@@ -506,6 +529,59 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
     );
   }
 
+  Widget _buildAddSubtaskButton() {
+    return InkWell(
+      onTap: () {
+        showModalBottomSheet(
+          context: context,
+          builder: (BuildContext context) {
+            return Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
+              ),
+              child: AddTaskWidget(
+                task: widget.task,
+                isParentTask: false,
+                onRefresh: (subTask) => {
+                  setState(() {
+                    _task.subTasks.add(subTask);
+                  }),
+                },
+              ),
+            );
+          },
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 48,
+              height: 50,
+              child: Icon(
+                Icons.add,
+                color: Colors.redAccent,
+              ),
+            ),
+            Expanded(
+              child: Text(
+                "Add sub task",
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.redAccent,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showAIPopup(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -518,7 +594,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
               _descriptionController.text = description;
 
               // Clear existing subtasks
-              _subTasks.clear();
+              _task.subTasks.clear();
 
               // Add new subtasks
               final now = DateTime.now();
@@ -535,7 +611,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                   createdAt: now,
                   updatedAt: now,
                 );
-                _subTasks.add(subtask);
+                _task.subTasks.add(subtask);
               }
             });
 

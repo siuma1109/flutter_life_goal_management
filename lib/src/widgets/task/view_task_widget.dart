@@ -10,10 +10,12 @@ import 'package:intl/intl.dart';
 
 class ViewTaskWidget extends StatefulWidget {
   final Task task;
+  final Function? onRefresh;
 
   const ViewTaskWidget({
     super.key,
     required this.task,
+    this.onRefresh,
   });
 
   @override
@@ -23,7 +25,7 @@ class ViewTaskWidget extends StatefulWidget {
 class _ViewTaskWidgetState extends State<ViewTaskWidget> {
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
-  List<Task> _subTasks = [];
+  late Task _task;
   DateTime? _dueDate;
   int _priority = 4; // Default priority
   final _dateFormat = DateFormat('yyyy-MM-dd');
@@ -38,11 +40,15 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
         TextEditingController(text: widget.task.description);
     _dueDate = widget.task.dueDate;
     _priority = widget.task.priority;
-    _loadSubTasksById();
-    // Listen for task changes
-    _taskChangedSubscription = TaskBroadcast().taskChangedStream.listen((_) {
+
+    _task = widget.task;
+    if (_task.id != null) {
       _loadSubTasksById();
-    });
+      // Listen for task changes
+      _taskChangedSubscription = TaskBroadcast().taskChangedStream.listen((_) {
+        _loadSubTasksById();
+      });
+    }
   }
 
   @override
@@ -72,7 +78,11 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
       updatedAt: DateTime.now(),
     );
 
-    await TaskService().updateTask(updatedTask.toMap());
+    if (widget.task.id != null) {
+      await TaskService().updateTask(updatedTask.toMap());
+    }
+
+    widget.onRefresh?.call(updatedTask);
   }
 
   void _showDatePicker(BuildContext context) {
@@ -140,7 +150,7 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
           const Divider(thickness: 5),
 
           // Subtasks section
-          if (_subTasks.isNotEmpty) _buildSubtasksSection(),
+          if (_task.subTasks.isNotEmpty) _buildSubtasksSection(),
 
           // Add subtask button
           _buildAddSubtaskButton(),
@@ -284,25 +294,26 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
   }
 
   Widget _buildSubtasksSection() {
-    final completeSubTasks = _subTasks.where((task) => task.isChecked).length;
+    final completeSubTasks =
+        _task.subTasks.where((task) => task.isChecked).length;
     return Column(
       children: [
         _buildTaskRow(
           icon: const Icon(Icons.list),
           content: Text(
-            "Sub Tasks ($completeSubTasks/${_subTasks.length})",
+            "Sub Tasks ($completeSubTasks/${_task.subTasks.length})",
             style: const TextStyle(fontSize: 16),
           ),
         ),
         ListView.builder(
           shrinkWrap: true,
-          itemCount: _subTasks.length,
+          itemCount: _task.subTasks.length,
           physics: const NeverScrollableScrollPhysics(),
           itemBuilder: (context, index) {
-            final task = _subTasks[index];
+            final task = _task.subTasks[index];
             return Container(
               decoration: BoxDecoration(
-                border: index < _subTasks.length - 1
+                border: index < _task.subTasks.length - 1
                     ? Border(
                         bottom: BorderSide(
                           color: Colors.black12,
@@ -312,7 +323,12 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
                     : null,
               ),
               child: GestureDetector(
-                onTap: () => TaskService().showTaskEditForm(context, task),
+                onTap: () =>
+                    TaskService().showTaskEditForm(context, task, (subTask) {
+                  setState(() {
+                    _task.subTasks[index] = subTask;
+                  });
+                }),
                 child: ListTile(
                   leading: Transform.scale(
                     scale: 1.2,
@@ -334,7 +350,7 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
                       onChanged: (bool? newValue) {
                         task.isChecked = !task.isChecked;
                         setState(() {
-                          _subTasks[index] = task;
+                          _task.subTasks[index] = task;
                           TaskService().updateTask(task.toMap());
                         });
                       },
@@ -374,7 +390,16 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
                 ),
               ),
               child: AddTaskWidget(
-                task: widget.task,
+                task: _task.copyWith(
+                  id: null,
+                  parentId: _task.id,
+                  subTasks: [],
+                ),
+                onRefresh: (subTask) => {
+                  setState(() {
+                    _task.subTasks.add(subTask);
+                  }),
+                },
               ),
             );
           },
@@ -410,7 +435,7 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
   Future<void> _loadSubTasksById() async {
     final tasks = await TaskService().getSubtasks(widget.task.id!);
     setState(() {
-      _subTasks = tasks.map((task) => Task.fromMap(task)).toList();
+      _task.subTasks = tasks.map((task) => Task.fromMap(task)).toList();
     });
   }
 
