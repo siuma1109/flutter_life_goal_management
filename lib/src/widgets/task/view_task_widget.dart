@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
+import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/add_task_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/task_date_picker_widget.dart';
 import '../../models/task.dart';
@@ -326,7 +327,7 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
                 onTap: () =>
                     TaskService().showTaskEditForm(context, task, (subTask) {
                   setState(() {
-                    _task.subTasks[index] = subTask;
+                    _task.subTasks[index] = subTask!;
                   });
                 }),
                 child: ListTile(
@@ -390,9 +391,13 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
                 ),
               ),
               child: AddTaskWidget(
-                task: _task.copyWith(
-                  id: null,
+                task: Task(
                   parentId: _task.id,
+                  title: _titleController.text,
+                  description: _descriptionController.text,
+                  isChecked: false,
+                  userId: AuthService().getLoggedInUser()?.id ?? 0,
+                  projectId: widget.task.projectId,
                   subTasks: [],
                 ),
                 onRefresh: (subTask) => {
@@ -455,9 +460,10 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
               onPressed: () async {
                 if (widget.task.id != null) {
                   await TaskService().deleteTask(widget.task.id!);
-                  Navigator.of(dialogContext).pop(); // Close the dialog
-                  Navigator.of(context).pop(); // Close the view task widget
                 }
+                widget.onRefresh?.call(null);
+                Navigator.of(dialogContext).pop(); // Close the dialog
+                Navigator.of(context).pop(); // Close the view task widget
               },
               child: const Text('Delete'),
             ),

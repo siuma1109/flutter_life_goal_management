@@ -24,7 +24,7 @@ class TaskService {
   }
 
   void showTaskEditForm(
-      BuildContext context, Task task, Function(Task) onRefresh) {
+      BuildContext context, Task task, Function(Task?) onRefresh) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

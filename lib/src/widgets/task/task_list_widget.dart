@@ -53,9 +53,15 @@ class _TaskListWidgetState extends State<TaskListWidget> {
                 child: GestureDetector(
                   onTap: () async {
                     _taskService.showTaskEditForm(context, task, (subTask) {
-                      setState(() {
-                        widget.tasks[index] = subTask;
-                      });
+                      if (subTask == null) {
+                        setState(() {
+                          widget.tasks.removeAt(index);
+                        });
+                      } else {
+                        setState(() {
+                          widget.tasks[index] = subTask;
+                        });
+                      }
                     });
                   },
                   child: ListTile(

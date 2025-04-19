@@ -478,9 +478,15 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
               child: GestureDetector(
                 onTap: () =>
                     TaskService().showTaskEditForm(context, task, (subTask) {
-                  setState(() {
-                    _task.subTasks[index] = subTask;
-                  });
+                  if (subTask == null) {
+                    setState(() {
+                      _task.subTasks.removeAt(index);
+                    });
+                  } else {
+                    setState(() {
+                      _task.subTasks[index] = subTask;
+                    });
+                  }
                 }),
                 child: ListTile(
                   leading: Transform.scale(
