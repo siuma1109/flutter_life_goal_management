@@ -193,6 +193,7 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
 
   Widget _buildTaskContent() {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         // Title with checkbox
         _buildTaskRow(
@@ -279,18 +280,16 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
   }
 
   Widget _buildTaskRow({required Widget icon, required Widget content}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 48,
-            height: 50,
-            child: icon,
-          ),
-          Expanded(child: content),
-        ],
-      ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 48,
+          height: 50,
+          child: icon,
+        ),
+        Expanded(child: content),
+      ],
     );
   }
 
@@ -298,6 +297,7 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
     final completeSubTasks =
         _task.subTasks.where((task) => task.isChecked).length;
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         _buildTaskRow(
           icon: const Icon(Icons.list),
@@ -308,6 +308,7 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
         ),
         ListView.builder(
           shrinkWrap: true,
+          padding: const EdgeInsets.all(0),
           itemCount: _task.subTasks.length,
           physics: const NeverScrollableScrollPhysics(),
           itemBuilder: (context, index) {
@@ -359,6 +360,7 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
                   ),
                   title: Text(task.title),
                   subtitle: Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (task.description != null && task.description != '')
@@ -382,6 +384,7 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
       onTap: () {
         showModalBottomSheet(
           context: context,
+          isScrollControlled: true,
           builder: (BuildContext context) {
             return Container(
               decoration: BoxDecoration(

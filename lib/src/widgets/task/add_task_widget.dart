@@ -222,227 +222,260 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding:
-          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(8, 16, 8, 16),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextFormField(
-                      controller: _taskController,
-                      focusNode: _taskFocusNode,
-                      decoration: InputDecoration(
-                          hintText: 'Task Name',
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.all(16.0)),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a task name';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 4),
-                    TextFormField(
-                      controller: _descriptionController,
-                      decoration: InputDecoration(
-                        hintText: 'Description',
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.all(16.0),
-                      ),
-                      maxLines: 6,
-                      minLines: 1,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        ElevatedButton(
-                          onPressed: () => _showDatePicker(context),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.calendar_today,
-                                color: _dueDate != null
-                                    ? Colors.green
-                                    : Colors.black,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                _dueDate == null
-                                    ? 'Date'
-                                    : '${_dateFormat.format(_dueDate!)}',
-                                style: TextStyle(
-                                  color: _dueDate != null
-                                      ? Colors.green
-                                      : Colors.black,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              if (_dueDate != null)
-                                SizedBox(
-                                  width: 12,
-                                  height: 24,
-                                  child: IconButton(
-                                    icon: const Icon(Icons.close,
-                                        color: Colors.red),
-                                    padding: EdgeInsets.zero,
-                                    onPressed: () {
-                                      setState(() {
-                                        _dueDate = null;
-                                        _dateInputController.clear();
-                                      });
-                                    },
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        ElevatedButton(
-                          onPressed: () => TaskService().showPriorityPopUp(
-                              context, _priority, (priority) {
-                            setState(() {
-                              _priority = priority;
-                            });
-                          }),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.flag,
-                                color:
-                                    TaskService().getPriorityColor(_priority),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'P$_priority',
-                                style: TextStyle(
-                                  color:
-                                      TaskService().getPriorityColor(_priority),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(
-                      height: 8,
-                    ),
-                    // Subtasks section
-                    if (_task.subTasks.isNotEmpty) _buildSubtasksSection(),
-                    _buildAddSubtaskButton(),
-                    Divider(),
-                    Padding(
-                      padding: EdgeInsets.only(left: 18, right: 18),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              DropdownButton(
-                                  items: [
-                                    DropdownMenuItem(
-                                      value: null,
-                                      child: Text('Inbox'),
-                                    ),
-                                    ...List.generate(
-                                      _projects.length,
-                                      (index) => DropdownMenuItem(
-                                        value: _projects[index].id,
-                                        child: Text(_projects[index].name),
-                                      ),
-                                    ),
-                                  ],
-                                  value: _projectId ?? widget.task?.projectId,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _projectId = value;
-                                    });
-                                  }),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              SizedBox(
-                                width: 50,
-                                child: ElevatedButton(
-                                  onPressed: () => _showAIPopup(context),
-                                  style: ElevatedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 4, horizontal: 4),
-                                      backgroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8))),
-                                  child: const Image(
-                                    image:
-                                        AssetImage("assets/gemini_ai_icon.png"),
-                                    height: 24,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              SizedBox(
-                                width: 50,
-                                child: ElevatedButton(
-                                  onPressed: _submitForm,
-                                  style: ElevatedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 4, horizontal: 4),
-                                    backgroundColor: Colors.grey,
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8)),
-                                  ),
-                                  child: Icon(
-                                    Icons.send,
-                                    color: Colors.white,
-                                    size: 24,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    )
-                  ],
-                ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Center(
+            child: Container(
+              margin: const EdgeInsets.only(top: 8, bottom: 16),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
+          ),
+          Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+              left: 8,
+              right: 8,
+            ),
+            child: Column(
+              children: [
+                _isLoading
+                    ? Center(child: CircularProgressIndicator())
+                    : SingleChildScrollView(
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              TextFormField(
+                                controller: _taskController,
+                                focusNode: _taskFocusNode,
+                                decoration: InputDecoration(
+                                    hintText: 'Task Name',
+                                    border: InputBorder.none,
+                                    contentPadding: const EdgeInsets.all(16.0)),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter a task name';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 4),
+                              TextFormField(
+                                controller: _descriptionController,
+                                decoration: InputDecoration(
+                                  hintText: 'Description',
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsets.all(16.0),
+                                ),
+                                maxLines: 6,
+                                minLines: 1,
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  ElevatedButton(
+                                    onPressed: () => _showDatePicker(context),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.calendar_today,
+                                          color: _dueDate != null
+                                              ? Colors.green
+                                              : Colors.black,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          _dueDate == null
+                                              ? 'Date'
+                                              : '${_dateFormat.format(_dueDate!)}',
+                                          style: TextStyle(
+                                            color: _dueDate != null
+                                                ? Colors.green
+                                                : Colors.black,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        if (_dueDate != null)
+                                          SizedBox(
+                                            width: 12,
+                                            height: 24,
+                                            child: IconButton(
+                                              icon: const Icon(Icons.close,
+                                                  color: Colors.red),
+                                              padding: EdgeInsets.zero,
+                                              onPressed: () {
+                                                setState(() {
+                                                  _dueDate = null;
+                                                  _dateInputController.clear();
+                                                });
+                                              },
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(width: 10),
+                                  ElevatedButton(
+                                    onPressed: () => TaskService()
+                                        .showPriorityPopUp(context, _priority,
+                                            (priority) {
+                                      setState(() {
+                                        _priority = priority;
+                                      });
+                                    }),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.flag,
+                                          color: TaskService()
+                                              .getPriorityColor(_priority),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          'P$_priority',
+                                          style: TextStyle(
+                                            color: TaskService()
+                                                .getPriorityColor(_priority),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(
+                                height: 8,
+                              ),
+                              // Subtasks section
+                              if (_task.subTasks.isNotEmpty)
+                                _buildSubtasksSection(),
+                              _buildAddSubtaskButton(),
+                              Divider(),
+                              Padding(
+                                padding: EdgeInsets.only(left: 18, right: 18),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        DropdownButton(
+                                            items: [
+                                              DropdownMenuItem(
+                                                value: null,
+                                                child: Text('Inbox'),
+                                              ),
+                                              ...List.generate(
+                                                _projects.length,
+                                                (index) => DropdownMenuItem(
+                                                  value: _projects[index].id,
+                                                  child: Text(
+                                                      _projects[index].name),
+                                                ),
+                                              ),
+                                            ],
+                                            value: _projectId ??
+                                                widget.task?.projectId,
+                                            onChanged: (value) {
+                                              setState(() {
+                                                _projectId = value;
+                                              });
+                                            }),
+                                      ],
+                                    ),
+                                    Row(
+                                      children: [
+                                        SizedBox(
+                                          width: 50,
+                                          child: ElevatedButton(
+                                            onPressed: () =>
+                                                _showAIPopup(context),
+                                            style: ElevatedButton.styleFrom(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 4,
+                                                        horizontal: 4),
+                                                backgroundColor: Colors.white,
+                                                shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8))),
+                                            child: const Image(
+                                              image: AssetImage(
+                                                  "assets/gemini_ai_icon.png"),
+                                              height: 24,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        SizedBox(
+                                          width: 50,
+                                          child: ElevatedButton(
+                                            onPressed: _submitForm,
+                                            style: ElevatedButton.styleFrom(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      vertical: 4,
+                                                      horizontal: 4),
+                                              backgroundColor: Colors.grey,
+                                              shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8)),
+                                            ),
+                                            child: Icon(
+                                              Icons.send,
+                                              color: Colors.white,
+                                              size: 24,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
+                      ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildTaskRow({required Widget icon, required Widget content}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 48,
-            height: 50,
-            child: icon,
-          ),
-          Expanded(child: content),
-        ],
-      ),
+    return Row(
+      children: [
+        SizedBox(
+          width: 48,
+          height: 50,
+          child: icon,
+        ),
+        Expanded(child: content),
+      ],
     );
   }
 
@@ -460,6 +493,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
         ),
         ListView.builder(
           shrinkWrap: true,
+          padding: const EdgeInsets.all(0),
           itemCount: _task.subTasks.length,
           physics: const NeverScrollableScrollPhysics(),
           itemBuilder: (context, index) {
@@ -540,6 +574,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
       onTap: () {
         showModalBottomSheet(
           context: context,
+          isScrollControlled: true,
           builder: (BuildContext context) {
             return Container(
               decoration: BoxDecoration(
@@ -591,6 +626,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
   void _showAIPopup(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (BuildContext context) {
         return AddTaskAIWidget(
           onAccept: (String taskName, String description,
