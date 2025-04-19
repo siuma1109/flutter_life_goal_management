@@ -378,28 +378,29 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                                   children: [
                                     Row(
                                       children: [
-                                        DropdownButton(
-                                            items: [
-                                              DropdownMenuItem(
-                                                value: null,
-                                                child: Text('Inbox'),
-                                              ),
-                                              ...List.generate(
-                                                _projects.length,
-                                                (index) => DropdownMenuItem(
-                                                  value: _projects[index].id,
-                                                  child: Text(
-                                                      _projects[index].name),
+                                        if (widget.isParentTask)
+                                          DropdownButton(
+                                              items: [
+                                                DropdownMenuItem(
+                                                  value: null,
+                                                  child: Text('Inbox'),
                                                 ),
-                                              ),
-                                            ],
-                                            value: _projectId ??
-                                                widget.task?.projectId,
-                                            onChanged: (value) {
-                                              setState(() {
-                                                _projectId = value;
-                                              });
-                                            }),
+                                                ...List.generate(
+                                                  _projects.length,
+                                                  (index) => DropdownMenuItem(
+                                                    value: _projects[index].id,
+                                                    child: Text(
+                                                        _projects[index].name),
+                                                  ),
+                                                ),
+                                              ],
+                                              value: _projectId ??
+                                                  widget.task?.projectId,
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  _projectId = value;
+                                                });
+                                              }),
                                       ],
                                     ),
                                     Row(

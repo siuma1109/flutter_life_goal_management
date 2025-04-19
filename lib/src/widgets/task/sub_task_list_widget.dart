@@ -4,6 +4,7 @@ import 'package:flutter_life_goal_management/src/models/task.dart';
 import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/services/task_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/add_task_widget.dart';
+import 'package:flutter_life_goal_management/src/widgets/task/task_add_form_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/task_edit_form_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/task_row_widget.dart';
 
@@ -139,28 +140,21 @@ class _SubTaskListWidgetState extends State<SubTaskListWidget> {
           context: context,
           isScrollControlled: true,
           builder: (BuildContext context) {
-            return Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).scaffoldBackgroundColor,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(20),
-                ),
+            return TaskAddFormWidget(
+              task: Task(
+                parentId: _task.id,
+                title: "",
+                isChecked: false,
+                userId: AuthService().getLoggedInUser()?.id ?? 0,
+                projectId: widget.task.projectId,
+                subTasks: [],
               ),
-              child: AddTaskWidget(
-                task: Task(
-                  parentId: _task.id,
-                  title: "",
-                  isChecked: false,
-                  userId: AuthService().getLoggedInUser()?.id ?? 0,
-                  projectId: widget.task.projectId,
-                  subTasks: [],
-                ),
-                onRefresh: (subTask) => {
-                  setState(() {
-                    _task.subTasks.add(subTask);
-                  }),
-                },
-              ),
+              onRefresh: (subTask) => {
+                setState(() {
+                  _task.subTasks.add(subTask);
+                }),
+              },
+              isParentTask: false,
             );
           },
         );

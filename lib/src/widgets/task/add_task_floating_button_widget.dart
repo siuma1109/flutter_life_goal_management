@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/add_task_widget.dart';
+import 'package:flutter_life_goal_management/src/widgets/task/task_add_form_widget.dart';
 
 class AddTaskFloatingButtonWidget extends StatefulWidget {
   const AddTaskFloatingButtonWidget({super.key});
@@ -19,21 +20,8 @@ class _AddTaskFloatingButtonWidgetState
         var result = await showModalBottomSheet(
           context: context,
           isScrollControlled: true,
-          backgroundColor: Colors.transparent,
           useRootNavigator: true,
-          builder: (BuildContext context) {
-            return Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).scaffoldBackgroundColor,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(20),
-                ),
-              ),
-              child: SingleChildScrollView(
-                child: const AddTaskWidget(),
-              ),
-            );
-          },
+          builder: (context) => TaskAddFormWidget(),
         );
 
         if (result == true) {
