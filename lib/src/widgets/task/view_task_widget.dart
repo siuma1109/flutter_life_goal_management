@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
 import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/add_task_widget.dart';
+import 'package:flutter_life_goal_management/src/widgets/task/sub_task_list_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/task_date_picker_widget.dart';
+import 'package:flutter_life_goal_management/src/widgets/task/task_row_widget.dart';
 import '../../models/task.dart';
 import '../../services/task_service.dart';
 import 'package:intl/intl.dart';
@@ -135,10 +137,7 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(
-        top: 8,
-        bottom: 16,
-      ),
+      padding: const EdgeInsets.all(8),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -151,10 +150,7 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
           const Divider(thickness: 5),
 
           // Subtasks section
-          if (_task.subTasks.isNotEmpty) _buildSubtasksSection(),
-
-          // Add subtask button
-          _buildAddSubtaskButton(),
+          SubTaskListWidget(task: _task)
         ],
       ),
     );
@@ -196,30 +192,27 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
       mainAxisSize: MainAxisSize.min,
       children: [
         // Title with checkbox
-        _buildTaskRow(
-          icon: Transform.scale(
-            scale: 1.2,
-            child: Checkbox(
-              value: widget.task.isChecked,
+        TaskRowWidget(
+          icon: Checkbox(
+            value: widget.task.isChecked,
+            side: BorderSide(
+              color: TaskService().getPriorityColor(widget.task.priority),
+              width: 2.0,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(50),
               side: BorderSide(
                 color: TaskService().getPriorityColor(widget.task.priority),
                 width: 2.0,
               ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(50),
-                side: BorderSide(
-                  color: TaskService().getPriorityColor(widget.task.priority),
-                  width: 2.0,
-                ),
-              ),
-              activeColor: TaskService().getPriorityColor(widget.task.priority),
-              onChanged: (bool? newValue) {
-                setState(() {
-                  widget.task.isChecked = !widget.task.isChecked;
-                  _updateTask();
-                });
-              },
             ),
+            activeColor: TaskService().getPriorityColor(widget.task.priority),
+            onChanged: (bool? newValue) {
+              setState(() {
+                widget.task.isChecked = !widget.task.isChecked;
+                _updateTask();
+              });
+            },
           ),
           content: TextField(
             controller: _titleController,
@@ -231,7 +224,7 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
 
         // Description
         if (widget.task.description != null && widget.task.description != '')
-          _buildTaskRow(
+          TaskRowWidget(
             icon: const Icon(Icons.description),
             content: TextField(
               controller: _descriptionController,
@@ -244,7 +237,7 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
           ),
 
         // Due date
-        _buildTaskRow(
+        TaskRowWidget(
           icon: const Icon(Icons.calendar_month),
           content: InkWell(
             onTap: () => _showDatePicker(context),
@@ -256,7 +249,7 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
         ),
 
         // Priority
-        _buildTaskRow(
+        TaskRowWidget(
           icon: Icon(
             Icons.flag,
             color: TaskService().getPriorityColor(_priority),
@@ -276,167 +269,6 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildTaskRow({required Widget icon, required Widget content}) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(
-          width: 48,
-          height: 50,
-          child: icon,
-        ),
-        Expanded(child: content),
-      ],
-    );
-  }
-
-  Widget _buildSubtasksSection() {
-    final completeSubTasks =
-        _task.subTasks.where((task) => task.isChecked).length;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildTaskRow(
-          icon: const Icon(Icons.list),
-          content: Text(
-            "Sub Tasks ($completeSubTasks/${_task.subTasks.length})",
-            style: const TextStyle(fontSize: 16),
-          ),
-        ),
-        ListView.builder(
-          shrinkWrap: true,
-          padding: const EdgeInsets.all(0),
-          itemCount: _task.subTasks.length,
-          physics: const NeverScrollableScrollPhysics(),
-          itemBuilder: (context, index) {
-            final task = _task.subTasks[index];
-            return Container(
-              decoration: BoxDecoration(
-                border: index < _task.subTasks.length - 1
-                    ? Border(
-                        bottom: BorderSide(
-                          color: Colors.black12,
-                          width: 1.0,
-                        ),
-                      )
-                    : null,
-              ),
-              child: GestureDetector(
-                onTap: () =>
-                    TaskService().showTaskEditForm(context, task, (subTask) {
-                  setState(() {
-                    _task.subTasks[index] = subTask!;
-                  });
-                }),
-                child: ListTile(
-                  leading: Transform.scale(
-                    scale: 1.2,
-                    child: Checkbox(
-                      value: task.isChecked,
-                      side: BorderSide(
-                        color: TaskService().getPriorityColor(task.priority),
-                        width: 2.0,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(50),
-                        side: BorderSide(
-                          color: TaskService().getPriorityColor(task.priority),
-                          width: 2.0,
-                        ),
-                      ),
-                      activeColor:
-                          TaskService().getPriorityColor(task.priority),
-                      onChanged: (bool? newValue) {
-                        task.isChecked = !task.isChecked;
-                        setState(() {
-                          _task.subTasks[index] = task;
-                          TaskService().updateTask(task.toMap());
-                        });
-                      },
-                    ),
-                  ),
-                  title: Text(task.title),
-                  subtitle: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (task.description != null && task.description != '')
-                        Text(task.description!),
-                      if (task.dueDate != null)
-                        Text('Due: ${task.dueDate!.toString().split(' ')[0]}'),
-                      Text('Priority: ${task.priority}'),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAddSubtaskButton() {
-    return InkWell(
-      onTap: () {
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          builder: (BuildContext context) {
-            return Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).scaffoldBackgroundColor,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(20),
-                ),
-              ),
-              child: AddTaskWidget(
-                task: Task(
-                  parentId: _task.id,
-                  title: _titleController.text,
-                  description: _descriptionController.text,
-                  isChecked: false,
-                  userId: AuthService().getLoggedInUser()?.id ?? 0,
-                  projectId: widget.task.projectId,
-                  subTasks: [],
-                ),
-                onRefresh: (subTask) => {
-                  setState(() {
-                    _task.subTasks.add(subTask);
-                  }),
-                },
-              ),
-            );
-          },
-        );
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 48,
-              height: 50,
-              child: Icon(
-                Icons.add,
-                color: Colors.redAccent,
-              ),
-            ),
-            Expanded(
-              child: Text(
-                "Add sub task",
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.redAccent,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 

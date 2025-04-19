@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
 import 'package:flutter_life_goal_management/src/services/database_helper.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/task_priority_selector_widget.dart';
-import '../models/task.dart';
-import '../widgets/task/view_task_widget.dart';
 
 class TaskService {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
@@ -21,54 +19,6 @@ class TaskService {
       default:
         return Colors.black;
     }
-  }
-
-  void showTaskEditForm(
-      BuildContext context, Task task, Function(Task?) onRefresh) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      useRootNavigator: true,
-      builder: (BuildContext context) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).scaffoldBackgroundColor,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(20),
-            ),
-          ),
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    margin: const EdgeInsets.only(top: 8),
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: ViewTaskWidget(
-                      task: task,
-                      onRefresh: onRefresh,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
   }
 
   void showPriorityPopUp(

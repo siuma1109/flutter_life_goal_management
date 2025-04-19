@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
+import 'package:flutter_life_goal_management/src/widgets/task/task_edit_form_widget.dart';
 import '../../models/task.dart';
 import '../../services/task_service.dart';
 
@@ -52,17 +53,24 @@ class _TaskListWidgetState extends State<TaskListWidget> {
                 ),
                 child: GestureDetector(
                   onTap: () async {
-                    _taskService.showTaskEditForm(context, task, (subTask) {
-                      if (subTask == null) {
-                        setState(() {
-                          widget.tasks.removeAt(index);
-                        });
-                      } else {
-                        setState(() {
-                          widget.tasks[index] = subTask;
-                        });
-                      }
-                    });
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      builder: (context) => TaskEditFormWidget(
+                        task: task,
+                        onRefresh: (subTask) {
+                          if (subTask == null) {
+                            setState(() {
+                              widget.tasks.removeAt(index);
+                            });
+                          } else {
+                            setState(() {
+                              widget.tasks[index] = subTask;
+                            });
+                          }
+                        },
+                      ),
+                    );
                   },
                   child: ListTile(
                     leading: Transform.scale(
