@@ -9,7 +9,7 @@ User userFromJson(String str) => User.fromJson(json.decode(str));
 String userToJson(User data) => json.encode(data.toJson());
 
 class User {
-  int id;
+  int? id;
   String name;
   String email;
   DateTime? emailVerifiedAt;
@@ -17,7 +17,7 @@ class User {
   DateTime updatedAt;
 
   User({
-    required this.id,
+    this.id,
     required this.name,
     required this.email,
     this.emailVerifiedAt,
@@ -40,7 +40,7 @@ class User {
         "id": id,
         "name": name,
         "email": email,
-        "email_verified_at": emailVerifiedAt,
+        "email_verified_at": emailVerifiedAt?.toIso8601String(),
         "created_at": createdAt.toIso8601String(),
         "updated_at": updatedAt.toIso8601String(),
       };

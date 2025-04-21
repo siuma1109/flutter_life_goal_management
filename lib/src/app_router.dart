@@ -13,20 +13,29 @@ import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 /// The route configuration.
 final GoRouter router = GoRouter(
   initialLocation: '/',
-  redirect: (context, state) {
-    final isLoggedIn = AuthService().isLoggedIn();
-    final location = state.fullPath;
+  redirect: (context, state) async {
+    // Get unprotected routes
+    final publicRoutes = ['/login', '/login/forgot-password', '/login/sign-up'];
 
-    // Check if current route is any of the auth routes
-    final isLoginRoute = location?.contains('login') ?? false;
+    // Check if the current location is in the public routes
+    final isPublicRoute = publicRoutes.contains(state.fullPath);
 
-    if (!isLoggedIn && !isLoginRoute) {
+    // Check if token exists and is valid
+    final isLoggedIn = await AuthService().loggedIn();
+    print('isLoggedIn: $isLoggedIn, route: ${state.fullPath}');
+
+    // If not logged in and trying to access a protected route
+    if (!isLoggedIn && !isPublicRoute) {
       return '/login';
-    } else if (isLoggedIn && isLoginRoute) {
+    }
+
+    // If logged in and trying to access an auth route
+    if (isLoggedIn && isPublicRoute) {
       return '/';
     }
 
-    return null; // No redirection needed
+    // No redirection needed
+    return null;
   },
   routes: <RouteBase>[
     // Auth branch

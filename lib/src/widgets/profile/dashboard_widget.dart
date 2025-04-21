@@ -23,11 +23,12 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                 fontSize: Theme.of(context).textTheme.titleLarge?.fontSize,
               ),
             ),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.fromLTRB(40, 30, 40, 30),
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(10),
@@ -55,7 +56,7 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.fromLTRB(40, 30, 40, 30),
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(10),

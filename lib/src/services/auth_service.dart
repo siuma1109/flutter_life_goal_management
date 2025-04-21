@@ -1,4 +1,5 @@
 import 'package:flutter_life_goal_management/src/services/user_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
 
 class AuthService {
@@ -31,15 +32,32 @@ class AuthService {
   }
 
   // Method to log out the user
-  void logOut() {
+  Future<void> logOut() async {
     _isLoggedIn = false;
+    _loggedInUser = null;
+    await deleteToken();
   }
 
-  void setToken(String token) {
+  // Save token to SharedPreferences
+  Future<void> setToken(String token) async {
     _token = token;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('token', token);
   }
 
-  String? getToken() {
+  // Delete token from SharedPreferences
+  Future<void> deleteToken() async {
+    _token = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+  }
+
+  // Get token from SharedPreferences
+  Future<String?> getToken() async {
+    if (_token != null) return _token;
+
+    final prefs = await SharedPreferences.getInstance();
+    _token = prefs.getString('token');
     return _token;
   }
 
@@ -48,18 +66,51 @@ class AuthService {
     return _loggedInUser;
   }
 
-  // Method to log in the user with fake credentials
+  // Method to log in the user with credentials
   Future<bool> logInWithCredentials(String email, String password) async {
-    print("Email: $email");
-    print("Password: $password");
     final token = await UserService().login(email, password);
-    print("Token: $token");
+
     if (token != null) {
       _isLoggedIn = true;
-      setToken(token);
+      await setToken(token);
       _loggedInUser = await UserService().getUser();
       return true;
     }
     return false;
+  }
+
+  Future<bool> register(String email, String password, String name) async {
+    final result = await UserService().register(email, password, name);
+    if (result != null) {
+      _isLoggedIn = true;
+      await setToken(result['token']);
+      return true;
+    }
+    return false;
+  }
+
+  // Check if user is logged in based on token
+  Future<bool> loggedIn() async {
+    // First check if we have a token
+    final token = await getToken();
+
+    if (token == null || token.isEmpty) {
+      _isLoggedIn = false;
+      return false;
+    }
+
+    // If we have a token, validate it by getting user info
+    final result = await UserService().getUser();
+
+    if (result != null) {
+      _isLoggedIn = true;
+      _loggedInUser = result;
+      return true;
+    } else {
+      // If token is invalid, delete it
+      await deleteToken();
+      _isLoggedIn = false;
+      return false;
+    }
   }
 }

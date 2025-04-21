@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter_life_goal_management/src/models/user.dart';
-import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/services/http_service.dart';
 
 class UserService {
@@ -25,7 +24,25 @@ class UserService {
   }
 
   Future<User?> getUser() async {
-    final result = await _httpService.get('user');
+    final result = await _httpService.get('user', headers: {
+      'Content-Type': 'application/json',
+    });
+
+    if (result.statusCode != 200) {
+      return null;
+    }
+
     return User.fromJson(jsonDecode(result.body));
+  }
+
+  Future<Map<String, dynamic>?> register(
+      String email, String password, String name) async {
+    final result = await _httpService.post('users', body: {
+      'email': email,
+      'password': password,
+      'name': name,
+    });
+
+    return jsonDecode(result.body);
   }
 }
