@@ -133,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: () async {
                         // Handle login
                         final authService = AuthService();
-                        final email = 'user@example.com';
+                        final email = 'admin@example.com';
                         final password = 'password123';
 
                         if (await authService.logInWithCredentials(

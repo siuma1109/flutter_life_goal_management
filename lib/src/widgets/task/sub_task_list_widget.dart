@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_life_goal_management/src/models/task.dart';
 import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/services/task_service.dart';
-import 'package:flutter_life_goal_management/src/widgets/task/add_task_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/task_add_form_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/task_edit_form_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/task_row_widget.dart';
@@ -75,7 +73,7 @@ class _SubTaskListWidgetState extends State<SubTaskListWidget> {
                     onChanged: (bool? newValue) {
                       subTask.isChecked = !subTask.isChecked;
                       setState(() {
-                        TaskService().updateTask(subTask.toMap());
+                        TaskService().updateTask(subTask);
                       });
                     },
                   ),
@@ -148,6 +146,7 @@ class _SubTaskListWidgetState extends State<SubTaskListWidget> {
                 userId: AuthService().getLoggedInUser()?.id ?? 0,
                 projectId: widget.task.projectId,
                 subTasks: [],
+                priority: 4,
               ),
               onRefresh: (subTask) => {
                 setState(() {

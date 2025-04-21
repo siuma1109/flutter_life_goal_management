@@ -4,7 +4,6 @@ import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart'
 import 'package:flutter_life_goal_management/src/models/project.dart';
 import 'package:flutter_life_goal_management/src/screens/Profile/inbox_screen.dart';
 import 'package:flutter_life_goal_management/src/screens/Project/project_screen.dart';
-import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/services/project_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/projects/AddProjectWidget.dart';
 
@@ -51,12 +50,10 @@ class _ProfileMenuWidgetState extends State<ProfileMenuWidget> {
     });
 
     try {
-      final projects = await ProjectService()
-          .getAllProjectsByUserId(AuthService().getLoggedInUser()?.id ?? 0);
+      final projects = await ProjectService().getAllProjects();
       print("projects: $projects");
       setState(() {
-        _projects =
-            projects.map((project) => Project.fromMap(project)).toList();
+        _projects = projects;
       });
     } finally {
       setState(() {
@@ -199,7 +196,7 @@ class _ProfileMenuWidgetState extends State<ProfileMenuWidget> {
                               style: const TextStyle(fontSize: 16)),
                         ],
                       ),
-                      Text(_projects[index].taskCount.toString(),
+                      Text(_projects[index].tasksCount.toString(),
                           style: const TextStyle(fontSize: 14)),
                     ],
                   ),

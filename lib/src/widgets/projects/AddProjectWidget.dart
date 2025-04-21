@@ -34,11 +34,10 @@ class _AddProjectWidgetState extends State<AddProjectWidget> {
       final newProject = Project(
         name: _nameController.text,
         userId: AuthService().getLoggedInUser()?.id ?? 0,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
       );
 
-      await ProjectService().insertProject(newProject);
+      final insertProject = await ProjectService().insertProject(newProject);
+      print("insertProject: $insertProject");
 
       // Notify about the project change
       TaskBroadcast().notifyProjectChanged();

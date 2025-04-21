@@ -15,6 +15,7 @@ class AuthService {
   // In a real application, this might be replaced with a more complex logic
   // involving secure storage, API calls, etc.
   bool _isLoggedIn = false;
+  String? _token;
 
   // Add a private variable to store the logged-in user's information
   User? _loggedInUser;
@@ -34,18 +35,29 @@ class AuthService {
     _isLoggedIn = false;
   }
 
+  void setToken(String token) {
+    _token = token;
+  }
+
+  String? getToken() {
+    return _token;
+  }
+
   // Method to get the logged-in user's information
   User? getLoggedInUser() {
     return _loggedInUser;
   }
 
   // Method to log in the user with fake credentials
-  Future<bool> logInWithCredentials(
-      String emailOrUsername, String password) async {
-    final user = await UserService().getUserByEmailOrUsername(emailOrUsername);
-    if (user != null && user.password == password) {
+  Future<bool> logInWithCredentials(String email, String password) async {
+    print("Email: $email");
+    print("Password: $password");
+    final token = await UserService().login(email, password);
+    print("Token: $token");
+    if (token != null) {
       _isLoggedIn = true;
-      _loggedInUser = user; // Store the logged-in user's information
+      setToken(token);
+      _loggedInUser = await UserService().getUser();
       return true;
     }
     return false;

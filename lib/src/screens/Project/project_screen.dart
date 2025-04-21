@@ -61,7 +61,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
         await TaskService().getTasksByProjectId(widget.project.id ?? 0);
     if (mounted) {
       setState(() {
-        _tasks = tasks.map((task) => Task.fromMap(task)).toList();
+        _tasks = tasks;
       });
     }
   }

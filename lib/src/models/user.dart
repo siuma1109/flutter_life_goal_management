@@ -1,34 +1,47 @@
+// To parse this JSON data, do
+//
+//     final user = userFromJson(jsonString);
+
+import 'dart:convert';
+
+User userFromJson(String str) => User.fromJson(json.decode(str));
+
+String userToJson(User data) => json.encode(data.toJson());
+
 class User {
-  final int? id;
-  final String username;
-  final String name;
-  final String email;
-  final String password;
+  int id;
+  String name;
+  String email;
+  DateTime? emailVerifiedAt;
+  DateTime createdAt;
+  DateTime updatedAt;
 
   User({
-    this.id,
-    required this.username,
+    required this.id,
     required this.name,
     required this.email,
-    required this.password,
+    this.emailVerifiedAt,
+    required this.createdAt,
+    required this.updatedAt,
   });
 
-  factory User.fromMap(Map<String, dynamic> map) {
-    return User(
-        id: map['id'],
-        username: map['username'],
-        name: map['name'],
-        email: map['email'],
-        password: map['password']);
-  }
+  factory User.fromJson(Map<String, dynamic> json) => User(
+        id: json["id"],
+        name: json["name"] ?? "",
+        email: json["email"] ?? "",
+        emailVerifiedAt: json["email_verified_at"] != null
+            ? DateTime.parse(json["email_verified_at"])
+            : null,
+        createdAt: DateTime.parse(json["created_at"]),
+        updatedAt: DateTime.parse(json["updated_at"]),
+      );
 
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'username': username,
-      'name': name,
-      'email': email,
-      'password': password,
-    };
-  }
+  Map<String, dynamic> toJson() => {
+        "id": id,
+        "name": name,
+        "email": email,
+        "email_verified_at": emailVerifiedAt,
+        "created_at": createdAt.toIso8601String(),
+        "updated_at": updatedAt.toIso8601String(),
+      };
 }

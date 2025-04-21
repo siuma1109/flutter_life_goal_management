@@ -5,7 +5,7 @@ class TaskPrioritySelectorWidget extends StatefulWidget {
   final int priority;
   final Function(int) onPriorityChanged;
 
-  TaskPrioritySelectorWidget({
+  const TaskPrioritySelectorWidget({
     super.key,
     required this.priority,
     required this.onPriorityChanged,

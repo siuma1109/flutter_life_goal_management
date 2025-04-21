@@ -1,15 +1,25 @@
+// To parse this JSON data, do
+//
+//     final task = taskFromJson(jsonString);
+
+import 'dart:convert';
+
+Task taskFromJson(String str) => Task.fromJson(json.decode(str));
+
+String taskToJson(Task data) => json.encode(data.toJson());
+
 class Task {
-  final int? id;
-  final int? parentId;
-  final String title;
-  final String? description;
-  final DateTime? dueDate;
-  final int priority;
+  int? id;
+  int? parentId;
+  int userId;
+  int? projectId;
+  String title;
+  String? description;
+  DateTime? dueDate;
+  int priority;
   bool isChecked;
-  final int userId;
-  final int? projectId;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
+  DateTime? createdAt;
+  DateTime? updatedAt;
   List<Task> subTasks;
 
   Task({
@@ -18,48 +28,50 @@ class Task {
     required this.userId,
     this.projectId,
     required this.title,
-    this.description,
+    this.description = '',
     this.dueDate,
-    this.priority = 4,
-    this.isChecked = false,
+    required this.priority,
+    required this.isChecked,
     this.createdAt,
     this.updatedAt,
-    List<Task>? subTasks,
-  }) : subTasks = subTasks ?? [];
-
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'parent_id': parentId,
-      'user_id': userId,
-      'project_id': projectId,
-      'title': title,
-      'description': description,
-      'due_date': dueDate?.toIso8601String(),
-      'priority': priority,
-      'is_checked': isChecked,
-      'created_at': createdAt?.toIso8601String(),
-      'updated_at': updatedAt?.toIso8601String(),
-    };
+    required this.subTasks,
+  }) {
+    createdAt = createdAt ?? DateTime.now();
+    updatedAt = updatedAt ?? DateTime.now();
   }
 
-  factory Task.fromMap(Map<String, dynamic> map) {
-    return Task(
-      id: map['id'],
-      parentId: map['parent_id'],
-      userId: map['user_id'],
-      projectId: map['project_id'],
-      title: map['title'],
-      description: map['description'],
-      dueDate: map['due_date'] != null ? DateTime.parse(map['due_date']) : null,
-      priority: map['priority'],
-      isChecked: map['is_checked'] == 1 ? true : false,
-      createdAt:
-          map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
-      updatedAt:
-          map['updated_at'] != null ? DateTime.parse(map['updated_at']) : null,
-    );
-  }
+  factory Task.fromJson(Map<String, dynamic> json) => Task(
+        id: json["id"],
+        parentId: json["parent_id"],
+        userId: json["user_id"],
+        projectId: json["project_id"],
+        title: json["title"] ?? "",
+        description: json["description"],
+        dueDate:
+            json["due_date"] != null ? DateTime.parse(json["due_date"]) : null,
+        priority: json["priority"],
+        isChecked: json["is_checked"],
+        createdAt: DateTime.parse(json["created_at"]),
+        updatedAt: DateTime.parse(json["updated_at"]),
+        subTasks:
+            List<Task>.from(json["sub_tasks"].map((x) => Task.fromJson(x))),
+      );
+
+  Map<String, dynamic> toJson() => {
+        "id": id,
+        "parent_id": parentId,
+        "user_id": userId,
+        "project_id": projectId,
+        "title": title,
+        "description": description,
+        "due_date": dueDate?.toIso8601String(),
+        "priority": priority,
+        "is_checked": isChecked,
+        "created_at": createdAt?.toIso8601String(),
+        "updated_at": updatedAt?.toIso8601String(),
+        "sub_tasks":
+            List<Map<String, dynamic>>.from(subTasks.map((x) => x.toJson())),
+      };
 
   Task copyWith({
     int? id,

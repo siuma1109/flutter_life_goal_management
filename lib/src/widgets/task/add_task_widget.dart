@@ -58,6 +58,11 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
         Task(
           userId: AuthService().getLoggedInUser()?.id ?? 0,
           title: "",
+          parentId: widget.task?.id,
+          projectId: widget.task?.projectId,
+          priority: widget.task?.priority ?? 4,
+          isChecked: widget.task?.isChecked ?? false,
+          subTasks: [],
         );
     _loadProjects();
   }
@@ -87,10 +92,9 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
   }
 
   Future<void> _loadProjects() async {
-    final projects = await ProjectService()
-        .getAllProjectsByUserId(AuthService().getLoggedInUser()?.id ?? 0);
+    final projects = await ProjectService().getAllProjects();
     setState(() {
-      _projects = projects.map((project) => Project.fromMap(project)).toList();
+      _projects = projects;
     });
   }
 
@@ -115,6 +119,8 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                 dueDate: _dueDate,
                 createdAt: DateTime.now(),
                 updatedAt: DateTime.now(),
+                isChecked: false,
+                subTasks: [],
               ),
           onDateSelected: (date) {
             setState(() {
@@ -151,7 +157,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
 
     // If it's a task with a project, also notify project changes
     if (_projectId != null) {
-      TaskBroadcast().notifyProjectChanged(_projectId);
+      TaskBroadcast().notifyProjectChanged();
     }
   }
 
@@ -162,7 +168,6 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
       });
 
       try {
-        final now = DateTime.now();
         final task = _task.copyWith(
           parentId: widget.task?.id,
           userId: AuthService().getLoggedInUser()?.id ?? 0,
@@ -171,17 +176,12 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
           description: _descriptionController.text,
           dueDate: _dueDate,
           priority: _priority,
-          createdAt: widget.task?.createdAt ?? now,
-          updatedAt: now,
         );
         widget.onRefresh?.call(task);
 
         if (widget.isParentTask) {
           // Insert the main task and get its ID
-          final taskId = await TaskService().insertTask(task.toMap());
-
-          // Insert subtasks recursively
-          await _insertSubtasks(task.subTasks, taskId);
+          await TaskService().insertTask(task);
           _notifyChanges();
         }
 
@@ -202,20 +202,6 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
         setState(() {
           _isLoading = false;
         });
-      }
-    }
-  }
-
-  Future<void> _insertSubtasks(List<Task> subTasks, int parentId) async {
-    print("Inserting subtasks: ${subTasks.length}");
-    for (var subTask in subTasks) {
-      // Create a new task with the parent ID set
-      final newSubtask = subTask.copyWith(parentId: parentId);
-      final newSubtaskId = await TaskService().insertTask(newSubtask.toMap());
-
-      // If the subtask has its own subtasks, insert them recursively
-      if (subTask.subTasks.isNotEmpty) {
-        await _insertSubtasks(subTask.subTasks, newSubtaskId);
       }
     }
   }
@@ -495,6 +481,8 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                   dueDate: _dueDate,
                   createdAt: now,
                   updatedAt: now,
+                  isChecked: false,
+                  subTasks: [],
                 );
                 _task.subTasks.add(subtask);
               }

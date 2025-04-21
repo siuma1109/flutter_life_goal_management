@@ -93,7 +93,7 @@ class _TaskListWidgetState extends State<TaskListWidget> {
                         onChanged: (bool? newValue) {
                           setState(() {
                             task.isChecked = !task.isChecked;
-                            _taskService.updateTask(task.toMap());
+                            _taskService.updateTask(task);
                             _refreshTasks();
                           });
                         },

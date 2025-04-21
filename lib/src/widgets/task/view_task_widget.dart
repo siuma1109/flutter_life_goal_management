@@ -75,13 +75,10 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
       dueDate: _dueDate,
       priority: _priority,
       isChecked: widget.task.isChecked,
-      createdAt: widget.task.createdAt,
-      updatedAt: DateTime.now(),
+      subTasks: widget.task.subTasks,
     );
 
-    if (widget.task.id != null) {
-      await TaskService().updateTask(updatedTask.toMap());
-    }
+    await TaskService().updateTask(updatedTask);
 
     widget.onRefresh?.call(updatedTask);
   }
@@ -107,6 +104,7 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
             isChecked: widget.task.isChecked,
             createdAt: widget.task.createdAt,
             updatedAt: widget.task.updatedAt,
+            subTasks: widget.task.subTasks,
           ),
           onDateSelected: (date) {
             setState(() {
@@ -271,9 +269,9 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
   }
 
   Future<void> _loadSubTasksById() async {
-    final tasks = await TaskService().getSubtasks(widget.task.id!);
+    final subTasks = await TaskService().getSubtasks(widget.task.id!);
     setState(() {
-      _task.subTasks = tasks.map((task) => Task.fromMap(task)).toList();
+      _task.subTasks = subTasks;
     });
   }
 
@@ -292,7 +290,9 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
             TextButton(
               onPressed: () async {
                 if (widget.task.id != null) {
-                  await TaskService().deleteTask(widget.task.id!);
+                  print("Deleting task: ${widget.task.id}");
+                  print("Deleting task projectId: ${widget.task.projectId}");
+                  await TaskService().deleteTask(widget.task);
                 }
                 widget.onRefresh?.call(null);
                 Navigator.of(dialogContext).pop(); // Close the dialog

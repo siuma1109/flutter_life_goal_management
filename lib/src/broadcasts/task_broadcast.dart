@@ -9,11 +9,11 @@ class TaskBroadcast {
 
   // Stream controllers for various events
   final _taskChangedController = StreamController<void>.broadcast();
-  final _projectChangedController = StreamController<int?>.broadcast();
+  final _projectChangedController = StreamController<void>.broadcast();
 
   // Streams that other widgets can listen to
   Stream<void> get taskChangedStream => _taskChangedController.stream;
-  Stream<int?> get projectChangedStream => _projectChangedController.stream;
+  Stream<void> get projectChangedStream => _projectChangedController.stream;
 
   // Method to notify that tasks have changed
   void notifyTasksChanged() {
@@ -21,8 +21,9 @@ class TaskBroadcast {
   }
 
   // Method to notify that a project has changed
-  void notifyProjectChanged([int? projectId]) {
-    _projectChangedController.add(projectId);
+  void notifyProjectChanged() {
+    print("notifyProjectChanged");
+    _projectChangedController.add(null);
   }
 
   // Clean up resources

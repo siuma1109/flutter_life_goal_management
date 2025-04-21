@@ -63,10 +63,8 @@ class _ProfileScreenState extends State<ProfileScreen>
     });
 
     try {
-      final taskCount = await TaskService()
-          .getTaskCount(AuthService().getLoggedInUser()?.id ?? 0);
-      final inboxTaskCount = await TaskService()
-          .getInboxTaskCount(AuthService().getLoggedInUser()?.id ?? 0);
+      final taskCount = await TaskService().getTasksCount();
+      final inboxTaskCount = await TaskService().getInboxTasksCount();
       if (mounted) {
         setState(() {
           _taskCount = taskCount;
@@ -86,7 +84,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(AuthService().getLoggedInUser()?.username ?? 'Profile'),
+        title: Text(AuthService().getLoggedInUser()?.name ?? 'Profile'),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),

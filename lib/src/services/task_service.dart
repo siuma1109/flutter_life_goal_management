@@ -1,11 +1,14 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
-import 'package:flutter_life_goal_management/src/services/database_helper.dart';
+import 'package:flutter_life_goal_management/src/models/task.dart';
+import 'package:flutter_life_goal_management/src/services/auth_service.dart';
+import 'package:flutter_life_goal_management/src/services/http_service.dart';
+
 import 'package:flutter_life_goal_management/src/widgets/task/task_priority_selector_widget.dart';
 
 class TaskService {
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
-
   Color getPriorityColor(int priority) {
     switch (priority) {
       case 1:
@@ -38,163 +41,115 @@ class TaskService {
 
   // Task Part Start
   // Insert a task
-  Future<int> insertTask(Map<String, dynamic> task) async {
-    final db = await _databaseHelper.database;
-    task.remove("id");
-    task.remove("created_at");
-    task.remove("updated_at");
-    final result = await db.insert('tasks', task);
-
+  Future<Task?> insertTask(Task task) async {
+    print('subTasks: ${task.subTasks.map((e) => e.toJson())}');
+    print("task: ${task.toJson()}");
+    print("body: ${jsonEncode(task.toJson())}");
+    final result = await HttpService().post('tasks',
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(task.toJson()));
+    print("result: ${result.body}");
     // Broadcast task changes
     TaskBroadcast().notifyTasksChanged();
 
     // If it's a task with a project, also notify project changes
-    if (task['project_id'] != null) {
-      TaskBroadcast().notifyProjectChanged(task['project_id']);
+    if (task.projectId != null) {
+      TaskBroadcast().notifyProjectChanged();
     }
+    print("result: ${result.body}");
+    return Task.fromJson(jsonDecode(result.body));
+  }
 
-    return result;
+  // Get All Tasks Count Without sub tasks
+  Future<int> getTasksCount() async {
+    final result = await HttpService().get('tasks_count', queryParameters: {
+      'type': 'all_without_sub_tasks',
+    });
+    print("result: ${result.body}");
+    return jsonDecode(result.body)['tasks_count'] ?? 0;
   }
 
   // Get Inbox Tasks
-  Future<List<Map<String, dynamic>>> getInboxTasks(int userId) async {
-    final db = await _databaseHelper.database;
-    return await db.query('tasks',
-        where: 'user_id = ? AND project_id IS NULL AND parent_id IS NULL',
-        whereArgs: [userId]);
+  Future<List<Task>> getInboxTasks() async {
+    final result = await HttpService().get('tasks', queryParameters: {
+      'type': 'inbox',
+    });
+    print("result: ${result.body}");
+    return List<Task>.from(
+        jsonDecode(result.body).map((e) => Task.fromJson(e)));
   }
 
-  // Get all tasks (including subtasks)
-  Future<List<Map<String, dynamic>>> getAllTasks(
-      bool withSubTask, int? userId) async {
-    final db = await _databaseHelper.database;
-    var whereClauses = [];
-    var whereArgs = [];
-
-    if (userId != null) {
-      whereClauses.add('user_id = ?');
-      whereArgs.add(userId);
-    }
-    if (withSubTask) {
-      whereClauses.add('parent_id IS NOT NULL');
-    }
-
-    return await db.query('tasks',
-        where: whereClauses.join(' AND '), whereArgs: whereArgs);
-  }
-
-  // Get task count
-  Future<int> getTaskCount(int userId) async {
-    final db = await _databaseHelper.database;
-    final result = await db.rawQuery(
-        'SELECT COUNT(*) as count FROM tasks WHERE user_id = ? AND parent_id IS NULL',
-        [userId]);
-
-    return result.first['count'] as int;
-  }
-
-  // Get inbox task count
-  Future<int> getInboxTaskCount(int userId) async {
-    final db = await _databaseHelper.database;
-    final result = await db.rawQuery(
-        'SELECT COUNT(*) as count FROM tasks WHERE user_id = ? AND project_id IS NULL AND parent_id IS NULL',
-        [userId]);
-
-    return result.first['count'] as int;
+  // Get Inbox Tasks Count
+  Future<int> getInboxTasksCount() async {
+    final result = await HttpService().get('tasks_count', queryParameters: {
+      'type': 'inbox',
+    });
+    return jsonDecode(result.body)['tasks_count'] ?? 0;
   }
 
   // Get tasks by project_id
-  Future<List<Map<String, dynamic>>> getTasksByProjectId(int projectId) async {
-    final db = await _databaseHelper.database;
-    return await db.query(
-      'tasks',
-      where: 'project_id = ?',
-      whereArgs: [projectId],
-    );
+  Future<List<Task>> getTasksByProjectId(int projectId) async {
+    final result = await HttpService().get('tasks', queryParameters: {
+      'project_id': projectId,
+    });
+    return List<Task>.from(
+        jsonDecode(result.body).map((e) => Task.fromJson(e)));
   }
 
   // Get tasks by parent_id (for subtasks)
-  Future<List<Map<String, dynamic>>> getSubtasks(int parentId) async {
-    final db = await _databaseHelper.database;
-    return await db.query(
-      'tasks',
-      where: 'parent_id = ?',
-      whereArgs: [parentId],
-    );
-  }
-
-  // Get main tasks (tasks without parent)
-  Future<List<Map<String, dynamic>>> getMainTasks() async {
-    final db = await _databaseHelper.database;
-    return await db.query(
-      'tasks',
-      where: 'parent_id IS NULL',
-    );
+  Future<List<Task>> getSubtasks(int parentId) async {
+    final result = await HttpService().get('tasks', queryParameters: {
+      'parent_id': parentId,
+    });
+    return List<Task>.from(
+        jsonDecode(result.body).map((e) => Task.fromJson(e)));
   }
 
   // Update a task
-  Future<int> updateTask(Map<String, dynamic> task) async {
-    final db = await _databaseHelper.database;
-    final id = task['id'];
-    task.remove("id");
+  Future<Task?> updateTask(Task task) async {
+    print("task: ${task.toJson()}");
+    final result = await HttpService().put('tasks/${task.id}',
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(task.toJson()));
 
-    final result = await db.update(
-      'tasks',
-      task,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-
+    print("result: ${result.body}");
+    if (result.statusCode != 200) {
+      return null;
+    }
     // Broadcast task changes
     TaskBroadcast().notifyTasksChanged();
 
     // If it's a task with a project, also notify project changes
-    if (task['project_id'] != null) {
-      TaskBroadcast().notifyProjectChanged(task['project_id']);
+    if (task.projectId != null) {
+      TaskBroadcast().notifyProjectChanged();
     }
 
-    return result;
+    return Task.fromJson(jsonDecode(result.body));
   }
 
   // Delete a task and its subtasks
-  Future<int> deleteTask(int id) async {
-    final db = await _databaseHelper.database;
+  Future<bool> deleteTask(Task task) async {
+    try {
+      print("task projectId: ${task.projectId}");
+      final result = await HttpService().delete('tasks/${task.id}');
 
-    // Get the task first to check project_id
-    final List<Map<String, dynamic>> taskData = await db.query(
-      'tasks',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+      if (result.statusCode != 204 && result.statusCode != 200) {
+        return false;
+      }
 
-    int? projectId;
-    if (taskData.isNotEmpty) {
-      projectId = taskData.first['project_id'];
+      // Broadcast task changes
+      TaskBroadcast().notifyTasksChanged();
+
+      // If it was a project task, also notify project changes
+      if (task.projectId != null) {
+        TaskBroadcast().notifyProjectChanged();
+      }
+
+      return true;
+    } catch (e) {
+      print('error: ${e.toString()}');
+      return false;
     }
-
-    // First delete all subtasks
-    await db.delete(
-      'tasks',
-      where: 'parent_id = ?',
-      whereArgs: [id],
-    );
-
-    // Then delete the main task
-    final result = await db.delete(
-      'tasks',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-
-    // Broadcast task changes
-    TaskBroadcast().notifyTasksChanged();
-
-    // If it was a project task, also notify project changes
-    if (projectId != null) {
-      TaskBroadcast().notifyProjectChanged(projectId);
-    }
-
-    return result;
   }
   // database end
 }

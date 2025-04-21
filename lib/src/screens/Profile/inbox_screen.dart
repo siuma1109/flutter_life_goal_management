@@ -44,10 +44,9 @@ class _InboxScreenState extends State<InboxScreen> {
     });
 
     try {
-      final tasks = await TaskService()
-          .getInboxTasks(AuthService().getLoggedInUser()?.id ?? 0);
+      final tasks = await TaskService().getInboxTasks();
       setState(() {
-        _tasks = tasks.map((task) => Task.fromMap(task)).toList();
+        _tasks = tasks;
       });
     } finally {
       setState(() {

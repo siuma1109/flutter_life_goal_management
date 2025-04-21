@@ -1,54 +1,68 @@
+import 'dart:convert';
+
 import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
 import 'package:flutter_life_goal_management/src/models/project.dart';
-import 'package:flutter_life_goal_management/src/services/database_helper.dart';
+import 'package:flutter_life_goal_management/src/services/http_service.dart';
 
 class ProjectService {
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
-
   // Insert a project
-  Future<int> insertProject(Project project) async {
-    print("inserting project: ${project.toMap()}");
-    final db = await _databaseHelper.database;
-    Map<String, dynamic> projectMap = project.toMap();
-    projectMap.remove('task_count');
-    final result = await db.insert('projects', projectMap);
+  Future<Project?> insertProject(Project project) async {
+    final result = await HttpService().post('projects',
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(project.toJson()));
+
     TaskBroadcast().notifyProjectChanged();
-    print("result: $result");
-    return result;
+
+    if (result.statusCode == 200 || result.statusCode == 201) {
+      try {
+        return Project.fromJson(jsonDecode(result.body));
+      } catch (e) {
+        print("Error parsing project response: $e");
+        return null;
+      }
+    }
+    return null;
   }
 
   // Update a project
   Future<int> updateProject(Project project) async {
-    final db = await _databaseHelper.database;
-    final result = await db.update('projects', project.toMap(),
-        where: 'id = ?', whereArgs: [project.id]);
+    final result = await HttpService()
+        .put('projects/${project.id}', body: project.toJson());
     TaskBroadcast().notifyProjectChanged();
-    return result;
+    return result.statusCode;
   }
 
   // Get all projects
-  Future<List<Map<String, dynamic>>> getAllProjectsByUserId(int userId) async {
-    final db = await _databaseHelper.database;
-    return await db.rawQuery('''
-          SELECT *, (
-          SELECT COUNT(*) FROM tasks WHERE project_id = projects.id) as task_count 
-          FROM projects WHERE user_id = ?
-        ''', [userId]);
+  Future<List<Project>> getAllProjects() async {
+    final result = await HttpService().get('projects');
+
+    try {
+      final List<Project> data = jsonDecode(result.body)
+          .map<Project>((json) => Project.fromJson(json))
+          .toList();
+      return data;
+    } catch (e) {
+      print("Error parsing projects: $e");
+      return [];
+    }
   }
 
   // Get a project
-  Future<Project> getProject(int id) async {
-    final db = await _databaseHelper.database;
-    final result = await db.query('projects', where: 'id = ?', whereArgs: [id]);
-    return Project.fromMap(result.first);
+  Future<Project?> getProject(int id) async {
+    final result = await HttpService().get('projects/$id');
+
+    try {
+      return Project.fromJson(jsonDecode(result.body));
+    } catch (e) {
+      print("Error parsing project: $e");
+      return null;
+    }
   }
 
   // Delete a project
   Future<int> deleteProject(int id) async {
-    final db = await _databaseHelper.database;
-    final result =
-        await db.delete('projects', where: 'id = ?', whereArgs: [id]);
+    final result = await HttpService().delete('projects/$id');
     TaskBroadcast().notifyProjectChanged();
-    return result;
+    return result.statusCode;
   }
 }
