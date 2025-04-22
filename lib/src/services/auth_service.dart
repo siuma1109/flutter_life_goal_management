@@ -62,7 +62,11 @@ class AuthService {
   }
 
   // Method to get the logged-in user's information
-  User? getLoggedInUser() {
+  Future<User?> getLoggedInUser() async {
+    final isLoggedIn = await loggedIn();
+    if (!isLoggedIn) {
+      return null;
+    }
     return _loggedInUser;
   }
 
@@ -109,6 +113,7 @@ class AuthService {
     } else {
       // If token is invalid, delete it
       await deleteToken();
+      _loggedInUser = null;
       _isLoggedIn = false;
       return false;
     }

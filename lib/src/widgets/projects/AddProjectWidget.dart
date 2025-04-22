@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
 import 'package:flutter_life_goal_management/src/models/project.dart';
-import 'package:flutter_life_goal_management/src/services/auth_service.dart';
+import 'package:flutter_life_goal_management/src/models/user.dart';
 import 'package:flutter_life_goal_management/src/services/project_service.dart';
 
 class AddProjectWidget extends StatefulWidget {
-  const AddProjectWidget({super.key});
+  final User? user;
+  const AddProjectWidget({super.key, required this.user});
 
   @override
   _AddProjectWidgetState createState() => _AddProjectWidgetState();
@@ -15,10 +16,11 @@ class _AddProjectWidgetState extends State<AddProjectWidget> {
   final _nameController = TextEditingController();
   final FocusNode _nameFocusNode = FocusNode();
   final _formKey = GlobalKey<FormState>();
-
+  User? _user;
   @override
   void initState() {
     super.initState();
+    _user = widget.user;
     _nameFocusNode.requestFocus();
   }
 
@@ -33,7 +35,7 @@ class _AddProjectWidgetState extends State<AddProjectWidget> {
     if (_formKey.currentState!.validate()) {
       final newProject = Project(
         name: _nameController.text,
-        userId: AuthService().getLoggedInUser()?.id ?? 0,
+        userId: _user!.id!,
       );
 
       final insertProject = await ProjectService().insertProject(newProject);

@@ -1,15 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_life_goal_management/src/services/auth_service.dart';
+import 'package:flutter_life_goal_management/src/models/user.dart';
+import 'package:flutter_life_goal_management/src/screens/Profile/edit_profile_screen.dart';
 
 class ProfileInfoWidget extends StatefulWidget {
   final int taskCount;
-  const ProfileInfoWidget({super.key, required this.taskCount});
+  final User? user;
+  const ProfileInfoWidget({
+    super.key,
+    required this.taskCount,
+    required this.user,
+  });
 
   @override
   State<ProfileInfoWidget> createState() => _ProfileInfoWidgetState();
 }
 
 class _ProfileInfoWidgetState extends State<ProfileInfoWidget> {
+  User? _user;
+  @override
+  void initState() {
+    super.initState();
+    _user = widget.user;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -30,7 +43,7 @@ class _ProfileInfoWidgetState extends State<ProfileInfoWidget> {
                   Row(
                     children: [
                       Text(
-                        AuthService().getLoggedInUser()?.name ?? '',
+                        _user?.name ?? '',
                         style: TextStyle(fontSize: 24),
                       ),
                     ],
@@ -65,21 +78,28 @@ class _ProfileInfoWidgetState extends State<ProfileInfoWidget> {
               ),
             ],
           ),
-          SizedBox(height: 16),
-          Text('This is a placeholder description for the user.',
-              style: TextStyle(fontSize: 14)),
+          // SizedBox(height: 16),
+          // Text('This is a placeholder description for the user.',
+          //     style: TextStyle(fontSize: 14)),
           SizedBox(height: 16),
           Row(
             children: [
               OutlinedButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EditProfileScreen(user: _user),
+                    ),
+                  );
+                },
                 style: OutlinedButton.styleFrom(
                   side: BorderSide(color: Colors.black),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8.0),
                   ),
                 ),
-                child: Text('Edit Profile (TODO)'),
+                child: Text('Edit Profile'),
               ),
             ],
           ),

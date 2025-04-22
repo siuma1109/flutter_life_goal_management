@@ -45,4 +45,16 @@ class UserService {
 
     return jsonDecode(result.body);
   }
+
+  Future<Map<String, dynamic>?> updateUser(User user) async {
+    final result = await _httpService.put(
+      'users/${user.id}',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(user.toJson()),
+    );
+
+    return jsonDecode(result.body);
+  }
 }

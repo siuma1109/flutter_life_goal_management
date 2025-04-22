@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
 import 'package:flutter_life_goal_management/src/models/project.dart';
+import 'package:flutter_life_goal_management/src/models/user.dart';
 import 'package:flutter_life_goal_management/src/screens/Profile/inbox_screen.dart';
 import 'package:flutter_life_goal_management/src/screens/Project/project_screen.dart';
 import 'package:flutter_life_goal_management/src/services/project_service.dart';
@@ -9,10 +10,11 @@ import 'package:flutter_life_goal_management/src/widgets/projects/AddProjectWidg
 
 class ProfileMenuWidget extends StatefulWidget {
   final int inboxTaskCount;
-
+  final User? user;
   const ProfileMenuWidget({
     super.key,
     required this.inboxTaskCount,
+    required this.user,
   });
 
   @override
@@ -77,7 +79,7 @@ class _ProfileMenuWidgetState extends State<ProfileMenuWidget> {
       isScrollControlled: true,
       backgroundColor: Colors.white,
       useRootNavigator: true,
-      builder: (context) => AddProjectWidget(),
+      builder: (context) => AddProjectWidget(user: widget.user),
     );
 
     if (result == true) {

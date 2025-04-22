@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
 import 'package:flutter_life_goal_management/src/models/project.dart';
+import 'package:flutter_life_goal_management/src/models/user.dart';
 import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/services/project_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/sub_task_list_widget.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../models/task.dart';
@@ -15,12 +17,13 @@ class AddTaskWidget extends StatefulWidget {
   final Task? task;
   final bool isParentTask;
   final Function? onRefresh;
-
+  final User? user;
   const AddTaskWidget({
     super.key,
     this.task,
     this.isParentTask = true,
     this.onRefresh,
+    this.user,
   });
 
   @override
@@ -47,6 +50,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
   late Task _task;
   List<Project> _projects = [];
   int? _projectId;
+  User? _user;
 
   @override
   void initState() {
@@ -54,9 +58,10 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
     _dateInputFocusNode.addListener(_onFocusChange);
     _taskFocusNode.requestFocus();
     dotenv.load();
+    _loadUser();
     _task = widget.task ??
         Task(
-          userId: AuthService().getLoggedInUser()?.id ?? 0,
+          userId: _user!.id!,
           title: "",
           parentId: widget.task?.id,
           projectId: widget.task?.projectId,
@@ -65,6 +70,16 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
           subTasks: [],
         );
     _loadProjects();
+  }
+
+  Future<void> _loadUser() async {
+    final user = await AuthService().getLoggedInUser();
+    if (user == null && mounted) {
+      context.go('/login');
+      return;
+    }
+    _user = user;
+    _task.userId = _user!.id!;
   }
 
   @override
@@ -112,7 +127,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
               Task(
                 id: null,
                 parentId: null,
-                userId: AuthService().getLoggedInUser()?.id ?? 0,
+                userId: _user?.id ?? 0,
                 projectId: widget.task?.projectId ?? null,
                 title: "",
                 priority: _priority,
@@ -170,7 +185,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
       try {
         final task = _task.copyWith(
           parentId: widget.task?.id,
-          userId: AuthService().getLoggedInUser()?.id ?? 0,
+          userId: _user?.id ?? 0,
           projectId: _projectId,
           title: _taskController.text,
           description: _descriptionController.text,
@@ -473,7 +488,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                 final subtask = Task(
                   id: null,
                   parentId: null, // Will be set when the parent task is created
-                  userId: AuthService().getLoggedInUser()?.id ?? 0,
+                  userId: _user?.id ?? 0,
                   projectId: _projectId,
                   title: subTask['task_name'],
                   description: subTask['description'],

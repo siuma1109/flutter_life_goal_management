@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/models/task.dart';
+import 'package:flutter_life_goal_management/src/models/user.dart';
 import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/services/task_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/task_add_form_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/task_edit_form_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/task_row_widget.dart';
+import 'package:go_router/go_router.dart';
 
 class SubTaskListWidget extends StatefulWidget {
   final Task task;
@@ -16,11 +18,21 @@ class SubTaskListWidget extends StatefulWidget {
 
 class _SubTaskListWidgetState extends State<SubTaskListWidget> {
   late Task _task;
+  late User _user;
 
   @override
   void initState() {
     super.initState();
     _task = widget.task;
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    final user = await AuthService().getLoggedInUser();
+    if (user == null && mounted) {
+      context.go('/login');
+    }
+    _user = user!;
   }
 
   @override
@@ -143,11 +155,12 @@ class _SubTaskListWidgetState extends State<SubTaskListWidget> {
                 parentId: _task.id,
                 title: "",
                 isChecked: false,
-                userId: AuthService().getLoggedInUser()?.id ?? 0,
+                userId: _user.id!,
                 projectId: widget.task.projectId,
                 subTasks: [],
                 priority: 4,
               ),
+              user: _user,
               onRefresh: (subTask) => {
                 setState(() {
                   _task.subTasks.add(subTask);
