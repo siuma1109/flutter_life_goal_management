@@ -1,15 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
-import 'package:flutter_life_goal_management/src/broadcasts/user_broadcast.dart';
 import 'package:flutter_life_goal_management/src/models/user.dart';
 import 'package:flutter_life_goal_management/src/screens/setting_screen.dart';
-import 'package:flutter_life_goal_management/src/widgets/profile/dashboard_widget.dart';
 import 'package:flutter_life_goal_management/src/services/auth_service.dart';
+import 'package:flutter_life_goal_management/src/widgets/profile/dashboard_widget.dart';
 import 'package:flutter_life_goal_management/src/services/task_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/profile/ProfileMenuWidget.dart';
 import 'package:flutter_life_goal_management/src/widgets/profile_info_widget.dart';
-import 'package:go_router/go_router.dart';
 import '../widgets/task/add_task_floating_button_widget.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -23,10 +21,9 @@ class _ProfileScreenState extends State<ProfileScreen>
     with WidgetsBindingObserver {
   int _taskCount = 0;
   int _inboxTaskCount = 0;
-  bool _isLoading = false;
   StreamSubscription? _taskChangedSubscription;
   User? _user;
-  StreamSubscription? _userChangedSubscription;
+  bool _isLoadingTaskCount = false;
 
   @override
   void initState() {
@@ -34,16 +31,12 @@ class _ProfileScreenState extends State<ProfileScreen>
 
     WidgetsBinding.instance.addObserver(this);
 
+    _user = AuthService().getLoggedInUser();
     // Listen for task changes
     _taskChangedSubscription = TaskBroadcast().taskChangedStream.listen((_) {
       _loadTaskCount();
     });
 
-    // Listen for user changes
-    _userChangedSubscription = UserBroadcast().userChangedStream.listen((_) {
-      _loadUser();
-    });
-    _loadUser();
     _loadTaskCount();
   }
 
@@ -51,13 +44,11 @@ class _ProfileScreenState extends State<ProfileScreen>
   void didChangeDependencies() {
     super.didChangeDependencies();
     _loadTaskCount();
-    _loadUser();
   }
 
   @override
   void dispose() {
     _taskChangedSubscription?.cancel();
-    _userChangedSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -66,30 +57,12 @@ class _ProfileScreenState extends State<ProfileScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _loadTaskCount();
-      _loadUser();
     }
-  }
-
-  Future<void> _loadUser() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    final user = await AuthService().getLoggedInUser();
-
-    if (user == null && mounted) {
-      context.go('/login');
-    }
-
-    setState(() {
-      _isLoading = false;
-      _user = user;
-    });
   }
 
   Future<void> _loadTaskCount() async {
     setState(() {
-      _isLoading = true;
+      _isLoadingTaskCount = true;
     });
 
     try {
@@ -104,7 +77,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     } finally {
       if (mounted) {
         setState(() {
-          _isLoading = false;
+          _isLoadingTaskCount = false;
         });
       }
     }
@@ -112,15 +85,6 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Show a loading indicator while user data is being loaded
-    if (_isLoading || _user == null) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(
         title: Text(_user?.name ?? 'Profile'),
@@ -144,7 +108,10 @@ class _ProfileScreenState extends State<ProfileScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Profile Section
-            ProfileInfoWidget(taskCount: _taskCount, user: _user!),
+            ProfileInfoWidget(
+              isLoadingTaskCount: _isLoadingTaskCount,
+              taskCount: _taskCount,
+            ),
             const TabBar(
               tabs: [
                 Tab(icon: Icon(Icons.show_chart)),

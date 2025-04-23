@@ -24,15 +24,7 @@ class _SubTaskListWidgetState extends State<SubTaskListWidget> {
   void initState() {
     super.initState();
     _task = widget.task;
-    _loadUser();
-  }
-
-  Future<void> _loadUser() async {
-    final user = await AuthService().getLoggedInUser();
-    if (user == null && mounted) {
-      context.go('/login');
-    }
-    _user = user!;
+    _user = AuthService().getLoggedInUser()!;
   }
 
   @override
@@ -161,7 +153,6 @@ class _SubTaskListWidgetState extends State<SubTaskListWidget> {
                 subTasks: [],
                 priority: 4,
               ),
-              user: _user,
               onRefresh: (subTask) => {
                 setState(() {
                   _task.subTasks.add(subTask);

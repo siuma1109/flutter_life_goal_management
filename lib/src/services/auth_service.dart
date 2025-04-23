@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/services/user_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
@@ -62,12 +63,12 @@ class AuthService {
   }
 
   // Method to get the logged-in user's information
-  Future<User?> getLoggedInUser() async {
-    final isLoggedIn = await loggedIn();
-    if (!isLoggedIn) {
-      return null;
-    }
+  User? getLoggedInUser() {
     return _loggedInUser;
+  }
+
+  void setLoggedInUser(User user) {
+    _loggedInUser = user;
   }
 
   // Method to log in the user with credentials

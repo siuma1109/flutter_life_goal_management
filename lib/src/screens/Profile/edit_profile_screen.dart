@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/broadcasts/user_broadcast.dart';
 import 'package:flutter_life_goal_management/src/models/user.dart';
+import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/services/user_service.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final User? user;
-  const EditProfileScreen({super.key, required this.user});
+  final Function(User) onUserUpdated;
+  const EditProfileScreen({
+    super.key,
+    required this.user,
+    required this.onUserUpdated,
+  });
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
 }
@@ -168,7 +174,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                         if (_errors.isEmpty) {
                           final user = result;
-                          print('user: $user');
+
                           if (user != null) {
                             _user = User.fromJson(user);
                             _nameController.text = _user!.name;
@@ -179,6 +185,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           setState(() {
                             _showMessage = 'Profile updated successfully';
                           });
+                          widget.onUserUpdated(_user!);
+                          AuthService().setLoggedInUser(_user!);
                         }
                       }
                       setState(() {

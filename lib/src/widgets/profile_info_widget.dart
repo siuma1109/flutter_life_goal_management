@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/models/user.dart';
 import 'package:flutter_life_goal_management/src/screens/Profile/edit_profile_screen.dart';
+import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 
 class ProfileInfoWidget extends StatefulWidget {
   final int taskCount;
-  final User? user;
+  final bool isLoadingTaskCount;
+
   const ProfileInfoWidget({
     super.key,
     required this.taskCount,
-    required this.user,
+    required this.isLoadingTaskCount,
   });
 
   @override
@@ -20,7 +22,7 @@ class _ProfileInfoWidgetState extends State<ProfileInfoWidget> {
   @override
   void initState() {
     super.initState();
-    _user = widget.user;
+    _user = AuthService().getLoggedInUser();
   }
 
   @override
@@ -54,7 +56,9 @@ class _ProfileInfoWidgetState extends State<ProfileInfoWidget> {
                     children: [
                       Column(
                         children: [
-                          Text(widget.taskCount.toString()),
+                          widget.isLoadingTaskCount
+                              ? CircularProgressIndicator()
+                              : Text(widget.taskCount.toString()),
                           Text('Tasks'),
                         ],
                       ),
@@ -89,7 +93,14 @@ class _ProfileInfoWidgetState extends State<ProfileInfoWidget> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => EditProfileScreen(user: _user),
+                      builder: (context) => EditProfileScreen(
+                        user: _user,
+                        onUserUpdated: (User updatedUser) {
+                          setState(() {
+                            _user = updatedUser;
+                          });
+                        },
+                      ),
                     ),
                   );
                 },

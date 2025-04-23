@@ -11,7 +11,7 @@ String taskToJson(Task data) => json.encode(data.toJson());
 class Task {
   int? id;
   int? parentId;
-  int userId;
+  int? userId;
   int? projectId;
   String title;
   String? description;
@@ -25,7 +25,7 @@ class Task {
   Task({
     this.id,
     this.parentId,
-    required this.userId,
+    this.userId,
     this.projectId,
     required this.title,
     this.description = '',

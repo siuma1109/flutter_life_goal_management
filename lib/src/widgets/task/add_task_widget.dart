@@ -17,13 +17,12 @@ class AddTaskWidget extends StatefulWidget {
   final Task? task;
   final bool isParentTask;
   final Function? onRefresh;
-  final User? user;
+
   const AddTaskWidget({
     super.key,
     this.task,
     this.isParentTask = true,
     this.onRefresh,
-    this.user,
   });
 
   @override
@@ -58,10 +57,10 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
     _dateInputFocusNode.addListener(_onFocusChange);
     _taskFocusNode.requestFocus();
     dotenv.load();
-    _loadUser();
+    _user = AuthService().getLoggedInUser();
     _task = widget.task ??
         Task(
-          userId: _user!.id!,
+          userId: _user?.id,
           title: "",
           parentId: widget.task?.id,
           projectId: widget.task?.projectId,
@@ -69,17 +68,8 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
           isChecked: widget.task?.isChecked ?? false,
           subTasks: [],
         );
-    _loadProjects();
-  }
 
-  Future<void> _loadUser() async {
-    final user = await AuthService().getLoggedInUser();
-    if (user == null && mounted) {
-      context.go('/login');
-      return;
-    }
-    _user = user;
-    _task.userId = _user!.id!;
+    _loadProjects();
   }
 
   @override

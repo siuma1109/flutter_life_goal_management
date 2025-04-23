@@ -9,10 +9,12 @@ import 'package:flutter_life_goal_management/src/widgets/scaffold_with_bottom_na
 import 'package:flutter_life_goal_management/src/screens/profile_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_life_goal_management/src/services/auth_service.dart';
+import 'package:flutter_life_goal_management/src/services/http_service.dart';
 
 /// The route configuration.
 final GoRouter router = GoRouter(
   initialLocation: '/',
+  navigatorKey: HttpService.navigatorKey,
   redirect: (context, state) async {
     // Get unprotected routes
     final publicRoutes = ['/login', '/login/forgot-password', '/login/sign-up'];

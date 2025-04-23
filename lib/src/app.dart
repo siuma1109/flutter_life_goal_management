@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/app_router.dart';
+import 'package:flutter_life_goal_management/src/services/http_service.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
