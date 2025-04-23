@@ -98,8 +98,8 @@ class _CommentListWidgetState extends State<CommentListWidget> {
                 ),
               ),
               const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+              SizedBox(
+                width: double.infinity,
                 child: _comments.isEmpty
                     ? Text('No comments yet',
                         style: TextStyle(

@@ -108,6 +108,17 @@ class TaskService {
         jsonDecode(result.body).map((e) => Task.fromJson(e)));
   }
 
+  // Get explorer Tasks
+  Future<List<Task>> getExplorerTasks(int page) async {
+    final result = await HttpService().get('explore/tasks', queryParameters: {
+      'page': page,
+    });
+    final body = jsonDecode(result.body);
+    final data = body['data'];
+    print('data: ${data}');
+    return List<Task>.from(data.map((e) => Task.fromJson(e)));
+  }
+
   // Get tasks by parent_id (for subtasks)
   Future<List<Task>> getSubtasks(int parentId) async {
     final result = await HttpService().get('tasks', queryParameters: {
@@ -118,16 +129,14 @@ class TaskService {
   }
 
   // Update a task
-  Future<Task?> updateTask(Task task) async {
+  Future<Map<String, dynamic>> updateTask(Task task) async {
     print("task: ${task.toJson()}");
     final result = await HttpService().put('tasks/${task.id}',
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(task.toJson()));
 
     print("result: ${result.body}");
-    if (result.statusCode != 200) {
-      return null;
-    }
+
     // Broadcast task changes
     TaskBroadcast().notifyTasksChanged();
 
@@ -136,7 +145,7 @@ class TaskService {
       TaskBroadcast().notifyProjectChanged();
     }
 
-    return Task.fromJson(jsonDecode(result.body));
+    return jsonDecode(result.body);
   }
 
   // Delete a task and its subtasks

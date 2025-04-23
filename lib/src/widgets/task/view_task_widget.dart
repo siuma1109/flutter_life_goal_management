@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
+import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/comment_list_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/sub_task_list_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/task_date_picker_widget.dart';
@@ -36,6 +37,7 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
   final _dateFormat = DateFormat('yyyy-MM-dd');
   bool _isLoading = false; // Loading state
   StreamSubscription<void>? _taskChangedSubscription;
+  Map<String, String> _errors = {};
 
   @override
   void initState() {
@@ -69,6 +71,7 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
 
   void _updateTask() async {
     setState(() {
+      _errors = {};
       _isLoading = true; // Set loading to true
     });
 
@@ -86,9 +89,20 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
       subTasks: widget.task.subTasks,
     );
 
-    await TaskService().updateTask(updatedTask);
+    final result = await TaskService().updateTask(updatedTask);
 
-    widget.onRefresh?.call(updatedTask);
+    if (result != null && result['errors'] != null) {
+      setState(() {
+        print('error: ${result['errors']}');
+        _errors = result['errors']
+            .map((key, value) => MapEntry(key, value.join('\n')))
+            .cast<String, String>();
+      });
+    }
+
+    if (_errors.isEmpty) {
+      widget.onRefresh?.call(Task.fromJson(result));
+    }
   }
 
   @override
@@ -99,7 +113,9 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
         _buildHeader(),
         _buildTaskContent(),
         const Divider(thickness: 5),
-        SubTaskListWidget(task: _task),
+        SubTaskListWidget(
+          task: _task,
+        ),
         const Divider(thickness: 5),
         CommentListWidget(task: _task),
         Padding(
@@ -146,27 +162,29 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
       children: [
         // Title with checkbox
         TaskRowWidget(
-          icon: Checkbox(
-            value: widget.task.isChecked,
-            side: BorderSide(
-              color: TaskService().getPriorityColor(widget.task.priority),
-              width: 2.0,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(50),
-              side: BorderSide(
-                color: TaskService().getPriorityColor(widget.task.priority),
-                width: 2.0,
-              ),
-            ),
-            activeColor: TaskService().getPriorityColor(widget.task.priority),
-            onChanged: (bool? newValue) {
-              setState(() {
-                widget.task.isChecked = !widget.task.isChecked;
-                _updateTask();
-              });
-            },
-          ),
+          icon: widget.task.userId == AuthService().getLoggedInUser()!.id
+              ? Checkbox(
+                  value: widget.task.isChecked,
+                  side: BorderSide(
+                    color: TaskService().getPriorityColor(_priority),
+                    width: 2.0,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(50),
+                    side: BorderSide(
+                      color: TaskService().getPriorityColor(_priority),
+                      width: 2.0,
+                    ),
+                  ),
+                  activeColor: TaskService().getPriorityColor(_priority),
+                  onChanged: (bool? newValue) {
+                    setState(() {
+                      widget.task.isChecked = !widget.task.isChecked;
+                      _updateTask();
+                    });
+                  },
+                )
+              : const SizedBox.shrink(),
           content: TextField(
             controller: _titleController,
             decoration: const InputDecoration(
@@ -203,24 +221,25 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
                         fontSize: 18,
                       )),
                   Text(_startDate == null
-                      ? ''
+                      ? 'No start date'
                       : _dateFormat.format(_startDate!)),
                 ],
               ),
-              SizedBox(
-                height: 216,
-                child: CupertinoDatePicker(
-                  initialDateTime: _startDate,
-                  mode: CupertinoDatePickerMode.dateAndTime,
-                  minimumDate: DateTime.now().subtract(Duration(days: 7)),
-                  maximumDate: DateTime.now().add(Duration(days: 365 * 3)),
-                  onDateTimeChanged: (value) {
-                    setState(() {
-                      _startDate = value;
-                    });
-                  },
+              if (_task.userId == AuthService().getLoggedInUser()!.id)
+                SizedBox(
+                  height: 216,
+                  child: CupertinoDatePicker(
+                    initialDateTime: _startDate,
+                    mode: CupertinoDatePickerMode.dateAndTime,
+                    minimumDate: DateTime.now().subtract(Duration(days: 7)),
+                    maximumDate: DateTime.now().add(Duration(days: 365 * 3)),
+                    onDateTimeChanged: (value) {
+                      setState(() {
+                        _startDate = value;
+                      });
+                    },
+                  ),
                 ),
-              ),
             ],
           ),
         ),
@@ -236,23 +255,26 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
                       style: TextStyle(
                         fontSize: 18,
                       )),
-                  Text(_endDate == null ? '' : _dateFormat.format(_endDate!)),
+                  Text(_endDate == null
+                      ? 'No end date'
+                      : _dateFormat.format(_endDate!)),
                 ],
               ),
-              SizedBox(
-                height: 216,
-                child: CupertinoDatePicker(
-                  initialDateTime: _endDate,
-                  mode: CupertinoDatePickerMode.dateAndTime,
-                  minimumDate: DateTime.now().subtract(Duration(days: 7)),
-                  maximumDate: DateTime.now().add(Duration(days: 365 * 3)),
-                  onDateTimeChanged: (value) {
-                    setState(() {
-                      _endDate = value;
-                    });
-                  },
+              if (_task.userId == AuthService().getLoggedInUser()!.id)
+                SizedBox(
+                  height: 216,
+                  child: CupertinoDatePicker(
+                    initialDateTime: _endDate,
+                    mode: CupertinoDatePickerMode.dateAndTime,
+                    minimumDate: DateTime.now().subtract(Duration(days: 7)),
+                    maximumDate: DateTime.now().add(Duration(days: 365 * 3)),
+                    onDateTimeChanged: (value) {
+                      setState(() {
+                        _endDate = value;
+                      });
+                    },
+                  ),
                 ),
-              ),
             ],
           ),
         ),
@@ -263,29 +285,33 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
             color: TaskService().getPriorityColor(_priority),
           ),
           content: InkWell(
-            onTap: () =>
+            onTap: () {
+              if (_task.userId == AuthService().getLoggedInUser()!.id) {
                 TaskService().showPriorityPopUp(context, _priority, (priority) {
-              setState(() {
-                _priority = priority;
-              });
-              _updateTask();
-            }),
+                  setState(() {
+                    _priority = priority;
+                  });
+                  _updateTask();
+                });
+              }
+            },
             child: Text(
               'Priority $_priority',
               style: const TextStyle(fontSize: 16),
             ),
           ),
         ),
-        TaskRowWidget(
-          onTap: () {
-            _updateTask();
-            if (mounted) {
-              Navigator.of(context).pop();
-            }
-          },
-          icon: Icon(Icons.save),
-          content: Text('Save Task'),
-        ),
+        if (_task.userId == AuthService().getLoggedInUser()!.id)
+          TaskRowWidget(
+            onTap: () {
+              _updateTask();
+              if (mounted && _errors.isEmpty) {
+                Navigator.of(context).pop();
+              }
+            },
+            icon: Icon(Icons.save),
+            content: Text('Save Task'),
+          ),
       ],
     );
   }

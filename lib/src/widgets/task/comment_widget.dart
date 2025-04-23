@@ -25,6 +25,7 @@ class _CommentWidgetState extends State<CommentWidget> {
       icon: Icon(Icons.person),
       content: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
@@ -33,9 +34,13 @@ class _CommentWidgetState extends State<CommentWidget> {
               Text(_comment.createdAt.toString()),
             ],
           ),
-          Row(
+          Wrap(
             children: [
-              Text(_comment.body),
+              Text(
+                _comment.body,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 3,
+              )
             ],
           ),
         ],

@@ -61,8 +61,9 @@ class Task {
         isChecked: json["is_checked"],
         createdAt: DateTime.parse(json["created_at"]),
         updatedAt: DateTime.parse(json["updated_at"]),
-        subTasks:
-            List<Task>.from(json["sub_tasks"].map((x) => Task.fromJson(x))),
+        subTasks: json["sub_tasks"] != null
+            ? List<Task>.from(json["sub_tasks"].map((x) => Task.fromJson(x)))
+            : <Task>[],
       );
 
   Map<String, dynamic> toJson() => {
