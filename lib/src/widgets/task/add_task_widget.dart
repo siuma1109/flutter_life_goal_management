@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
 import 'package:flutter_life_goal_management/src/models/project.dart';
@@ -5,12 +6,10 @@ import 'package:flutter_life_goal_management/src/models/user.dart';
 import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/services/project_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/sub_task_list_widget.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../models/task.dart';
 import '../../services/task_service.dart';
-import '../../widgets/task/task_date_picker_widget.dart';
 import '../../widgets/task/add_task_ai_widget.dart';
 
 class AddTaskWidget extends StatefulWidget {
@@ -35,16 +34,13 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
   final _descriptionController = TextEditingController();
   final _dateInputController = TextEditingController();
   final _subtaskController = TextEditingController();
-  final _dateFormat = DateFormat('yyyy-MM-dd');
-  final _timeFormat = DateFormat('hh:mm a');
-  DateTime? _dueDate;
-  TimeOfDay? _dueTime;
-  DateTime? _suggestedDate;
+  final _dateFormat = DateFormat('yyyy-MM-dd HH:mm');
+  DateTime? _startDate = DateTime.now();
+  DateTime? _endDate = DateTime.now().add(Duration(hours: 3));
   int _priority = 4; // 4 is lowest priority, 1 is highest
   OverlayEntry? _overlayEntry;
   final FocusNode _dateInputFocusNode = FocusNode();
   final FocusNode _taskFocusNode = FocusNode();
-  final LayerLink _layerLink = LayerLink();
   bool _isLoading = false;
   late Task _task;
   List<Project> _projects = [];
@@ -103,58 +99,59 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
     });
   }
 
-  void _showDatePicker(BuildContext context) {
-    _dateInputFocusNode.requestFocus();
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
-      ),
-      builder: (BuildContext context) {
-        return TaskDatePickerWidget(
-          task: widget.task ??
-              Task(
-                id: null,
-                parentId: null,
-                userId: _user?.id ?? 0,
-                projectId: widget.task?.projectId ?? null,
-                title: "",
-                priority: _priority,
-                dueDate: _dueDate,
-                createdAt: DateTime.now(),
-                updatedAt: DateTime.now(),
-                isChecked: false,
-                subTasks: [],
-              ),
-          onDateSelected: (date) {
-            setState(() {
-              _dueDate = date;
-              if (date != null) {
-                _dateInputController.text = _dateFormat.format(date);
-              } else {
-                _dateInputController.clear();
-              }
-            });
-          },
-          onTimeSelected: (newTime) {
-            setState(() {
-              _dueTime = newTime;
-              if (_dueDate != null && newTime != null) {
-                _dueDate = DateTime(
-                  _dueDate!.year,
-                  _dueDate!.month,
-                  _dueDate!.day,
-                  newTime.hour,
-                  newTime.minute,
-                );
-              }
-            });
-          },
-        );
-      },
-    );
-  }
+  // void _showDatePicker(BuildContext context) {
+  //   _dateInputFocusNode.requestFocus();
+  //   showModalBottomSheet(
+  //     context: context,
+  //     isScrollControlled: true,
+  //     shape: const RoundedRectangleBorder(
+  //       borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+  //     ),
+  //     builder: (BuildContext context) {
+  //       return TaskDatePickerWidget(
+  //         task: widget.task ??
+  //             Task(
+  //               id: null,
+  //               parentId: null,
+  //               userId: _user?.id ?? 0,
+  //               projectId: widget.task?.projectId ?? null,
+  //               title: "",
+  //               priority: _priority,
+  //               startDate: _dateTimeRange?.start,
+  //               endDate: _dateTimeRange?.end,
+  //               createdAt: DateTime.now(),
+  //               updatedAt: DateTime.now(),
+  //               isChecked: false,
+  //               subTasks: [],
+  //             ),
+  //         onDateSelected: (date) {
+  //           setState(() {
+  //             _startDate = date;
+  //             if (date != null) {
+  //               _dateInputController.text = _dateFormat.format(date);
+  //             } else {
+  //               _dateInputController.clear();
+  //             }
+  //           });
+  //         },
+  //         onTimeSelected: (newTime) {
+  //           setState(() {
+  //             _dueTime = newTime;
+  //             if (_startDate != null && newTime != null) {
+  //               _startDate = DateTime(
+  //                 _startDate!.year,
+  //                 _startDate!.month,
+  //                 _startDate!.day,
+  //                 newTime.hour,
+  //                 newTime.minute,
+  //               );
+  //             }
+  //           });
+  //         },
+  //       );
+  //     },
+  //   );
+  // }
 
   void _notifyChanges() {
     // Broadcast the change
@@ -179,7 +176,8 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
           projectId: _projectId,
           title: _taskController.text,
           description: _descriptionController.text,
-          dueDate: _dueDate,
+          startDate: _startDate,
+          endDate: _endDate,
           priority: _priority,
         );
         widget.onRefresh?.call(task);
@@ -269,58 +267,134 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                                 maxLines: 6,
                                 minLines: 1,
                               ),
+                              Padding(
+                                padding: EdgeInsets.all(16),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text('Start Date',
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                            )),
+                                        Text(_startDate == null
+                                            ? ''
+                                            : _dateFormat.format(_startDate!)),
+                                      ],
+                                    ),
+                                    SizedBox(
+                                      height: 216,
+                                      child: CupertinoDatePicker(
+                                        initialDateTime: _startDate,
+                                        mode:
+                                            CupertinoDatePickerMode.dateAndTime,
+                                        minimumDate: DateTime.now()
+                                            .subtract(Duration(days: 7)),
+                                        maximumDate: DateTime.now()
+                                            .add(Duration(days: 365 * 3)),
+                                        onDateTimeChanged: (value) {
+                                          setState(() {
+                                            _startDate = value;
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.all(16),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text('End Date',
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                            )),
+                                        Text(_endDate == null
+                                            ? ''
+                                            : _dateFormat.format(_endDate!)),
+                                      ],
+                                    ),
+                                    SizedBox(
+                                      height: 216,
+                                      child: CupertinoDatePicker(
+                                        initialDateTime: _endDate,
+                                        mode:
+                                            CupertinoDatePickerMode.dateAndTime,
+                                        minimumDate: DateTime.now()
+                                            .subtract(Duration(days: 7)),
+                                        maximumDate: DateTime.now()
+                                            .add(Duration(days: 365 * 3)),
+                                        onDateTimeChanged: (value) {
+                                          setState(() {
+                                            _endDate = value;
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
-                                  ElevatedButton(
-                                    onPressed: () => _showDatePicker(context),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.calendar_today,
-                                          color: _dueDate != null
-                                              ? Colors.green
-                                              : Colors.black,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          _dueDate == null
-                                              ? 'Date'
-                                              : '${_dateFormat.format(_dueDate!)}',
-                                          style: TextStyle(
-                                            color: _dueDate != null
-                                                ? Colors.green
-                                                : Colors.black,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        if (_dueDate != null)
-                                          SizedBox(
-                                            width: 12,
-                                            height: 24,
-                                            child: IconButton(
-                                              icon: const Icon(Icons.close,
-                                                  color: Colors.red),
-                                              padding: EdgeInsets.zero,
-                                              onPressed: () {
-                                                setState(() {
-                                                  _dueDate = null;
-                                                  _dateInputController.clear();
-                                                });
-                                              },
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                  SizedBox(width: 10),
+                                  // ElevatedButton(
+                                  //   onPressed: () => {},
+                                  //   style: ElevatedButton.styleFrom(
+                                  //     backgroundColor: Colors.white,
+                                  //     shape: RoundedRectangleBorder(
+                                  //       borderRadius: BorderRadius.circular(8),
+                                  //     ),
+                                  //   ),
+                                  //   child: Row(
+                                  //     mainAxisSize: MainAxisSize.min,
+                                  //     children: [
+                                  //       Icon(
+                                  //         Icons.calendar_month,
+                                  //         color: _startDate != null
+                                  //             ? Colors.green
+                                  //             : Colors.black,
+                                  //       ),
+                                  //       const SizedBox(width: 4),
+                                  //       Text(
+                                  //         _startDate == null
+                                  //             ? 'Start Date'
+                                  //             : '${_dateFormat.format(_startDate!)}',
+                                  //         style: TextStyle(
+                                  //           color: _startDate != null
+                                  //               ? Colors.green
+                                  //               : Colors.black,
+                                  //         ),
+                                  //       ),
+                                  //       const SizedBox(width: 8),
+                                  //       if (_startDate != null)
+                                  //         SizedBox(
+                                  //           width: 12,
+                                  //           height: 24,
+                                  //           child: IconButton(
+                                  //             icon: const Icon(Icons.close,
+                                  //                 color: Colors.red),
+                                  //             padding: EdgeInsets.zero,
+                                  //             onPressed: () {
+                                  //               setState(() {
+                                  //                 _startDate = null;
+                                  //                 _dateInputController.clear();
+                                  //               });
+                                  //             },
+                                  //           ),
+                                  //         ),
+                                  //     ],
+                                  //   ),
+                                  // ),
+                                  // SizedBox(width: 10),
                                   ElevatedButton(
                                     onPressed: () => TaskService()
                                         .showPriorityPopUp(context, _priority,
@@ -483,7 +557,8 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                   title: subTask['task_name'],
                   description: subTask['description'],
                   priority: _priority,
-                  dueDate: _dueDate,
+                  startDate: _startDate,
+                  endDate: _endDate,
                   createdAt: now,
                   updatedAt: now,
                   isChecked: false,

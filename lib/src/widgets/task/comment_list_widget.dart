@@ -98,17 +98,24 @@ class _CommentListWidgetState extends State<CommentListWidget> {
                 ),
               ),
               const SizedBox(height: 8),
-              _comments.isEmpty
-                  ? const Text('No comments yet')
-                  : ListView.builder(
-                      key: UniqueKey(),
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: _comments.length,
-                      itemBuilder: (context, index) {
-                        return CommentWidget(comment: _comments[index]);
-                      },
-                    ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _comments.isEmpty
+                    ? Text('No comments yet',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.grey,
+                        ))
+                    : ListView.builder(
+                        key: UniqueKey(),
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _comments.length,
+                        itemBuilder: (context, index) {
+                          return CommentWidget(comment: _comments[index]);
+                        },
+                      ),
+              ),
             ]),
       ),
     );

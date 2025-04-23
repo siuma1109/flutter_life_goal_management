@@ -107,8 +107,8 @@ class _TaskListWidgetState extends State<TaskListWidget> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(task.description!),
-                              if (task.dueDate != null)
-                                Text(task.dueDate!.toString().split(' ')[0]),
+                              if (task.startDate != null)
+                                Text(task.startDate!.toString().split(' ')[0]),
                             ],
                           )
                         : null,

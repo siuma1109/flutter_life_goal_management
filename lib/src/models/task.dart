@@ -4,6 +4,8 @@
 
 import 'dart:convert';
 
+import 'package:intl/intl.dart';
+
 Task taskFromJson(String str) => Task.fromJson(json.decode(str));
 
 String taskToJson(Task data) => json.encode(data.toJson());
@@ -15,12 +17,14 @@ class Task {
   int? projectId;
   String title;
   String? description;
-  DateTime? dueDate;
+  DateTime? startDate;
+  DateTime? endDate;
   int priority;
   bool isChecked;
   DateTime? createdAt;
   DateTime? updatedAt;
   List<Task> subTasks;
+  static final dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
 
   Task({
     this.id,
@@ -29,7 +33,8 @@ class Task {
     this.projectId,
     required this.title,
     this.description = '',
-    this.dueDate,
+    this.startDate,
+    this.endDate,
     required this.priority,
     required this.isChecked,
     this.createdAt,
@@ -47,8 +52,11 @@ class Task {
         projectId: json["project_id"],
         title: json["title"] ?? "",
         description: json["description"],
-        dueDate:
-            json["due_date"] != null ? DateTime.parse(json["due_date"]) : null,
+        startDate: json["start_date"] != null
+            ? DateTime.parse(json["start_date"])
+            : null,
+        endDate:
+            json["end_date"] != null ? DateTime.parse(json["end_date"]) : null,
         priority: json["priority"],
         isChecked: json["is_checked"],
         createdAt: DateTime.parse(json["created_at"]),
@@ -64,11 +72,12 @@ class Task {
         "project_id": projectId,
         "title": title,
         "description": description,
-        "due_date": dueDate?.toIso8601String(),
+        "start_date": startDate == null ? null : dateFormat.format(startDate!),
+        "end_date": endDate == null ? null : dateFormat.format(endDate!),
         "priority": priority,
         "is_checked": isChecked,
-        "created_at": createdAt?.toIso8601String(),
-        "updated_at": updatedAt?.toIso8601String(),
+        "created_at": createdAt == null ? null : dateFormat.format(createdAt!),
+        "updated_at": updatedAt == null ? null : dateFormat.format(updatedAt!),
         "sub_tasks":
             List<Map<String, dynamic>>.from(subTasks.map((x) => x.toJson())),
       };
@@ -80,7 +89,8 @@ class Task {
     int? projectId,
     String? title,
     String? description,
-    DateTime? dueDate,
+    DateTime? startDate,
+    DateTime? endDate,
     int? priority,
     bool? isChecked,
     DateTime? createdAt,
@@ -94,7 +104,8 @@ class Task {
       projectId: projectId ?? this.projectId,
       title: title ?? this.title,
       description: description ?? this.description,
-      dueDate: dueDate ?? this.dueDate,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
       priority: priority ?? this.priority,
       isChecked: isChecked ?? this.isChecked,
       createdAt: createdAt ?? this.createdAt,

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/comment_list_widget.dart';
@@ -29,7 +30,8 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
   late TextEditingController _descriptionController;
   late TextEditingController _commentController;
   late Task _task;
-  DateTime? _dueDate;
+  DateTime? _startDate;
+  DateTime? _endDate;
   int _priority = 4; // Default priority
   final _dateFormat = DateFormat('yyyy-MM-dd');
   bool _isLoading = false; // Loading state
@@ -42,7 +44,8 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
     _descriptionController =
         TextEditingController(text: widget.task.description);
     _commentController = TextEditingController();
-    _dueDate = widget.task.dueDate;
+    _startDate = widget.task.startDate;
+    _endDate = widget.task.endDate;
     _priority = widget.task.priority;
 
     _task = widget.task;
@@ -76,7 +79,8 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
       projectId: widget.task.projectId,
       title: _titleController.text,
       description: _descriptionController.text,
-      dueDate: _dueDate,
+      startDate: _startDate,
+      endDate: _endDate,
       priority: _priority,
       isChecked: widget.task.isChecked,
       subTasks: widget.task.subTasks,
@@ -85,53 +89,6 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
     await TaskService().updateTask(updatedTask);
 
     widget.onRefresh?.call(updatedTask);
-  }
-
-  void _showDatePicker(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
-      ),
-      builder: (BuildContext context) {
-        return TaskDatePickerWidget(
-          task: Task(
-            id: widget.task.id,
-            parentId: widget.task.parentId,
-            userId: widget.task.userId,
-            projectId: widget.task.projectId,
-            title: widget.task.title,
-            description: widget.task.description,
-            dueDate: _dueDate,
-            priority: widget.task.priority,
-            isChecked: widget.task.isChecked,
-            createdAt: widget.task.createdAt,
-            updatedAt: widget.task.updatedAt,
-            subTasks: widget.task.subTasks,
-          ),
-          onDateSelected: (date) {
-            setState(() {
-              _dueDate = date;
-            });
-            _updateTask();
-          },
-          onTimeSelected: (newTime) {
-            setState(() {
-              if (_dueDate != null && newTime != null) {
-                _dueDate = DateTime(
-                  _dueDate!.year,
-                  _dueDate!.month,
-                  _dueDate!.day,
-                  newTime.hour,
-                  newTime.minute,
-                );
-              }
-            });
-          },
-        );
-      },
-    );
   }
 
   @override
@@ -145,6 +102,9 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
         SubTaskListWidget(task: _task),
         const Divider(thickness: 5),
         CommentListWidget(task: _task),
+        Padding(
+          padding: const EdgeInsets.all(16),
+        ),
       ],
     );
   }
@@ -230,17 +190,72 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
           ),
 
         // Due date
-        TaskRowWidget(
-          icon: const Icon(Icons.calendar_month),
-          content: InkWell(
-            onTap: () => _showDatePicker(context),
-            child: Text(
-              _dueDate != null ? _dateFormat.format(_dueDate!) : 'Date',
-              style: const TextStyle(fontSize: 16),
-            ),
+        Padding(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Start Date',
+                      style: TextStyle(
+                        fontSize: 18,
+                      )),
+                  Text(_startDate == null
+                      ? ''
+                      : _dateFormat.format(_startDate!)),
+                ],
+              ),
+              SizedBox(
+                height: 216,
+                child: CupertinoDatePicker(
+                  initialDateTime: _startDate,
+                  mode: CupertinoDatePickerMode.dateAndTime,
+                  minimumDate: DateTime.now().subtract(Duration(days: 7)),
+                  maximumDate: DateTime.now().add(Duration(days: 365 * 3)),
+                  onDateTimeChanged: (value) {
+                    setState(() {
+                      _startDate = value;
+                    });
+                  },
+                ),
+              ),
+            ],
           ),
         ),
-
+        Padding(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('End Date',
+                      style: TextStyle(
+                        fontSize: 18,
+                      )),
+                  Text(_endDate == null ? '' : _dateFormat.format(_endDate!)),
+                ],
+              ),
+              SizedBox(
+                height: 216,
+                child: CupertinoDatePicker(
+                  initialDateTime: _endDate,
+                  mode: CupertinoDatePickerMode.dateAndTime,
+                  minimumDate: DateTime.now().subtract(Duration(days: 7)),
+                  maximumDate: DateTime.now().add(Duration(days: 365 * 3)),
+                  onDateTimeChanged: (value) {
+                    setState(() {
+                      _endDate = value;
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
         // Priority
         TaskRowWidget(
           icon: Icon(
@@ -260,6 +275,16 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
               style: const TextStyle(fontSize: 16),
             ),
           ),
+        ),
+        TaskRowWidget(
+          onTap: () {
+            _updateTask();
+            if (mounted) {
+              Navigator.of(context).pop();
+            }
+          },
+          icon: Icon(Icons.save),
+          content: Text('Save Task'),
         ),
       ],
     );

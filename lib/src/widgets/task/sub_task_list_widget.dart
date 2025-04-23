@@ -118,9 +118,9 @@ class _SubTaskListWidgetState extends State<SubTaskListWidget> {
                                 color: Colors.grey,
                               ),
                             ),
-                          if (subTask.dueDate != null)
+                          if (subTask.startDate != null)
                             Text(
-                                'Due: ${subTask.dueDate!.toString().split(' ')[0]}'),
+                                'Due: ${subTask.startDate!.toString().split(' ')[0]}'),
                           Text(
                             'Priority: ${subTask.priority}',
                             style: TextStyle(

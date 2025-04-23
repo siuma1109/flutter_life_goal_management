@@ -97,6 +97,17 @@ class TaskService {
         jsonDecode(result.body).map((e) => Task.fromJson(e)));
   }
 
+  // Get tasks by date range
+  Future<List<Task>> getTasksByYearAndMonth(int year, int month) async {
+    final result = await HttpService().get('tasks', queryParameters: {
+      'year': year,
+      'month': month,
+    });
+
+    return List<Task>.from(
+        jsonDecode(result.body).map((e) => Task.fromJson(e)));
+  }
+
   // Get tasks by parent_id (for subtasks)
   Future<List<Task>> getSubtasks(int parentId) async {
     final result = await HttpService().get('tasks', queryParameters: {

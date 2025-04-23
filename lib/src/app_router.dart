@@ -4,7 +4,7 @@ import 'package:flutter_life_goal_management/src/screens/forgot_password_screen.
 import 'package:flutter_life_goal_management/src/screens/sign_up_screen.dart';
 import 'package:flutter_life_goal_management/src/screens/home_screen.dart';
 import 'package:flutter_life_goal_management/src/screens/explore_screen.dart';
-import 'package:flutter_life_goal_management/src/screens/community_screen.dart';
+import 'package:flutter_life_goal_management/src/screens/calendar_screen.dart';
 import 'package:flutter_life_goal_management/src/widgets/scaffold_with_bottom_navbar_widget.dart';
 import 'package:flutter_life_goal_management/src/screens/profile_screen.dart';
 import 'package:go_router/go_router.dart';
@@ -74,7 +74,7 @@ final GoRouter router = GoRouter(
             GoRoute(
               path: '/',
               builder: (BuildContext context, GoRouterState state) {
-                return const HomeScreen(title: 'Home Screen');
+                return const HomeScreen(title: 'Home');
               },
             ),
           ],
@@ -85,7 +85,7 @@ final GoRouter router = GoRouter(
             GoRoute(
               path: '/explore',
               builder: (BuildContext context, GoRouterState state) {
-                return const ExploreScreen(title: 'Explore Screen');
+                return const ExploreScreen(title: 'Explore');
               },
             ),
           ],
@@ -94,9 +94,9 @@ final GoRouter router = GoRouter(
         StatefulShellBranch(
           routes: [
             GoRoute(
-              path: '/community',
+              path: '/calendar',
               builder: (BuildContext context, GoRouterState state) {
-                return const CommunityScreen(title: 'Community Screen');
+                return const CalendarScreen(title: 'Calendar');
               },
             ),
           ],

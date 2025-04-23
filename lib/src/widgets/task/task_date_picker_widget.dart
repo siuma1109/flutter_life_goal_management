@@ -24,7 +24,7 @@ class _TaskDatePickerWidgetState extends State<TaskDatePickerWidget> {
   final _dateInputFocusNode = FocusNode();
   final _dateFormat = DateFormat('yyyy-MM-dd');
   final _timeFormat = DateFormat('hh:mm a');
-  DateTime? _dueDate;
+  DateTime? _startDate;
   TimeOfDay? _dueTime;
   DateTime? _suggestedDate;
   OverlayEntry? _overlayEntry;
@@ -33,10 +33,10 @@ class _TaskDatePickerWidgetState extends State<TaskDatePickerWidget> {
   void initState() {
     super.initState();
     _dateInputFocusNode.addListener(_onFocusChange);
-    _dueDate = widget.task.dueDate;
-    if (_dueDate != null) {
-      _dueTime = TimeOfDay(hour: _dueDate!.hour, minute: _dueDate!.minute);
-      _dateInputController.text = _dateFormat.format(_dueDate!);
+    _startDate = widget.task.startDate;
+    if (_startDate != null) {
+      _dueTime = TimeOfDay(hour: _startDate!.hour, minute: _startDate!.minute);
+      _dateInputController.text = _dateFormat.format(_startDate!);
     }
   }
 
@@ -110,7 +110,7 @@ class _TaskDatePickerWidgetState extends State<TaskDatePickerWidget> {
               context: context,
               onDateSelected: (date) {
                 setState(() {
-                  _dueDate = date;
+                  _startDate = date;
                   _dateInputController.text =
                       date != null ? _dateFormat.format(date) : "";
                 });
@@ -129,11 +129,11 @@ class _TaskDatePickerWidgetState extends State<TaskDatePickerWidget> {
                 _showTimePicker(context, onTimeSelected: (newTime) {
                   setState(() {
                     _dueTime = newTime;
-                    if (_dueDate != null && newTime != null) {
-                      _dueDate = DateTime(
-                        _dueDate!.year,
-                        _dueDate!.month,
-                        _dueDate!.day,
+                    if (_startDate != null && newTime != null) {
+                      _startDate = DateTime(
+                        _startDate!.year,
+                        _startDate!.month,
+                        _startDate!.day,
                         newTime.hour,
                         newTime.minute,
                       );
@@ -168,7 +168,7 @@ class _TaskDatePickerWidgetState extends State<TaskDatePickerWidget> {
                 backgroundColor: Colors.red,
               ),
               onPressed: () {
-                widget.onDateSelected(_dueDate);
+                widget.onDateSelected(_startDate);
                 Navigator.pop(context);
               },
               child: Text(
@@ -197,11 +197,11 @@ class _TaskDatePickerWidgetState extends State<TaskDatePickerWidget> {
       if (newTime != null) {
         setState(() {
           _dueTime = newTime;
-          if (_dueDate != null) {
-            _dueDate = DateTime(
-              _dueDate!.year,
-              _dueDate!.month,
-              _dueDate!.day,
+          if (_startDate != null) {
+            _startDate = DateTime(
+              _startDate!.year,
+              _startDate!.month,
+              _startDate!.day,
               newTime.hour,
               newTime.minute,
             );
@@ -220,8 +220,8 @@ class _TaskDatePickerWidgetState extends State<TaskDatePickerWidget> {
   }) {
     final now = DateTime.now();
     final firstDate = DateTime(2024);
-    final initialDate = (_dueDate != null && _dueDate!.isAfter(firstDate))
-        ? _dueDate!
+    final initialDate = (_startDate != null && _startDate!.isAfter(firstDate))
+        ? _startDate!
         : (now.isAfter(firstDate) ? now : firstDate);
 
     return Container(
@@ -290,7 +290,7 @@ class _TaskDatePickerWidgetState extends State<TaskDatePickerWidget> {
                 lastDate: DateTime(2100),
                 onDateChanged: (DateTime value) {
                   setState(() {
-                    _dueDate = value;
+                    _startDate = value;
                     _dateInputController.text = _dateFormat.format(value);
                   });
                 },
@@ -314,11 +314,11 @@ class _TaskDatePickerWidgetState extends State<TaskDatePickerWidget> {
       onTap: () {
         setState(() {
           if (showDate && date != null) {
-            _dueDate = date;
+            _startDate = date;
             _dateInputController.text = _dateFormat.format(date);
             onDateSelected(date);
           } else {
-            _dueDate = null;
+            _startDate = null;
             _dueTime = null;
             _dateInputController.clear();
             onDateSelected(null);

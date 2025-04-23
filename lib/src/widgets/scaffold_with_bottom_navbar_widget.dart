@@ -68,8 +68,8 @@ class _ScaffoldWithBottomNavBarWidgetState
                   label: 'Explore',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.group),
-                  label: 'Community',
+                  icon: Icon(Icons.calendar_month),
+                  label: 'Calendar',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.account_circle),
