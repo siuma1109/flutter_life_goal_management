@@ -20,6 +20,8 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen>
     with WidgetsBindingObserver {
   int _taskCount = 0;
+  int _finishedTaskCount = 0;
+  int _pendingTaskCount = 0;
   int _inboxTaskCount = 0;
   StreamSubscription? _taskChangedSubscription;
   User? _user;
@@ -66,12 +68,14 @@ class _ProfileScreenState extends State<ProfileScreen>
     });
 
     try {
-      final taskCount = await TaskService().getTasksCount();
+      final getTasksCountResult = await TaskService().getTasksCount();
       final inboxTaskCount = await TaskService().getInboxTasksCount();
       if (mounted) {
         setState(() {
-          _taskCount = taskCount;
+          _taskCount = getTasksCountResult['tasks_count'] ?? 0;
           _inboxTaskCount = inboxTaskCount;
+          _finishedTaskCount = getTasksCountResult['finished_tasks_count'] ?? 0;
+          _pendingTaskCount = getTasksCountResult['pending_tasks_count'] ?? 0;
         });
       }
     } finally {
@@ -121,9 +125,14 @@ class _ProfileScreenState extends State<ProfileScreen>
             Expanded(
               child: TabBarView(
                 children: [
-                  DashboardWidget(),
+                  DashboardWidget(
+                    isLoadingTaskCount: _isLoadingTaskCount,
+                    finishedTaskCount: _finishedTaskCount,
+                    pendingTaskCount: _pendingTaskCount,
+                  ),
                   ProfileMenuWidget(
                     inboxTaskCount: _inboxTaskCount,
+                    finishedTaskCount: _finishedTaskCount,
                     user: _user!,
                   ),
                 ],

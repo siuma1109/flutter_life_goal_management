@@ -62,12 +62,12 @@ class TaskService {
   }
 
   // Get All Tasks Count Without sub tasks
-  Future<int> getTasksCount() async {
+  Future<Map<String, dynamic>> getTasksCount() async {
     final result = await HttpService().get('tasks_count', queryParameters: {
       'type': 'all_without_sub_tasks',
     });
     print("result: ${result.body}");
-    return jsonDecode(result.body)['tasks_count'] ?? 0;
+    return jsonDecode(result.body);
   }
 
   // Get Inbox Tasks

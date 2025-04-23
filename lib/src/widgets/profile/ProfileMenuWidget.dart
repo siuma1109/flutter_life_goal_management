@@ -10,10 +10,12 @@ import 'package:flutter_life_goal_management/src/widgets/projects/AddProjectWidg
 
 class ProfileMenuWidget extends StatefulWidget {
   final int inboxTaskCount;
+  final int finishedTaskCount;
   final User? user;
   const ProfileMenuWidget({
     super.key,
     required this.inboxTaskCount,
+    required this.finishedTaskCount,
     required this.user,
   });
 
@@ -142,16 +144,17 @@ class _ProfileMenuWidgetState extends State<ProfileMenuWidget> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
-                  children: const [
+                  children: [
                     Icon(
                       Icons.check_circle_outline,
                       size: 20,
                     ),
                     SizedBox(width: 10),
-                    Text("Completed (TODO)", style: TextStyle(fontSize: 16)),
+                    Text("Completed", style: TextStyle(fontSize: 16)),
                   ],
                 ),
-                const Text("2", style: TextStyle(fontSize: 14)),
+                Text(widget.finishedTaskCount.toString(),
+                    style: const TextStyle(fontSize: 14)),
               ],
             ),
           ),

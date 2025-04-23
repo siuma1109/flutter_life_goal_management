@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
 
 class DashboardWidget extends StatefulWidget {
-  const DashboardWidget({super.key});
+  final int finishedTaskCount;
+  final int pendingTaskCount;
+  final bool isLoadingTaskCount;
+  const DashboardWidget({
+    super.key,
+    required this.finishedTaskCount,
+    required this.pendingTaskCount,
+    required this.isLoadingTaskCount,
+  });
 
   @override
   State<DashboardWidget> createState() => _DashboardWidgetState();
@@ -38,7 +46,7 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 20),
                         child: Text(
-                          "0",
+                          widget.finishedTaskCount.toString(),
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -66,7 +74,7 @@ class _DashboardWidgetState extends State<DashboardWidget> {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 20),
                         child: Text(
-                          "3",
+                          widget.pendingTaskCount.toString(),
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
