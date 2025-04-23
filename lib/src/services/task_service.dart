@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
+import 'package:flutter_life_goal_management/src/models/comment.dart';
 import 'package:flutter_life_goal_management/src/models/task.dart';
 import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/services/http_service.dart';
@@ -151,5 +152,41 @@ class TaskService {
       return false;
     }
   }
-  // database end
+
+  // Comment Part Start
+  Future<List<Comment>> getComments(int taskId) async {
+    final result = await HttpService().get('tasks/$taskId/comments');
+
+    if (result.statusCode != 200) {
+      throw Exception('Failed to load comments');
+    }
+
+    return List<Comment>.from(
+        jsonDecode(result.body).map((e) => Comment.fromJson(e)));
+  }
+
+  Future<Comment> addComment(int taskId, String body) async {
+    // Get logged-in user
+    final user = await AuthService().getLoggedInUser();
+    if (user == null) {
+      throw Exception('User not logged in');
+    }
+
+    final result = await HttpService().post(
+      'tasks/$taskId/comments',
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'body': body,
+        'user_id': user.id,
+      }),
+    );
+
+    if (result.statusCode != 200 && result.statusCode != 201) {
+      throw Exception('Failed to add comment');
+    }
+
+    return Comment.fromJson(jsonDecode(result.body));
+  }
+
+  // Comment Part End
 }

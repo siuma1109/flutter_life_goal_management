@@ -93,6 +93,7 @@ class _SubTaskListWidgetState extends State<SubTaskListWidget> {
                       onTap: () => showModalBottomSheet(
                           context: context,
                           isScrollControlled: true,
+                          useRootNavigator: true,
                           builder: (context) => TaskEditFormWidget(
                               task: subTask,
                               onRefresh: (returnSubTask) {
