@@ -157,6 +157,7 @@ class _SubTaskListWidgetState extends State<SubTaskListWidget> {
                 setState(() {
                   _task.subTasks.add(subTask);
                 }),
+                if (_task.id != null) TaskService().insertTask(subTask),
               },
               isParentTask: false,
             );
