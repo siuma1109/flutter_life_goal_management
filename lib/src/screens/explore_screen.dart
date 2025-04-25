@@ -99,7 +99,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       controller: _scrollController,
                       padding: EdgeInsets.all(4),
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3, // 3 items per row like Instagram
+                        crossAxisCount: 2,
                         childAspectRatio: 1, // Square cells
                         crossAxisSpacing: 1,
                         mainAxisSpacing: 1,

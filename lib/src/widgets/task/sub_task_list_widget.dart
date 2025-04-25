@@ -36,7 +36,7 @@ class _SubTaskListWidgetState extends State<SubTaskListWidget> {
         if (_task.subTasks.isNotEmpty) _buildSubtasksSection(),
 
         // Add subtask button
-        _buildAddSubtaskButton(),
+        if (_task.userId == _user.id) _buildAddSubtaskButton(),
       ],
     );
   }

@@ -77,7 +77,7 @@ class _TaskCardWidgetState extends State<TaskCardWidget> {
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          fontSize: 20,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -129,14 +129,14 @@ class _TaskCardWidgetState extends State<TaskCardWidget> {
                         Icon(
                           Icons.calendar_today,
                           color: Colors.white,
-                          size: 12,
+                          size: 20,
                         ),
                         SizedBox(width: 4),
                         Text(
                           _getDateText(),
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 10,
+                            fontSize: 14,
                           ),
                         ),
                       ],

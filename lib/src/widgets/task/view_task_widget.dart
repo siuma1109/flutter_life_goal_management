@@ -119,7 +119,8 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
             children: [
               _buildHeader(),
               _buildTaskContent(),
-              const Divider(thickness: 5),
+              if (_task.userId == AuthService().getLoggedInUser()!.id)
+                const Divider(thickness: 5),
               SubTaskListWidget(
                 task: _task,
               ),
