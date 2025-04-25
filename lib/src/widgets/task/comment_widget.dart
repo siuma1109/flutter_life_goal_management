@@ -27,11 +27,13 @@ class _CommentWidgetState extends State<CommentWidget> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Wrap(
             children: [
-              Text(_comment.user!.name),
-              Text(' | '),
-              Text(_comment.createdAt.toString()),
+              Text(
+                '${_comment.user!.name} | ${_comment.createdAt.toString()}',
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+              ),
             ],
           ),
           Wrap(
