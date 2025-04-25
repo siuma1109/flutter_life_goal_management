@@ -6,7 +6,6 @@ import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart'
 import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/comment_list_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/sub_task_list_widget.dart';
-import 'package:flutter_life_goal_management/src/widgets/task/task_date_picker_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/task_row_widget.dart';
 import '../../models/task.dart';
 import '../../services/task_service.dart';
@@ -46,8 +45,8 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
     _descriptionController =
         TextEditingController(text: widget.task.description);
     _commentController = TextEditingController();
-    _startDate = widget.task.startDate;
-    _endDate = widget.task.endDate;
+    _startDate = widget.task.startDate ?? DateTime.now();
+    _endDate = widget.task.endDate ?? DateTime.now();
     _priority = widget.task.priority;
 
     _task = widget.task;
@@ -69,11 +68,13 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
     _taskChangedSubscription?.cancel();
   }
 
-  void _updateTask() async {
-    setState(() {
-      _errors = {};
-      _isLoading = true; // Set loading to true
-    });
+  Future<void> _updateTask() async {
+    if (mounted) {
+      setState(() {
+        _errors = {};
+        _isLoading = true; // Set loading to true
+      });
+    }
 
     final updatedTask = Task(
       id: widget.task.id,
@@ -103,26 +104,32 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
     if (_errors.isEmpty) {
       widget.onRefresh?.call(Task.fromJson(result));
     }
+
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildHeader(),
-        _buildTaskContent(),
-        const Divider(thickness: 5),
-        SubTaskListWidget(
-          task: _task,
-        ),
-        const Divider(thickness: 5),
-        CommentListWidget(task: _task),
-        Padding(
-          padding: const EdgeInsets.all(16),
-        ),
-      ],
-    );
+    return _isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildHeader(),
+              _buildTaskContent(),
+              const Divider(thickness: 5),
+              SubTaskListWidget(
+                task: _task,
+              ),
+              const Divider(thickness: 5),
+              CommentListWidget(task: _task),
+              Padding(
+                padding: const EdgeInsets.all(16),
+              ),
+            ],
+          );
   }
 
   Widget _buildHeader() {
@@ -180,15 +187,16 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
                   onChanged: (bool? newValue) {
                     setState(() {
                       widget.task.isChecked = !widget.task.isChecked;
-                      _updateTask();
                     });
+                    _updateTask();
                   },
                 )
               : const SizedBox.shrink(),
           content: TextField(
             controller: _titleController,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               border: OutlineInputBorder(borderSide: BorderSide.none),
+              errorText: _errors['title'] ?? null,
             ),
           ),
         ),
@@ -240,6 +248,9 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
                     },
                   ),
                 ),
+              if (_errors['start_date'] != null)
+                Text(_errors['start_date']!,
+                    style: TextStyle(color: Colors.red)),
             ],
           ),
         ),
@@ -275,6 +286,8 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
                     },
                   ),
                 ),
+              if (_errors['end_date'] != null)
+                Text(_errors['end_date']!, style: TextStyle(color: Colors.red)),
             ],
           ),
         ),
@@ -303,8 +316,8 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
         ),
         if (_task.userId == AuthService().getLoggedInUser()!.id)
           TaskRowWidget(
-            onTap: () {
-              _updateTask();
+            onTap: () async {
+              await _updateTask();
               if (mounted && _errors.isEmpty) {
                 Navigator.of(context).pop();
               }
@@ -318,9 +331,11 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
 
   Future<void> _loadSubTasksById() async {
     final subTasks = await TaskService().getSubtasks(widget.task.id!);
-    setState(() {
-      _task.subTasks = subTasks;
-    });
+    if (mounted) {
+      setState(() {
+        _task.subTasks = subTasks;
+      });
+    }
   }
 
   void _showDeleteConfirmationDialog(BuildContext context) {

@@ -52,7 +52,6 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
     super.initState();
     _dateInputFocusNode.addListener(_onFocusChange);
     _taskFocusNode.requestFocus();
-    dotenv.load();
     _user = AuthService().getLoggedInUser();
     _task = widget.task ??
         Task(
@@ -93,10 +92,15 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
   }
 
   Future<void> _loadProjects() async {
+    print('loading projects');
     final projects = await ProjectService().getAllProjects();
-    setState(() {
-      _projects = projects;
-    });
+    print('after loading projects');
+    print('projects: $projects');
+    if (mounted) {
+      setState(() {
+        _projects = projects;
+      });
+    }
   }
 
   // void _showDatePicker(BuildContext context) {
