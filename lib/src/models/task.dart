@@ -4,6 +4,7 @@
 
 import 'dart:convert';
 
+import 'package:flutter_life_goal_management/src/models/user.dart';
 import 'package:intl/intl.dart';
 
 Task taskFromJson(String str) => Task.fromJson(json.decode(str));
@@ -24,6 +25,7 @@ class Task {
   DateTime? createdAt;
   DateTime? updatedAt;
   List<Task> subTasks;
+  User? user;
   static final dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
 
   Task({
@@ -40,6 +42,7 @@ class Task {
     this.createdAt,
     this.updatedAt,
     required this.subTasks,
+    this.user,
   }) {
     createdAt = createdAt ?? DateTime.now();
     updatedAt = updatedAt ?? DateTime.now();
@@ -64,6 +67,7 @@ class Task {
         subTasks: json["sub_tasks"] != null
             ? List<Task>.from(json["sub_tasks"].map((x) => Task.fromJson(x)))
             : <Task>[],
+        user: json["user"] != null ? User.fromJson(json["user"]) : null,
       );
 
   Map<String, dynamic> toJson() => {
@@ -81,6 +85,7 @@ class Task {
         "updated_at": updatedAt == null ? null : dateFormat.format(updatedAt!),
         "sub_tasks":
             List<Map<String, dynamic>>.from(subTasks.map((x) => x.toJson())),
+        "user": user == null ? null : user!.toJson(),
       };
 
   Task copyWith({
@@ -112,6 +117,7 @@ class Task {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       subTasks: subTasks ?? this.subTasks,
+      user: user ?? this.user,
     );
   }
 }

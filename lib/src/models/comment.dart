@@ -5,6 +5,7 @@
 import 'dart:convert';
 
 import 'package:flutter_life_goal_management/src/models/user.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 List<Comment> commentFromJson(String str) =>
     List<Comment>.from(json.decode(str).map((x) => Comment.fromJson(x)));
@@ -54,4 +55,7 @@ class Comment {
         "updated_at": updatedAt.toIso8601String(),
         "user": user?.toJson(),
       };
+
+  String get createdAtFormatted => timeago.format(createdAt);
+  String get updatedAtFormatted => timeago.format(updatedAt);
 }

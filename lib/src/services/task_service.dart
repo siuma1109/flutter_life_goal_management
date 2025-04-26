@@ -109,13 +109,15 @@ class TaskService {
   }
 
   // Get explorer Tasks
-  Future<List<Task>> getExplorerTasks(int page) async {
+  Future<List<Task>> getExplorerTasks(int page, String? search) async {
     final result = await HttpService().get('explore/tasks', queryParameters: {
       'page': page,
+      if (search != null) 'search': search,
+      'per_page': 20,
     });
     final body = jsonDecode(result.body);
     final data = body['data'];
-    print('data: ${data}');
+    //print('data: ${data}');
     return List<Task>.from(data.map((e) => Task.fromJson(e)));
   }
 

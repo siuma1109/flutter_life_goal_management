@@ -6,10 +6,12 @@ import '../../services/task_service.dart';
 
 class TaskListWidget extends StatefulWidget {
   final List<Task> tasks;
+  final ScrollController? scrollController;
 
   const TaskListWidget({
     super.key,
     required this.tasks,
+    this.scrollController,
   });
 
   @override
@@ -37,6 +39,7 @@ class _TaskListWidgetState extends State<TaskListWidget> {
             ],
           )
         : ListView.builder(
+            controller: widget.scrollController,
             itemCount: widget.tasks.length,
             itemBuilder: (context, index) {
               final task = widget.tasks[index];

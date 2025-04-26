@@ -23,6 +23,29 @@ class UserService {
     return null;
   }
 
+  Future<List<User>> getUsers(
+      {int page = 1, int limit = 10, String? search}) async {
+    final result = await _httpService.get('users_list', queryParameters: {
+      'page': page,
+      'limit': limit,
+      if (search != null) 'search': search,
+    });
+
+    final body = jsonDecode(result.body);
+    final data = body['data'];
+
+    return List<User>.from(data.map((e) => User.fromJson(e)));
+  }
+
+  Future<bool> followUser(User user) async {
+    final result = await _httpService.post('users/${user.id}/follow');
+    if (result.statusCode == 200) {
+      return true;
+    }
+
+    return false;
+  }
+
   Future<User?> getUser() async {
     final result = await _httpService.get('user', headers: {
       'Content-Type': 'application/json',

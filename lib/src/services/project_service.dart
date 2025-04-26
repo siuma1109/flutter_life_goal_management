@@ -33,14 +33,36 @@ class ProjectService {
   }
 
   // Get all projects
-  Future<List<Project>> getAllProjects() async {
-    final result = await HttpService().get('projects');
+  Future<List<Project>> getAllProjects({String? search}) async {
+    final result = await HttpService().get('projects', queryParameters: {
+      if (search != null) 'search': search,
+    });
 
     try {
       final List<Project> data = jsonDecode(result.body)
           .map<Project>((json) => Project.fromJson(json))
           .toList();
       return data;
+    } catch (e) {
+      print("Error parsing projects: $e");
+      return [];
+    }
+  }
+
+  // Get all projects by user id
+  Future<List<Project>> getAllProjectsWithPagination(
+      {int page = 1, String? search}) async {
+    final result = await HttpService().get('projects_list', queryParameters: {
+      'page': page,
+      if (search != null) 'search': search,
+      'per_page': 20,
+    });
+
+    try {
+      final body = jsonDecode(result.body);
+      final data = body['data'];
+      //print('data: ${data}');
+      return List<Project>.from(data.map((e) => Project.fromJson(e)));
     } catch (e) {
       print("Error parsing projects: $e");
       return [];

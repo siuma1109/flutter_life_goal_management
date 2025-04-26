@@ -17,6 +17,9 @@ class User {
   DateTime? emailVerifiedAt;
   DateTime createdAt;
   DateTime updatedAt;
+  int? followersCount;
+  int? followingCount;
+  int? isFollowed;
 
   User({
     this.id,
@@ -27,6 +30,9 @@ class User {
     this.emailVerifiedAt,
     required this.createdAt,
     required this.updatedAt,
+    this.followersCount,
+    this.followingCount,
+    this.isFollowed,
   });
 
   factory User.fromJson(Map<String, dynamic> json) => User(
@@ -38,6 +44,9 @@ class User {
             : null,
         createdAt: DateTime.parse(json["created_at"]),
         updatedAt: DateTime.parse(json["updated_at"]),
+        followersCount: json["followers_count"] ?? 0,
+        followingCount: json["following_count"] ?? 0,
+        isFollowed: json["is_followed"] ?? 0,
       );
 
   Map<String, dynamic> toJson() => {
@@ -49,5 +58,8 @@ class User {
         "email_verified_at": emailVerifiedAt?.toIso8601String(),
         "created_at": createdAt.toIso8601String(),
         "updated_at": updatedAt.toIso8601String(),
+        "followers_count": followersCount,
+        "following_count": followingCount,
+        "is_followed": isFollowed,
       };
 }

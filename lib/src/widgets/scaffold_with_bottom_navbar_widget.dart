@@ -64,8 +64,8 @@ class _ScaffoldWithBottomNavBarWidgetState
                   label: 'Home',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.explore),
-                  label: 'Explore',
+                  icon: Icon(Icons.search),
+                  label: 'Search',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.calendar_month),

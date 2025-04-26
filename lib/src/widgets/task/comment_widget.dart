@@ -30,7 +30,7 @@ class _CommentWidgetState extends State<CommentWidget> {
           Wrap(
             children: [
               Text(
-                '${_comment.user!.name} | ${_comment.createdAt.toString()}',
+                '${_comment.user!.name} | ${_comment.createdAtFormatted.toString()}',
                 overflow: TextOverflow.ellipsis,
                 maxLines: 2,
               ),
