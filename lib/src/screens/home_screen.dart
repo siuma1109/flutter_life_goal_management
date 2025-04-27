@@ -1,7 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_life_goal_management/src/widgets/post_card.dart';
+import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
+import 'package:flutter_life_goal_management/src/models/feed.dart';
+import 'package:flutter_life_goal_management/src/models/task.dart';
+import 'package:flutter_life_goal_management/src/services/task_service.dart';
+import 'package:flutter_life_goal_management/src/services/feed_service.dart';
+import 'package:flutter_life_goal_management/src/widgets/feed/feed_list_widget.dart';
+import 'package:flutter_life_goal_management/src/widgets/home/today_tasks_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/add_task_floating_button_widget.dart';
-import 'package:flutter_life_goal_management/src/widgets/task/task_card.dart';
 
 class HomeScreen extends StatefulWidget {
   final String title;
@@ -13,8 +20,46 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  bool _showAllTasks = false;
-  final Map<String, bool> _completedTasks = {};
+  final ScrollController _scrollController = ScrollController();
+  List<Task> _tasks = [];
+  int taskPage = 1;
+  bool taskHasMoreData = true;
+  bool taskIsLoading = false;
+  StreamSubscription<void>? taskChangedSubscription;
+
+  List<Feed> _feeds = [];
+  int feedPage = 1;
+  bool feedHasMoreData = true;
+  bool feedIsLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTasks();
+    _loadFeeds();
+
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+              _scrollController.position.maxScrollExtent * 0.5 &&
+          !feedIsLoading &&
+          feedHasMoreData) {
+        _loadFeeds();
+      }
+    });
+
+    taskChangedSubscription = TaskBroadcast().taskChangedStream.listen((task) {
+      if (task != null) {
+        setState(() {
+          final index = _tasks.indexWhere((t) => t.id == task.id);
+          if (index != -1) {
+            _tasks[index] = task;
+          } else {
+            _tasks.add(task);
+          }
+        });
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,109 +68,97 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text(widget.title),
         actions: [
           IconButton(
-            icon: Icon(Icons.notifications),
+            icon: const Icon(Icons.notifications),
             onPressed: () {},
           ),
           IconButton(
-            icon: Icon(Icons.chat),
+            icon: const Icon(Icons.chat),
             onPressed: () {},
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: RefreshIndicator(
+        onRefresh: _refresh,
+        child: ListView(
+          controller: _scrollController,
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text('今日任務',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            TodayTasksWidget(
+              tasks: _tasks,
+              loadTasks: _loadTasks,
             ),
-            ..._buildTaskList(),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text('動態牆',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            FeedListWidget(
+              feeds: _feeds,
             ),
-            _buildActivityFeed(),
           ],
         ),
       ),
-      floatingActionButton: AddTaskFloatingButtonWidget(),
+      floatingActionButton: const AddTaskFloatingButtonWidget(),
     );
   }
 
-  List<Widget> _buildTaskList() {
-    final tasks = [
-      {'title': '每天閱讀 30 分鐘', 'progress': 0.7},
-      {'title': '每週運動三次', 'progress': 0.5},
-      {'title': '學習 Flutter', 'progress': 0.3},
-      {'title': '寫作 500 字', 'progress': 0.2},
-    ];
-
-    final displayedTasks = _showAllTasks ? tasks : tasks.take(2).toList();
-
-    return [
-      ...displayedTasks.map((task) {
-        final title = task['title'] as String;
-        return TaskCard(
-          title: title,
-          progress: (task['progress'] as num).toDouble(),
-          isCompleted: _completedTasks[title] ?? false,
-          onCompleted: () {
-            setState(() {
-              _completedTasks[title] = !(_completedTasks[title] ?? false);
-            });
-          },
-        );
-      }).toList(),
-      if (!_showAllTasks && tasks.length > 2)
-        Center(
-          child: TextButton(
-            onPressed: () => setState(() => _showAllTasks = true),
-            child: Text('查看更多任務'),
-          ),
-        ),
-      if (_showAllTasks)
-        Center(
-          child: TextButton(
-            onPressed: () => setState(() => _showAllTasks = false),
-            child: Text('收起'),
-          ),
-        ),
-    ];
+  Future<void> _refresh() async {
+    setState(() {
+      taskPage = 1;
+      _tasks = [];
+      taskHasMoreData = true;
+      taskIsLoading = false;
+      feedPage = 1;
+      _feeds = [];
+      feedHasMoreData = true;
+      feedIsLoading = false;
+    });
+    await Future.wait([_loadTasks(), _loadFeeds()]);
   }
 
-  Widget _buildActivityFeed() {
-    final posts = [
-      {
-        'user': {'name': '小明', 'avatar': null},
-        'content': {'text': '今天完成了 30 分鐘閱讀！'},
-        'timestamp': '2023-10-01T12:00:00Z',
-        'interactions': {'likes': 12, 'comments': 3, 'shares': 1},
-      },
-      {
-        'user': {'name': '系統推薦', 'avatar': 'system_avatar_url'},
-        'content': {
-          'text': '如何養成閱讀習慣',
-          'image': 'assets/image1.jpg',
-          'link': 'https://example.com',
-        },
-        'timestamp': '2023-10-01T11:00:00Z',
-        'interactions': {'likes': 8, 'comments': 1, 'shares': 0},
-      },
-      {
-        'user': {'name': '小華', 'avatar': 'avatar_url'},
-        'content': {'text': '推薦一本好書：《原子習慣》'},
-        'timestamp': '2023-10-01T10:00:00Z',
-        'interactions': {'likes': 5, 'comments': 0, 'shares': 0},
-      },
-    ];
+  Future<void> _loadTasks() async {
+    if (taskIsLoading) return;
 
-    return ListView(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      children: posts.map((post) => PostCard(post: post)).toList(),
-    );
+    setState(() {
+      taskIsLoading = true;
+    });
+
+    try {
+      final tasks = await TaskService().getTodayTasks(taskPage);
+      if (tasks.isEmpty) {
+        taskHasMoreData = false;
+      } else {
+        setState(() {
+          _tasks.addAll(tasks.where((t) => !_tasks.any((tt) => tt.id == t.id)));
+          taskPage++;
+        });
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    } finally {
+      setState(() {
+        taskIsLoading = false;
+      });
+    }
+  }
+
+  Future<void> _loadFeeds() async {
+    if (feedIsLoading) return;
+    setState(() {
+      feedIsLoading = true;
+    });
+    try {
+      final feeds = await FeedService().getFeeds(feedPage);
+      if (feeds.isEmpty) {
+        setState(() {
+          feedHasMoreData = false;
+        });
+      } else {
+        setState(() {
+          _feeds.addAll(feeds.where((f) => !_feeds.any((ff) => ff.id == f.id)));
+          feedPage++;
+        });
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    } finally {
+      setState(() {
+        feedIsLoading = false;
+      });
+    }
   }
 }

@@ -20,6 +20,7 @@ class User {
   int? followersCount;
   int? followingCount;
   int? isFollowed;
+  String? avatar;
 
   User({
     this.id,
@@ -33,6 +34,7 @@ class User {
     this.followersCount,
     this.followingCount,
     this.isFollowed,
+    this.avatar,
   });
 
   factory User.fromJson(Map<String, dynamic> json) => User(
@@ -47,6 +49,7 @@ class User {
         followersCount: json["followers_count"] ?? 0,
         followingCount: json["following_count"] ?? 0,
         isFollowed: json["is_followed"] ?? 0,
+        avatar: json["avatar"] ?? "",
       );
 
   Map<String, dynamic> toJson() => {
@@ -61,5 +64,6 @@ class User {
         "followers_count": followersCount,
         "following_count": followingCount,
         "is_followed": isFollowed,
+        "avatar": avatar,
       };
 }

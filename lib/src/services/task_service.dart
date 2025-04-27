@@ -51,7 +51,7 @@ class TaskService {
         body: jsonEncode(task.toJson()));
     print("result: ${result.body}");
     // Broadcast task changes
-    TaskBroadcast().notifyTasksChanged();
+    TaskBroadcast().notifyTasksChanged(task);
 
     // If it's a task with a project, also notify project changes
     if (task.projectId != null) {
@@ -108,6 +108,19 @@ class TaskService {
         jsonDecode(result.body).map((e) => Task.fromJson(e)));
   }
 
+  // Get today tasks
+  Future<List<Task>> getTodayTasks(int page) async {
+    final result = await HttpService().get('tasks_list', queryParameters: {
+      'date': DateTime.now().toIso8601String(),
+      'page': page,
+      'per_page': 4,
+    });
+    //print('result: ${result.body}');
+    final data = jsonDecode(result.body)['data'];
+    //print('data: $data');
+    return List<Task>.from(data.map((e) => Task.fromJson(e)));
+  }
+
   // Get explorer Tasks
   Future<List<Task>> getExplorerTasks(int page, String? search) async {
     final result = await HttpService().get('explore/tasks', queryParameters: {
@@ -132,15 +145,15 @@ class TaskService {
 
   // Update a task
   Future<Map<String, dynamic>> updateTask(Task task) async {
-    print("task: ${task.toJson()}");
+    //print("task: ${task.toJson()}");
     final result = await HttpService().put('tasks/${task.id}',
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(task.toJson()));
 
-    print("result: ${result.body}");
+    //print("result: ${result.body}");
 
     // Broadcast task changes
-    TaskBroadcast().notifyTasksChanged();
+    TaskBroadcast().notifyTasksChanged(task);
 
     // If it's a task with a project, also notify project changes
     if (task.projectId != null) {
@@ -161,7 +174,7 @@ class TaskService {
       }
 
       // Broadcast task changes
-      TaskBroadcast().notifyTasksChanged();
+      TaskBroadcast().notifyTasksChanged(task);
 
       // If it was a project task, also notify project changes
       if (task.projectId != null) {

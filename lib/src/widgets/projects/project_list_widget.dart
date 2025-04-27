@@ -38,7 +38,7 @@ class _ProjectListWidgetState extends State<ProjectListWidget> {
     // Listen for project changes
     _projectChangedSubscription =
         TaskBroadcast().projectChangedStream.listen((_) {
-      _loadProjects();
+      _refreshProjects();
     });
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
@@ -61,7 +61,7 @@ class _ProjectListWidgetState extends State<ProjectListWidget> {
     return _search.isNotEmpty && _projects.isEmpty
         ? const Center(child: Text('No projects found'))
         : RefreshIndicator(
-            onRefresh: _loadProjects,
+            onRefresh: _refreshProjects,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -123,6 +123,12 @@ class _ProjectListWidgetState extends State<ProjectListWidget> {
               ],
             ),
           );
+  }
+
+  Future<void> _refreshProjects() async {
+    _projects = [];
+    _page = 1;
+    _loadProjects();
   }
 
   Future<void> _loadProjects() async {

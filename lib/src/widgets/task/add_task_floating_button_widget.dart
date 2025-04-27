@@ -25,7 +25,7 @@ class _AddTaskFloatingButtonWidgetState
 
         if (result == true) {
           // Broadcast task changes to all listeners
-          TaskBroadcast().notifyTasksChanged();
+          TaskBroadcast().notifyTasksChanged(null);
         }
       },
       child: const Icon(Icons.add),

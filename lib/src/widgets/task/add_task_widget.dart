@@ -157,9 +157,9 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
   //   );
   // }
 
-  void _notifyChanges() {
+  void _notifyChanges(Task? task) {
     // Broadcast the change
-    TaskBroadcast().notifyTasksChanged();
+    TaskBroadcast().notifyTasksChanged(task);
 
     // If it's a task with a project, also notify project changes
     if (_projectId != null) {
@@ -189,7 +189,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
         if (widget.isParentTask) {
           // Insert the main task and get its ID
           await TaskService().insertTask(task);
-          _notifyChanges();
+          _notifyChanges(task);
         }
 
         if (mounted) {

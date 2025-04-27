@@ -21,9 +21,9 @@ class TaskListWidget extends StatefulWidget {
 class _TaskListWidgetState extends State<TaskListWidget> {
   final TaskService _taskService = TaskService();
 
-  void _refreshTasks() {
+  void _refreshTasks(Task? task) {
     // Broadcast the change
-    TaskBroadcast().notifyTasksChanged();
+    TaskBroadcast().notifyTasksChanged(task);
   }
 
   @override
@@ -98,7 +98,7 @@ class _TaskListWidgetState extends State<TaskListWidget> {
                           setState(() {
                             task.isChecked = !task.isChecked;
                             _taskService.updateTask(task);
-                            _refreshTasks();
+                            _refreshTasks(task);
                           });
                         },
                       ),
