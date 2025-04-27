@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/services/auth_service.dart';
-import 'package:flutter_life_goal_management/src/widgets/task/comment_list_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/sub_task_list_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/task_row_widget.dart';
 import '../../models/task.dart';
@@ -27,7 +26,6 @@ class ViewTaskWidget extends StatefulWidget {
 class _ViewTaskWidgetState extends State<ViewTaskWidget> {
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
-  late TextEditingController _commentController;
   late Task _task;
   DateTime? _startDate;
   DateTime? _endDate;
@@ -43,26 +41,18 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
     _titleController = TextEditingController(text: widget.task.title);
     _descriptionController =
         TextEditingController(text: widget.task.description);
-    _commentController = TextEditingController();
     _startDate = widget.task.startDate ?? DateTime.now();
     _endDate = widget.task.endDate ?? DateTime.now();
     _priority = widget.task.priority;
 
     _task = widget.task;
-    // if (_task.id != null) {
-    //   _loadSubTasksById();
-    //   // Listen for task changes
-    //   _taskChangedSubscription = TaskBroadcast().taskChangedStream.listen((_) {
-    //     _loadSubTasksById();
-    //   });
-    // }
   }
 
   @override
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
-    _commentController.dispose();
+
     super.dispose();
     _taskChangedSubscription?.cancel();
   }
@@ -123,8 +113,6 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
               SubTaskListWidget(
                 task: _task,
               ),
-              const Divider(thickness: 5),
-              CommentListWidget(task: _task),
               Padding(
                 padding: const EdgeInsets.all(16),
               ),
@@ -329,15 +317,6 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
     );
   }
 
-  // Future<void> _loadSubTasksById() async {
-  //   final subTasks = await TaskService().getSubtasks(widget.task.id!);
-  //   if (mounted) {
-  //     setState(() {
-  //       _task.subTasks = subTasks;
-  //     });
-  //   }
-  // }
-
   void _showDeleteConfirmationDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -367,80 +346,5 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
         );
       },
     );
-  }
-
-  Widget _buildCommentInputBar() {
-    return Container(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-        left: 8,
-        right: 8,
-        top: 8,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            spreadRadius: 1,
-            blurRadius: 3,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Row(
-          children: [
-            const CircleAvatar(
-              radius: 16,
-              child: Icon(Icons.person, size: 20),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: TextField(
-                controller: _commentController,
-                decoration: const InputDecoration(
-                  hintText: 'Add a comment...',
-                  border: InputBorder.none,
-                ),
-                minLines: 1,
-                maxLines: 4,
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.send),
-              onPressed: _submitComment,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _submitComment() async {
-    if (_commentController.text.trim().isEmpty) {
-      return;
-    }
-
-    if (_task.id == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cannot add comment to unsaved task')),
-      );
-      return;
-    }
-
-    try {
-      // Submit comment using TaskService
-      await TaskService().addComment(_task.id!, _commentController.text);
-
-      // Clear the input field
-      _commentController.clear();
-
-      // No need to manually notify as the addComment method already broadcasts changes
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to add comment: ${e.toString()}')),
-      );
-    }
   }
 }

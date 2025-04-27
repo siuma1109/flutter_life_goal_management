@@ -43,13 +43,13 @@ class TaskService {
   // Task Part Start
   // Insert a task
   Future<Task?> insertTask(Task task) async {
-    print('subTasks: ${task.subTasks.map((e) => e.toJson())}');
-    print("task: ${task.toJson()}");
-    print("body: ${jsonEncode(task.toJson())}");
+    //print('subTasks: ${task.subTasks.map((e) => e.toJson())}');
+    //print("task: ${task.toJson()}");
+    //print("body: ${jsonEncode(task.toJson())}");
     final result = await HttpService().post('tasks',
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(task.toJson()));
-    print("result: ${result.body}");
+    //print("result: ${result.body}");
     // Broadcast task changes
     TaskBroadcast().notifyTasksChanged(task);
 
@@ -57,7 +57,7 @@ class TaskService {
     if (task.projectId != null) {
       TaskBroadcast().notifyProjectChanged();
     }
-    print("result: ${result.body}");
+    //print("result: ${result.body}");
     return Task.fromJson(jsonDecode(result.body));
   }
 
@@ -66,7 +66,7 @@ class TaskService {
     final result = await HttpService().get('tasks_count', queryParameters: {
       'type': 'all_without_sub_tasks',
     });
-    print("result: ${result.body}");
+    //print("result: ${result.body}");
     return jsonDecode(result.body);
   }
 
@@ -75,7 +75,7 @@ class TaskService {
     final result = await HttpService().get('tasks', queryParameters: {
       'type': 'inbox',
     });
-    print("result: ${result.body}");
+    //print("result: ${result.body}");
     return List<Task>.from(
         jsonDecode(result.body).map((e) => Task.fromJson(e)));
   }
@@ -188,16 +188,32 @@ class TaskService {
     }
   }
 
+  // Like a task
+  Future<bool> likeTask(Task task) async {
+    final result = await HttpService().post('tasks/${task.id}/like');
+    if (result.statusCode == 200) {
+      task.likesCount = task.likesCount! + 1;
+      TaskBroadcast().notifyTasksChanged(task);
+      return true;
+    }
+    return false;
+  }
+
   // Comment Part Start
-  Future<List<Comment>> getComments(int taskId) async {
-    final result = await HttpService().get('tasks/$taskId/comments');
+  Future<List<Comment>> getComments(int taskId, int page) async {
+    final result =
+        await HttpService().get('tasks/$taskId/comments', queryParameters: {
+      'page': page,
+    });
 
     if (result.statusCode != 200) {
       throw Exception('Failed to load comments');
     }
 
-    return List<Comment>.from(
-        jsonDecode(result.body).map((e) => Comment.fromJson(e)));
+    final body = jsonDecode(result.body);
+    final data = body['data'];
+
+    return List<Comment>.from(data.map((e) => Comment.fromJson(e)));
   }
 
   Future<Comment> addComment(int taskId, String body) async {

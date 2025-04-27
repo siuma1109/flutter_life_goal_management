@@ -4,6 +4,7 @@
 
 import 'dart:convert';
 
+import 'package:flutter_life_goal_management/src/models/comment.dart';
 import 'package:flutter_life_goal_management/src/models/user.dart';
 import 'package:intl/intl.dart';
 
@@ -26,6 +27,12 @@ class Task {
   DateTime? updatedAt;
   List<Task> subTasks;
   User? user;
+  int? likesCount;
+  int? commentsCount;
+  int? sharesCount;
+  List<Comment> comments;
+  bool? isLiked;
+
   static final dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
 
   Task({
@@ -43,6 +50,11 @@ class Task {
     this.updatedAt,
     required this.subTasks,
     this.user,
+    this.likesCount,
+    this.commentsCount,
+    this.sharesCount,
+    this.comments = const [],
+    this.isLiked,
   }) {
     createdAt = createdAt ?? DateTime.now();
     updatedAt = updatedAt ?? DateTime.now();
@@ -68,6 +80,18 @@ class Task {
             ? List<Task>.from(json["sub_tasks"].map((x) => Task.fromJson(x)))
             : <Task>[],
         user: json["user"] != null ? User.fromJson(json["user"]) : null,
+        likesCount: json["likes_count"] ?? 0,
+        commentsCount: json["comments_count"] ?? 0,
+        sharesCount: json["shares_count"] ?? 0,
+        comments: json["comments"] != null
+            ? List<Comment>.from(
+                json["comments"].map((x) => Comment.fromJson(x)))
+            : <Comment>[],
+        isLiked: json["is_liked"] != null
+            ? json["is_liked"] > 0
+                ? true
+                : false
+            : false,
       );
 
   Map<String, dynamic> toJson() => {
@@ -86,6 +110,12 @@ class Task {
         "sub_tasks":
             List<Map<String, dynamic>>.from(subTasks.map((x) => x.toJson())),
         "user": user == null ? null : user!.toJson(),
+        "likes_count": likesCount,
+        "comments_count": commentsCount,
+        "shares_count": sharesCount,
+        "comments":
+            List<Map<String, dynamic>>.from(comments.map((x) => x.toJson())),
+        "is_liked": isLiked == true ? 1 : 0,
       };
 
   Task copyWith({
@@ -118,6 +148,11 @@ class Task {
       updatedAt: updatedAt ?? this.updatedAt,
       subTasks: subTasks ?? this.subTasks,
       user: user ?? this.user,
+      likesCount: likesCount ?? this.likesCount,
+      commentsCount: commentsCount ?? this.commentsCount,
+      sharesCount: sharesCount ?? this.sharesCount,
+      comments: comments ?? this.comments,
+      isLiked: isLiked ?? this.isLiked,
     );
   }
 }

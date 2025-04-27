@@ -113,12 +113,6 @@ class _TodayTasksWidgetState extends State<TodayTasksWidget> {
                               return TaskCard(
                                 key: index == 0 ? _firstItemKey : null,
                                 task: _tasks[index],
-                                onCompleted: () {
-                                  setState(() {
-                                    _tasks[index].isChecked =
-                                        !_tasks[index].isChecked;
-                                  });
-                                },
                                 onEdited: (Task? task) {
                                   if (task != null) {
                                     setState(() {

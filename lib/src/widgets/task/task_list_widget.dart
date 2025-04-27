@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
+import 'package:flutter_life_goal_management/src/widgets/task/task_card.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/task_edit_form_widget.dart';
 import '../../models/task.dart';
 import '../../services/task_service.dart';
@@ -54,68 +55,15 @@ class _TaskListWidgetState extends State<TaskListWidget> {
                         )
                       : null,
                 ),
-                child: GestureDetector(
-                  onTap: () async {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      useRootNavigator: true,
-                      builder: (context) => TaskEditFormWidget(
-                        task: task,
-                        onRefresh: (subTask) {
-                          if (subTask == null) {
-                            setState(() {
-                              widget.tasks.removeAt(index);
-                            });
-                          } else {
-                            setState(() {
-                              widget.tasks[index] = subTask;
-                            });
-                          }
-                        },
-                      ),
-                    );
+                child: TaskCard(
+                  task: task,
+                  onEdited: (Task? updatedTask) {
+                    if (updatedTask != null) {
+                      setState(() {
+                        widget.tasks[index] = updatedTask;
+                      });
+                    }
                   },
-                  child: ListTile(
-                    leading: Transform.scale(
-                      scale: 1.2,
-                      child: Checkbox(
-                        value: task.isChecked,
-                        side: BorderSide(
-                          color: _taskService.getPriorityColor(task.priority),
-                          width: 2.0,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(50),
-                          side: BorderSide(
-                            color: _taskService.getPriorityColor(task.priority),
-                            width: 2.0,
-                          ),
-                        ),
-                        activeColor:
-                            _taskService.getPriorityColor(task.priority),
-                        onChanged: (bool? newValue) {
-                          setState(() {
-                            task.isChecked = !task.isChecked;
-                            _taskService.updateTask(task);
-                            _refreshTasks(task);
-                          });
-                        },
-                      ),
-                    ),
-                    title: Text(task.title),
-                    subtitle: (task.description != null &&
-                            task.description != '')
-                        ? Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(task.description!),
-                              if (task.startDate != null)
-                                Text(task.startDate!.toString().split(' ')[0]),
-                            ],
-                          )
-                        : null,
-                  ),
                 ),
               );
             },

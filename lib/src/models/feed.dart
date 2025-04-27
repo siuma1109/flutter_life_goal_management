@@ -26,7 +26,7 @@ class Feed {
   int? commentsCount;
   int? sharesCount;
   String? link;
-
+  bool? isLiked;
   Feed({
     required this.id,
     required this.feedableType,
@@ -40,6 +40,7 @@ class Feed {
     this.commentsCount,
     this.sharesCount,
     this.link,
+    this.isLiked,
   });
 
   factory Feed.fromJson(Map<String, dynamic> json) => Feed(
@@ -55,6 +56,7 @@ class Feed {
         commentsCount: json["comments_count"] ?? 0,
         sharesCount: json["shares_count"] ?? 0,
         link: json["link"] ?? "",
+        isLiked: json["is_liked"] == 1 ? true : false,
       );
 
   Map<String, dynamic> toJson() => {
@@ -70,6 +72,7 @@ class Feed {
         "comments_count": commentsCount,
         "shares_count": sharesCount,
         "link": link,
+        "is_liked": isLiked == true ? 1 : 0,
       };
 
   String get createdAtFormatted => timeago.format(createdAt);
