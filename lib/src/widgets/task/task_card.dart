@@ -168,5 +168,6 @@ class _TaskCardState extends State<TaskCard> {
   Future<void> _updateTask(Task task) async {
     //print("task: ${task.toJson()}");
     await TaskService().updateTask(task);
+    widget.onEdited?.call(task);
   }
 }

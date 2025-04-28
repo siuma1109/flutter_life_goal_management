@@ -19,6 +19,10 @@ class _ProjectScreenState extends State<ProjectScreen> {
   Project? _project;
   List<Task> _tasks = [];
   StreamSubscription? _taskChangedSubscription;
+  int _page = 1;
+  bool _hasMoreData = true;
+  ScrollController _scrollController = ScrollController();
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -29,6 +33,15 @@ class _ProjectScreenState extends State<ProjectScreen> {
     // Listen for task changes
     _taskChangedSubscription = TaskBroadcast().taskChangedStream.listen((_) {
       _loadTasks();
+    });
+
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+              _scrollController.position.maxScrollExtent * 0.8 &&
+          !_isLoading &&
+          _hasMoreData) {
+        _loadTasks();
+      }
     });
   }
 
@@ -56,14 +69,37 @@ class _ProjectScreenState extends State<ProjectScreen> {
     }
   }
 
+  Future<void> _refreshTasks() async {
+    setState(() {
+      _page = 1;
+      _hasMoreData = true;
+      _tasks = [];
+    });
+    await _loadTasks();
+  }
+
   Future<void> _loadTasks() async {
+    if (!_hasMoreData) return;
+    setState(() {
+      _isLoading = true;
+    });
     final tasks =
-        await TaskService().getTasksByProjectId(widget.project.id ?? 0);
+        await TaskService().getTasksByProjectId(widget.project.id ?? 0, _page);
     if (mounted) {
-      setState(() {
-        _tasks = tasks;
-      });
+      if (tasks.isEmpty) {
+        setState(() {
+          _hasMoreData = false;
+        });
+      } else {
+        setState(() {
+          _tasks.addAll(tasks.where((t) => !_tasks.any((tt) => tt.id == t.id)));
+          _page++;
+        });
+      }
     }
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   void _showDeleteConfirmationDialog(BuildContext context) {
@@ -130,9 +166,10 @@ class _ProjectScreenState extends State<ProjectScreen> {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: _loadTasks,
+        onRefresh: _refreshTasks,
         child: TaskListWidget(
           tasks: _tasks,
+          scrollController: _scrollController,
         ),
       ),
     );

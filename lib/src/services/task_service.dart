@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
 import 'package:flutter_life_goal_management/src/models/comment.dart';
 import 'package:flutter_life_goal_management/src/models/task.dart';
+import 'package:flutter_life_goal_management/src/models/task_date_count.dart';
 import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/services/http_service.dart';
 
@@ -57,6 +58,7 @@ class TaskService {
     if (task.projectId != null) {
       TaskBroadcast().notifyProjectChanged();
     }
+
     //print("result: ${result.body}");
     return Task.fromJson(jsonDecode(result.body));
   }
@@ -71,13 +73,14 @@ class TaskService {
   }
 
   // Get Inbox Tasks
-  Future<List<Task>> getInboxTasks() async {
+  Future<List<Task>> getInboxTasks(int page) async {
     final result = await HttpService().get('tasks', queryParameters: {
       'type': 'inbox',
+      'page': page,
     });
-    //print("result: ${result.body}");
-    return List<Task>.from(
-        jsonDecode(result.body).map((e) => Task.fromJson(e)));
+    final body = jsonDecode(result.body);
+    final data = body['data'];
+    return List<Task>.from(data.map((e) => Task.fromJson(e)));
   }
 
   // Get Inbox Tasks Count
@@ -89,23 +92,38 @@ class TaskService {
   }
 
   // Get tasks by project_id
-  Future<List<Task>> getTasksByProjectId(int projectId) async {
+  Future<List<Task>> getTasksByProjectId(int projectId, int page) async {
     final result = await HttpService().get('tasks', queryParameters: {
       'project_id': projectId,
+      'page': page,
     });
-    return List<Task>.from(
-        jsonDecode(result.body).map((e) => Task.fromJson(e)));
+    final body = jsonDecode(result.body);
+    final data = body['data'];
+    return List<Task>.from(data.map((e) => Task.fromJson(e)));
   }
 
   // Get tasks by date range
-  Future<List<Task>> getTasksByYearAndMonth(int year, int month) async {
+  Future<List<Task>> getTasksByDate(DateTime date, int page) async {
     final result = await HttpService().get('tasks', queryParameters: {
+      'date': date.toIso8601String(),
+      'page': page,
+    });
+    final body = jsonDecode(result.body);
+    final data = body['data'];
+    return List<Task>.from(data.map((e) => Task.fromJson(e)));
+  }
+
+  Future<List<TaskDateCount>> getTasksByYearAndMonthCount(
+      int year, int month) async {
+    final result =
+        await HttpService().get('tasks_count_by_date', queryParameters: {
       'year': year,
       'month': month,
     });
 
-    return List<Task>.from(
-        jsonDecode(result.body).map((e) => Task.fromJson(e)));
+    final data = jsonDecode(result.body);
+    //print('data: $data');
+    return List<TaskDateCount>.from(data.map((e) => TaskDateCount.fromJson(e)));
   }
 
   // Get today tasks
@@ -135,12 +153,14 @@ class TaskService {
   }
 
   // Get tasks by parent_id (for subtasks)
-  Future<List<Task>> getSubtasks(int parentId) async {
+  Future<List<Task>> getSubtasks(int parentId, int page) async {
     final result = await HttpService().get('tasks', queryParameters: {
       'parent_id': parentId,
+      'page': page,
     });
-    return List<Task>.from(
-        jsonDecode(result.body).map((e) => Task.fromJson(e)));
+    final body = jsonDecode(result.body);
+    final data = body['data'];
+    return List<Task>.from(data.map((e) => Task.fromJson(e)));
   }
 
   // Update a task

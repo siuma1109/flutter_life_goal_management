@@ -28,14 +28,23 @@ class _UserListItemWidgetState extends State<UserListItemWidget> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // CircleAvatar(
-          //   radius: 24,
-          //   backgroundImage: NetworkImage(widget.user.avatar),
-          // ),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.person, size: 48),
+              CircleAvatar(
+                child: widget.user.avatar == null
+                    ? Icon(Icons.person)
+                    : ClipOval(
+                        child: Image.network(
+                          widget.user.avatar!,
+                          width: 40,
+                          height: 40,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Icon(Icons.person),
+                        ),
+                      ),
+              ),
               SizedBox(width: 16),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

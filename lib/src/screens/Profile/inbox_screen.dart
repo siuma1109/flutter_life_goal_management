@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
 import 'package:flutter_life_goal_management/src/models/task.dart';
-import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/services/task_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/add_task_floating_button_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/task_list_widget.dart';
@@ -17,7 +16,10 @@ class InboxScreen extends StatefulWidget {
 class _InboxScreenState extends State<InboxScreen> {
   List<Task> _tasks = [];
   bool _isLoading = false;
+  int _page = 1;
+  bool _hasMoreData = true;
   StreamSubscription? _taskChangedSubscription;
+  ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -28,12 +30,30 @@ class _InboxScreenState extends State<InboxScreen> {
     _taskChangedSubscription = TaskBroadcast().taskChangedStream.listen((_) {
       _loadTasks();
     });
+
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+              _scrollController.position.maxScrollExtent * 0.8 &&
+          !_isLoading &&
+          _hasMoreData) {
+        _loadTasks();
+      }
+    });
   }
 
   @override
   void dispose() {
     _taskChangedSubscription?.cancel();
     super.dispose();
+  }
+
+  Future<void> _refreshTasks() async {
+    setState(() {
+      _page = 1;
+      _hasMoreData = true;
+      _tasks = [];
+    });
+    await _loadTasks();
   }
 
   Future<void> _loadTasks() async {
@@ -44,10 +64,20 @@ class _InboxScreenState extends State<InboxScreen> {
     });
 
     try {
-      final tasks = await TaskService().getInboxTasks();
-      setState(() {
-        _tasks = tasks;
-      });
+      if (_hasMoreData) {
+        final tasks = await TaskService().getInboxTasks(_page);
+        if (tasks.isEmpty) {
+          setState(() {
+            _hasMoreData = false;
+          });
+        } else {
+          setState(() {
+            _tasks
+                .addAll(tasks.where((t) => !_tasks.any((tt) => tt.id == t.id)));
+            _page++;
+          });
+        }
+      }
     } finally {
       setState(() {
         _isLoading = false;
@@ -62,11 +92,12 @@ class _InboxScreenState extends State<InboxScreen> {
         title: const Text("Inbox"),
       ),
       body: RefreshIndicator(
-        onRefresh: _loadTasks,
+        onRefresh: _refreshTasks,
         child: _tasks.isEmpty
             ? const Center(child: Text("No tasks in inbox"))
             : TaskListWidget(
                 tasks: _tasks,
+                scrollController: _scrollController,
               ),
       ),
       floatingActionButton: const AddTaskFloatingButtonWidget(),
