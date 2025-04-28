@@ -53,16 +53,17 @@ class _ProfileInfoWidgetState extends State<ProfileInfoWidget> {
           Row(
             children: [
               CircleAvatar(
+                radius: 40,
                 child: _user?.avatar == null
-                    ? Icon(Icons.person)
+                    ? Icon(Icons.person, size: 50)
                     : ClipOval(
                         child: Image.network(
                           _user?.avatar ?? '',
-                          width: 40,
-                          height: 40,
+                          width: 60,
+                          height: 60,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
-                              Icon(Icons.person),
+                              Icon(Icons.person, size: 50),
                         ),
                       ),
               ),
