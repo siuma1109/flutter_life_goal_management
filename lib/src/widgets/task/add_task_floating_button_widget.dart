@@ -15,18 +15,13 @@ class _AddTaskFloatingButtonWidgetState
   @override
   Widget build(BuildContext context) {
     return FloatingActionButton(
-      onPressed: () async {
-        var result = await showModalBottomSheet(
+      onPressed: () {
+        showModalBottomSheet(
           context: context,
           isScrollControlled: true,
           useRootNavigator: true,
           builder: (context) => TaskAddFormWidget(),
         );
-
-        if (result == true) {
-          // Broadcast task changes to all listeners
-          TaskBroadcast().notifyTasksChanged(null);
-        }
       },
       child: const Icon(Icons.add),
     );

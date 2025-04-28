@@ -88,6 +88,7 @@ class _ProjectListWidgetState extends State<ProjectListWidget> {
                     itemCount: _projects.length,
                     controller: _scrollController,
                     itemBuilder: (context, index) => Padding(
+                      key: Key(_projects[index].id.toString()),
                       padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                       child: GestureDetector(
                         onTap: () => _openProject(_projects[index]),

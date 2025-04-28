@@ -55,7 +55,8 @@ class _UsersListWidgetState extends State<UsersListWidget> {
               controller: _scrollController,
               itemCount: _users.length,
               itemBuilder: (context, index) {
-                return UserListItemWidget(user: _users[index]);
+                return UserListItemWidget(
+                    key: Key(_users[index].id.toString()), user: _users[index]);
               },
             ),
     );

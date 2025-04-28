@@ -27,8 +27,20 @@ class _InboxScreenState extends State<InboxScreen> {
     _loadTasks();
 
     // Listen for task changes
-    _taskChangedSubscription = TaskBroadcast().taskChangedStream.listen((_) {
-      _loadTasks();
+    _taskChangedSubscription =
+        TaskBroadcast().taskChangedStream.listen((Task? task) {
+      print('task: ${task?.toJson()}');
+      if (task != null &&
+          task.id != null &&
+          task.id != 0 &&
+          !_tasks.any((t) => t.id == task.id)) {
+        setState(() {
+          _tasks = [
+            task,
+            ..._tasks,
+          ];
+        });
+      }
     });
 
     _scrollController.addListener(() {

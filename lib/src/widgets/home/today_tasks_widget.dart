@@ -5,10 +5,15 @@ import 'package:flutter_life_goal_management/src/widgets/task/task_card.dart';
 class TodayTasksWidget extends StatefulWidget {
   final List<Task> tasks;
   final Function loadTasks;
+  final bool isLoading;
+  final ScrollController? scrollController;
+
   const TodayTasksWidget({
     super.key,
     required this.tasks,
     required this.loadTasks,
+    required this.isLoading,
+    this.scrollController,
   });
 
   @override
@@ -31,6 +36,19 @@ class _TodayTasksWidgetState extends State<TodayTasksWidget> {
     });
   }
 
+  @override
+  void didUpdateWidget(TodayTasksWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.tasks != oldWidget.tasks) {
+      setState(() {
+        _tasks = widget.tasks;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _calculateItemHeight();
+      });
+    }
+  }
+
   void _calculateItemHeight() {
     if (_firstItemKey.currentContext != null && _tasks.isNotEmpty) {
       final RenderBox renderBox =
@@ -44,16 +62,6 @@ class _TodayTasksWidgetState extends State<TodayTasksWidget> {
   @override
   void dispose() {
     super.dispose();
-  }
-
-  @override
-  void didUpdateWidget(TodayTasksWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.tasks != oldWidget.tasks) {
-      setState(() {
-        _tasks = widget.tasks;
-      });
-    }
   }
 
   @override
@@ -94,36 +102,27 @@ class _TodayTasksWidgetState extends State<TodayTasksWidget> {
                 height: listViewHeight,
                 child: _tasks.isEmpty
                     ? const Center(child: Text('No tasks'))
-                    : NotificationListener<ScrollNotification>(
-                        onNotification: (ScrollNotification scrollInfo) {
-                          if (scrollInfo is ScrollEndNotification &&
-                              scrollInfo.metrics.pixels >=
-                                  scrollInfo.metrics.maxScrollExtent * 0.8) {
-                            widget.loadTasks();
-                            return true;
+                    : ListView.builder(
+                        controller: widget.scrollController,
+                        itemCount: _tasks.length,
+                        shrinkWrap: true,
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        itemBuilder: (context, index) {
+                          if (index < _tasks.length) {
+                            return TaskCard(
+                              key: Key(_tasks[index].id.toString()),
+                              task: _tasks[index],
+                              onEdited: (Task? task) {
+                                if (task != null) {
+                                  setState(() {
+                                    _tasks[index] = task;
+                                  });
+                                }
+                              },
+                            );
                           }
-                          return false;
+                          return null;
                         },
-                        child: ListView.builder(
-                          itemCount: _tasks.length,
-                          shrinkWrap: true,
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          itemBuilder: (context, index) {
-                            if (index < _tasks.length) {
-                              return TaskCard(
-                                key: index == 0 ? _firstItemKey : null,
-                                task: _tasks[index],
-                                onEdited: (Task? task) {
-                                  if (task != null) {
-                                    setState(() {
-                                      _tasks[index] = task;
-                                    });
-                                  }
-                                },
-                              );
-                            }
-                          },
-                        ),
                       ),
               ),
               if (!_showAllTasks && _tasks.length > 2)
@@ -131,7 +130,9 @@ class _TodayTasksWidgetState extends State<TodayTasksWidget> {
                   child: TextButton(
                     onPressed: () => setState(() {
                       _showAllTasks = true;
-                      widget.loadTasks();
+                      if (!widget.isLoading) {
+                        widget.loadTasks();
+                      }
                     }),
                     child: const Text('Show more'),
                   ),

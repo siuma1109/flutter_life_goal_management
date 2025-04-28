@@ -52,7 +52,8 @@ class TaskService {
         body: jsonEncode(task.toJson()));
     //print("result: ${result.body}");
     // Broadcast task changes
-    TaskBroadcast().notifyTasksChanged(task);
+    Task insertedTask = Task.fromJson(jsonDecode(result.body));
+    TaskBroadcast().notifyTasksChanged(insertedTask);
 
     // If it's a task with a project, also notify project changes
     if (task.projectId != null) {
@@ -60,7 +61,7 @@ class TaskService {
     }
 
     //print("result: ${result.body}");
-    return Task.fromJson(jsonDecode(result.body));
+    return insertedTask;
   }
 
   // Get All Tasks Count Without sub tasks
@@ -129,8 +130,8 @@ class TaskService {
   // Get today tasks
   Future<List<Task>> getTodayTasks(int page) async {
     final result = await HttpService().get('tasks_list', queryParameters: {
-      'date': DateTime.now().toIso8601String(),
       'page': page,
+      'date': DateTime.now().toIso8601String(),
       'per_page': 4,
     });
     //print('result: ${result.body}');

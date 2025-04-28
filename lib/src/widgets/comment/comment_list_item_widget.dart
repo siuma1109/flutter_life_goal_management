@@ -39,9 +39,19 @@ class _CommentListItemWidgetState extends State<CommentListItemWidget> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const CircleAvatar(
-                radius: 18.0,
-                child: Icon(Icons.person), // Placeholder user icon
+              CircleAvatar(
+                child: _comment.user?.avatar == null
+                    ? Icon(Icons.person)
+                    : ClipOval(
+                        child: Image.network(
+                          _comment.user?.avatar ?? '',
+                          width: 40,
+                          height: 40,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Icon(Icons.person),
+                        ),
+                      ),
               ),
               const SizedBox(width: 12.0),
               Expanded(

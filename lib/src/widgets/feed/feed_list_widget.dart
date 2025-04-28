@@ -49,7 +49,9 @@ class _FeedListWidgetState extends State<FeedListWidget> {
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: _feeds.length,
                 itemBuilder: (context, index) {
-                  return FeedListItemWidget(feed: _feeds[index]);
+                  return FeedListItemWidget(
+                      key: Key(_feeds[index].id.toString()),
+                      feed: _feeds[index]);
                 },
               ),
       ],

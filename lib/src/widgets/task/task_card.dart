@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/models/comment.dart';
 import 'package:flutter_life_goal_management/src/models/task.dart';
+import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/services/task_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/comment/comment_list_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/draggable_bottom_sheet_widget.dart';
@@ -8,12 +9,12 @@ import 'package:flutter_life_goal_management/src/widgets/task/task_edit_form_wid
 
 class TaskCard extends StatefulWidget {
   final Task task;
-
   final Function(Task?)? onEdited;
-
+  final bool showUser;
   const TaskCard({
     required this.task,
     this.onEdited,
+    this.showUser = false,
     super.key,
   });
 
@@ -59,6 +60,32 @@ class _TaskCardState extends State<TaskCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (widget.showUser)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(children: [
+                      CircleAvatar(
+                        child: _task.user?.avatar == null
+                            ? Icon(Icons.person)
+                            : ClipOval(
+                                child: Image.network(
+                                  _task.user?.avatar ?? '',
+                                  width: 40,
+                                  height: 40,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      Icon(Icons.person),
+                                ),
+                              ),
+                      ),
+                      SizedBox(width: 8),
+                      Text(_task.user?.name ?? ''),
+                    ]),
+                    Text(_task.createdAtFormatted),
+                  ],
+                ),
+              SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -71,26 +98,28 @@ class _TaskCardState extends State<TaskCard> {
                           _task.isChecked ? TextDecoration.lineThrough : null,
                     ),
                   ),
-                  Checkbox(
-                    side: BorderSide(
-                      color: TaskService().getPriorityColor(_task.priority),
-                      width: 2.0,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(50),
+                  if (_task.user?.id == AuthService().getLoggedInUser()?.id)
+                    Checkbox(
                       side: BorderSide(
                         color: TaskService().getPriorityColor(_task.priority),
                         width: 2.0,
                       ),
-                    ),
-                    activeColor: TaskService().getPriorityColor(_task.priority),
-                    value: _task.isChecked,
-                    onChanged: (_) {
-                      _task.isChecked = !_task.isChecked;
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(50),
+                        side: BorderSide(
+                          color: TaskService().getPriorityColor(_task.priority),
+                          width: 2.0,
+                        ),
+                      ),
+                      activeColor:
+                          TaskService().getPriorityColor(_task.priority),
+                      value: _task.isChecked,
+                      onChanged: (_) {
+                        _task.isChecked = !_task.isChecked;
 
-                      _updateTask(_task);
-                    },
-                  ),
+                        _updateTask(_task);
+                      },
+                    ),
                 ],
               ),
               if (_task.subTasks != null && _task.subTasks!.isNotEmpty)

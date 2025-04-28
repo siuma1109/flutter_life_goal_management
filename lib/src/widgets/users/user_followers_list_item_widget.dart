@@ -45,7 +45,7 @@ class UserFollowersListWidgetState extends State<UserFollowersListWidget> {
     });
 
     _userChangedSubscription = UserBroadcast().userChangedStream.listen((_) {
-      _refreshUsers();
+      //_refreshUsers();
     });
   }
 
@@ -77,7 +77,8 @@ class UserFollowersListWidgetState extends State<UserFollowersListWidget> {
               controller: _scrollController,
               itemCount: _users.length,
               itemBuilder: (context, index) {
-                return UserListItemWidget(user: _users[index]);
+                return UserListItemWidget(
+                    key: Key(_users[index].id.toString()), user: _users[index]);
               },
             ),
     );

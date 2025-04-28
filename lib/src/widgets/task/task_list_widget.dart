@@ -6,11 +6,13 @@ import '../../services/task_service.dart';
 class TaskListWidget extends StatefulWidget {
   final List<Task> tasks;
   final ScrollController? scrollController;
+  final bool showUser;
 
   const TaskListWidget({
     super.key,
     required this.tasks,
     this.scrollController,
+    this.showUser = false,
   });
 
   @override
@@ -48,6 +50,7 @@ class _TaskListWidgetState extends State<TaskListWidget> {
               final task = widget.tasks[index];
               //task.title = '$index: ${task.title} ${task.id}';
               return Container(
+                key: Key(task.id.toString()),
                 decoration: BoxDecoration(
                   border: index < widget.tasks.length - 1
                       ? Border(
@@ -60,6 +63,7 @@ class _TaskListWidgetState extends State<TaskListWidget> {
                 ),
                 child: TaskCard(
                   task: task,
+                  showUser: widget.showUser,
                   onEdited: (Task? updatedTask) {
                     if (updatedTask != null) {
                       setState(() {

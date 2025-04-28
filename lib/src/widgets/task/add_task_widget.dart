@@ -103,70 +103,6 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
     }
   }
 
-  // void _showDatePicker(BuildContext context) {
-  //   _dateInputFocusNode.requestFocus();
-  //   showModalBottomSheet(
-  //     context: context,
-  //     isScrollControlled: true,
-  //     shape: const RoundedRectangleBorder(
-  //       borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
-  //     ),
-  //     builder: (BuildContext context) {
-  //       return TaskDatePickerWidget(
-  //         task: widget.task ??
-  //             Task(
-  //               id: null,
-  //               parentId: null,
-  //               userId: _user?.id ?? 0,
-  //               projectId: widget.task?.projectId ?? null,
-  //               title: "",
-  //               priority: _priority,
-  //               startDate: _dateTimeRange?.start,
-  //               endDate: _dateTimeRange?.end,
-  //               createdAt: DateTime.now(),
-  //               updatedAt: DateTime.now(),
-  //               isChecked: false,
-  //               subTasks: [],
-  //             ),
-  //         onDateSelected: (date) {
-  //           setState(() {
-  //             _startDate = date;
-  //             if (date != null) {
-  //               _dateInputController.text = _dateFormat.format(date);
-  //             } else {
-  //               _dateInputController.clear();
-  //             }
-  //           });
-  //         },
-  //         onTimeSelected: (newTime) {
-  //           setState(() {
-  //             _dueTime = newTime;
-  //             if (_startDate != null && newTime != null) {
-  //               _startDate = DateTime(
-  //                 _startDate!.year,
-  //                 _startDate!.month,
-  //                 _startDate!.day,
-  //                 newTime.hour,
-  //                 newTime.minute,
-  //               );
-  //             }
-  //           });
-  //         },
-  //       );
-  //     },
-  //   );
-  // }
-
-  void _notifyChanges(Task? task) {
-    // Broadcast the change
-    TaskBroadcast().notifyTasksChanged(task);
-
-    // If it's a task with a project, also notify project changes
-    if (_projectId != null) {
-      TaskBroadcast().notifyProjectChanged();
-    }
-  }
-
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -189,7 +125,6 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
         if (widget.isParentTask) {
           // Insert the main task and get its ID
           await TaskService().insertTask(task);
-          _notifyChanges(task);
         }
 
         if (mounted) {

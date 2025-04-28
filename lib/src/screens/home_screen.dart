@@ -21,6 +21,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
+  final ScrollController _tasksScrollController =
+      ScrollController(keepScrollOffset: true);
   List<Task> _tasks = [];
   int taskPage = 1;
   bool taskHasMoreData = true;
@@ -47,14 +49,39 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     });
 
-    taskChangedSubscription = TaskBroadcast().taskChangedStream.listen((task) {
-      if (task != null) {
+    _tasksScrollController.addListener(() {
+      if (_tasksScrollController.position.pixels >=
+              _tasksScrollController.position.maxScrollExtent * 0.5 &&
+          !taskIsLoading &&
+          taskHasMoreData) {
+        _loadTasks();
+      }
+    });
+    DateTime today = DateTime.now();
+    DateTime startOfDate =
+        DateTime(today.year, today.month, today.day, 0, 0, 0);
+    DateTime endOfDate =
+        DateTime(today.year, today.month, today.day, 23, 59, 59);
+    taskChangedSubscription =
+        TaskBroadcast().taskChangedStream.listen((Task? task) {
+      if (task != null && task.id != null && task.id != 0) {
+        //print('task: ${task.toJson()}');
         setState(() {
           final index = _tasks.indexWhere((t) => t.id == task.id);
           if (index != -1) {
             _tasks[index] = task;
           } else {
-            _tasks.add(task);
+            bool isForToday = false;
+            if (task.startDate!.isBefore(endOfDate) &&
+                task.endDate!.isAfter(startOfDate)) {
+              isForToday = true;
+            }
+
+            if (isForToday) {
+              if (!_tasks.any((t) => t.id == task.id)) {
+                _tasks = [task, ..._tasks];
+              }
+            }
           }
         });
       }
@@ -81,10 +108,13 @@ class _HomeScreenState extends State<HomeScreen> {
         onRefresh: _refresh,
         child: ListView(
           controller: _scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
           children: [
             TodayTasksWidget(
               tasks: _tasks,
               loadTasks: _loadTasks,
+              isLoading: taskIsLoading,
+              scrollController: _tasksScrollController,
             ),
             FeedListWidget(
               feeds: _feeds,
@@ -112,18 +142,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadTasks() async {
     if (taskIsLoading) return;
+    if (!taskHasMoreData) return;
 
     setState(() {
       taskIsLoading = true;
     });
-
     try {
       final tasks = await TaskService().getTodayTasks(taskPage);
+
       if (tasks.isEmpty) {
-        taskHasMoreData = false;
+        setState(() {
+          taskHasMoreData = false;
+        });
       } else {
         setState(() {
-          _tasks.addAll(tasks.where((t) => !_tasks.any((tt) => tt.id == t.id)));
+          final tasksToAdd =
+              tasks.where((t) => !_tasks.any((tt) => tt.id == t.id)).toList();
+
+          _tasks.addAll(tasksToAdd);
           taskPage++;
         });
       }
@@ -160,5 +196,13 @@ class _HomeScreenState extends State<HomeScreen> {
         feedIsLoading = false;
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _tasksScrollController.dispose();
+    taskChangedSubscription?.cancel();
+    super.dispose();
   }
 }

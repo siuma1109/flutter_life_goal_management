@@ -45,7 +45,7 @@ class UserFollowingListWidgetState extends State<UserFollowingListWidget> {
     });
 
     _userChangedSubscription = UserBroadcast().userChangedStream.listen((_) {
-      _refreshUsers();
+      //_refreshUsers();
     });
   }
 
@@ -78,6 +78,7 @@ class UserFollowingListWidgetState extends State<UserFollowingListWidget> {
               itemCount: _users.length,
               itemBuilder: (context, index) {
                 return UserListItemWidget(
+                  key: Key(_users[index].id.toString()),
                   user: _users[index],
                 );
               },

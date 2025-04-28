@@ -42,6 +42,7 @@ class _ExploreTaskListWidgetState extends State<ExploreTaskListWidget> {
           ? const Center(child: Text('No tasks found'))
           : TaskListWidget(
               tasks: _tasks,
+              showUser: true,
               scrollController: _scrollController,
             ),
     );

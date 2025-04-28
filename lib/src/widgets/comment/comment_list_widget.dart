@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/models/comment.dart';
 import 'package:flutter_life_goal_management/src/models/feed.dart';
 import 'package:flutter_life_goal_management/src/models/task.dart';
+import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/services/feed_service.dart';
 import 'package:flutter_life_goal_management/src/services/task_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/comment/comment_list_item_widget.dart';
@@ -130,13 +131,13 @@ class _CommentListWidgetState extends State<CommentListWidget> {
               child: _comments.isEmpty
                   ? const Center(child: Text('No comments yet'))
                   : ListView.builder(
-                      key: UniqueKey(),
                       controller: _scrollController,
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
                       itemCount: _comments.length,
                       itemBuilder: (context, index) {
                         final comment = _comments[index];
-                        return CommentListItemWidget(comment: comment);
+                        return CommentListItemWidget(
+                            key: Key(comment.id.toString()), comment: comment);
                       },
                     ),
             ),
@@ -149,9 +150,19 @@ class _CommentListWidgetState extends State<CommentListWidget> {
                   const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
               child: Row(
                 children: [
-                  const CircleAvatar(
-                    radius: 16.0,
-                    child: Icon(Icons.person, size: 18.0),
+                  CircleAvatar(
+                    child: AuthService().getLoggedInUser()?.avatar == null
+                        ? Icon(Icons.person)
+                        : ClipOval(
+                            child: Image.network(
+                              AuthService().getLoggedInUser()?.avatar ?? '',
+                              width: 40,
+                              height: 40,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Icon(Icons.person),
+                            ),
+                          ),
                   ),
                   const SizedBox(width: 12.0),
                   Expanded(

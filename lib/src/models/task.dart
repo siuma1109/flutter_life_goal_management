@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'package:flutter_life_goal_management/src/models/comment.dart';
 import 'package:flutter_life_goal_management/src/models/user.dart';
 import 'package:intl/intl.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 Task taskFromJson(String str) => Task.fromJson(json.decode(str));
 
@@ -155,4 +156,9 @@ class Task {
       isLiked: isLiked ?? this.isLiked,
     );
   }
+
+  String get createdAtFormatted =>
+      createdAt != null ? timeago.format(createdAt!) : '';
+  String get updatedAtFormatted =>
+      updatedAt != null ? timeago.format(updatedAt!) : '';
 }
