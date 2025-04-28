@@ -177,10 +177,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 });
                               }
 
-                              setState(() {
-                                _isLoading = false;
-                              });
-
                               if (_errors.isEmpty) {
                                 final token =
                                     result != null ? result['token'] : null;
@@ -190,6 +186,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 }
                               }
                             }
+                            setState(() {
+                              _isLoading = false;
+                            });
                           },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
