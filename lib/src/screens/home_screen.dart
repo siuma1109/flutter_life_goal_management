@@ -1,9 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_life_goal_management/src/broadcasts/notification_broadcast.dart';
 import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
 import 'package:flutter_life_goal_management/src/models/feed.dart';
 import 'package:flutter_life_goal_management/src/models/task.dart';
+import 'package:flutter_life_goal_management/src/screens/Notification/notification_screen.dart';
+import 'package:flutter_life_goal_management/src/services/notification_service.dart';
 import 'package:flutter_life_goal_management/src/services/task_service.dart';
 import 'package:flutter_life_goal_management/src/services/feed_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/feed/feed_list_widget.dart';
@@ -33,12 +36,21 @@ class _HomeScreenState extends State<HomeScreen> {
   int feedPage = 1;
   bool feedHasMoreData = true;
   bool feedIsLoading = false;
+  StreamSubscription<void>? notificationUnreadCountSubscription;
+  int _notificationUnreadCount = 0;
+  int _chatCount = 6;
 
   @override
   void initState() {
     super.initState();
     _loadTasks();
     _loadFeeds();
+    _loadNotificationsUnreadCount();
+
+    notificationUnreadCountSubscription =
+        NotificationBroadcast().notificationUnreadCountStream.listen((_) {
+      _loadNotificationsUnreadCount();
+    });
 
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
@@ -95,11 +107,57 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text(widget.title),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications),
-            onPressed: () {},
+            icon: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(Icons.notifications),
+                if (_notificationUnreadCount > 0)
+                  Positioned(
+                    top: -12,
+                    right: -6,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        _notificationUnreadCount.toString(),
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationScreen(),
+                ),
+              );
+            },
           ),
           IconButton(
-            icon: const Icon(Icons.chat),
+            icon: Stack(clipBehavior: Clip.none, children: [
+              Icon(Icons.chat),
+              if (_chatCount > 0)
+                Positioned(
+                  top: -12,
+                  right: -6,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      _chatCount.toString(),
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+            ]),
             onPressed: () {},
           ),
         ],
@@ -204,5 +262,13 @@ class _HomeScreenState extends State<HomeScreen> {
     _tasksScrollController.dispose();
     taskChangedSubscription?.cancel();
     super.dispose();
+  }
+
+  Future<void> _loadNotificationsUnreadCount() async {
+    final notificationsUnreadCount =
+        await NotificationService().getNotificationsUnreadCount();
+    setState(() {
+      _notificationUnreadCount = notificationsUnreadCount;
+    });
   }
 }

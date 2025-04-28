@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_life_goal_management/src/screens/Task/task_detail_screen.dart';
 import 'package:flutter_life_goal_management/src/screens/login_screen.dart';
 import 'package:flutter_life_goal_management/src/screens/forgot_password_screen.dart';
 import 'package:flutter_life_goal_management/src/screens/sign_up_screen.dart';
@@ -61,6 +62,14 @@ final GoRouter router = GoRouter(
           },
         ),
       ],
+    ),
+    GoRoute(
+      path: '/tasks/:taskId',
+      name: 'taskDetail',
+      builder: (BuildContext context, GoRouterState state) {
+        final taskId = state.pathParameters['taskId'];
+        return TaskDetailScreen(taskId: taskId ?? '');
+      },
     ),
     // Main shell route for bottom navigation
     StatefulShellRoute.indexedStack(

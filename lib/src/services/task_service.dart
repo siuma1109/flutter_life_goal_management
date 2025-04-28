@@ -260,5 +260,16 @@ class TaskService {
     return Comment.fromJson(jsonDecode(result.body));
   }
 
+  // Get a task by id
+  Future<Task?> getTaskById(String taskId) async {
+    final result = await HttpService().get('tasks/$taskId');
+
+    if (result.statusCode != 200) {
+      return null;
+    }
+
+    return Task.fromJson(jsonDecode(result.body));
+  }
+
   // Comment Part End
 }

@@ -107,7 +107,6 @@ class _CommentListWidgetState extends State<CommentListWidget> {
         ),
         child: Column(
           children: [
-            // 标题居中
             Container(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
               decoration: BoxDecoration(
@@ -126,7 +125,6 @@ class _CommentListWidgetState extends State<CommentListWidget> {
                 ],
               ),
             ),
-            // 评论列表
             Expanded(
               child: _comments.isEmpty
                   ? const Center(child: Text('No comments yet'))
