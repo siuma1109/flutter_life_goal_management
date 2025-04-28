@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/services/user_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';

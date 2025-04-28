@@ -11,14 +11,19 @@ import 'package:flutter_life_goal_management/src/widgets/profile_info_widget.dar
 import '../widgets/task/add_task_floating_button_widget.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final int? initialTabIndex;
+
+  const ProfileScreen({super.key, this.initialTabIndex});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, TickerProviderStateMixin {
+  late TabController _tabController;
+  final GlobalKey _tabBarKey = GlobalKey();
+  final FocusNode _tab2FocusNode = FocusNode();
   int _taskCount = 0;
   int _finishedTaskCount = 0;
   int _pendingTaskCount = 0;
@@ -40,6 +45,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     });
 
     _loadTaskCount();
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
@@ -52,6 +58,9 @@ class _ProfileScreenState extends State<ProfileScreen>
   void dispose() {
     _taskChangedSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
+    _tabController.dispose();
+    _tabBarKey.currentState?.dispose();
+    _tab2FocusNode.dispose();
     super.dispose();
   }
 
@@ -108,6 +117,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       ),
       body: DefaultTabController(
         length: 2,
+        initialIndex: widget.initialTabIndex ?? 0,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -115,15 +125,22 @@ class _ProfileScreenState extends State<ProfileScreen>
             ProfileInfoWidget(
               isLoadingTaskCount: _isLoadingTaskCount,
               taskCount: _taskCount,
+              tabController: _tabController,
             ),
-            const TabBar(
+            TabBar(
+              controller: _tabController,
+              key: _tabBarKey,
               tabs: [
                 Tab(icon: Icon(Icons.show_chart)),
-                Tab(icon: Icon(Icons.menu)),
+                Tab(
+                  child:
+                      Focus(focusNode: _tab2FocusNode, child: Icon(Icons.menu)),
+                ),
               ],
             ),
             Expanded(
               child: TabBarView(
+                controller: _tabController,
                 children: [
                   DashboardWidget(
                     isLoadingTaskCount: _isLoadingTaskCount,

@@ -1,6 +1,8 @@
 import 'dart:convert';
 
+import 'package:flutter_life_goal_management/src/broadcasts/user_broadcast.dart';
 import 'package:flutter_life_goal_management/src/models/user.dart';
+import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/services/http_service.dart';
 
 class UserService {
@@ -37,9 +39,40 @@ class UserService {
     return List<User>.from(data.map((e) => User.fromJson(e)));
   }
 
+  Future<List<User>> getUserFollowers(
+      {required User user, int page = 1, String? search}) async {
+    final result =
+        await _httpService.get('users/${user.id}/followers', queryParameters: {
+      'page': page,
+      if (search != null) 'search': search,
+    });
+
+    final body = jsonDecode(result.body);
+    final data = body['data'];
+    print('Data: $data');
+
+    return List<User>.from(data.map((e) => User.fromJson(e)));
+  }
+
+  Future<List<User>> getUserFollowing(
+      {required User user, int page = 1, String? search}) async {
+    final result =
+        await _httpService.get('users/${user.id}/following', queryParameters: {
+      'page': page,
+      if (search != null) 'search': search,
+    });
+
+    final body = jsonDecode(result.body);
+    final data = body['data'];
+    print('Data: $data');
+
+    return List<User>.from(data.map((e) => User.fromJson(e)));
+  }
+
   Future<bool> followUser(User user) async {
     final result = await _httpService.post('users/${user.id}/follow');
     if (result.statusCode == 200) {
+      UserBroadcast().notifyUserChanged();
       return true;
     }
 
@@ -54,6 +87,8 @@ class UserService {
     if (result.statusCode != 200) {
       return null;
     }
+
+    AuthService().setLoggedInUser(User.fromJson(jsonDecode(result.body)));
 
     return User.fromJson(jsonDecode(result.body));
   }
