@@ -5,6 +5,7 @@ import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart'
 import 'package:flutter_life_goal_management/src/models/project.dart';
 import 'package:flutter_life_goal_management/src/models/user.dart';
 import 'package:flutter_life_goal_management/src/screens/Project/project_screen.dart';
+import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/services/project_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/projects/AddProjectWidget.dart';
 
@@ -72,13 +73,15 @@ class _ProjectListWidgetState extends State<ProjectListWidget> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text("Projects", style: TextStyle(fontSize: 16)),
-                        GestureDetector(
-                          onTap: _addProject,
-                          child: const Icon(
-                            Icons.add,
-                            size: 20,
+                        if (widget.user?.id ==
+                            AuthService().getLoggedInUser()?.id)
+                          GestureDetector(
+                            onTap: _addProject,
+                            child: const Icon(
+                              Icons.add,
+                              size: 20,
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ),
@@ -143,6 +146,7 @@ class _ProjectListWidgetState extends State<ProjectListWidget> {
       final projects = await ProjectService().getAllProjectsWithPagination(
         search: widget.search,
         page: _page,
+        userId: widget.user?.id,
       );
       print("projects: $projects");
       setState(() {
@@ -178,6 +182,9 @@ class _ProjectListWidgetState extends State<ProjectListWidget> {
       MaterialPageRoute(
         builder: (context) => ProjectScreen(
           project: project,
+          user: widget.user == null
+              ? AuthService().getLoggedInUser()!
+              : widget.user!,
         ),
       ),
     );

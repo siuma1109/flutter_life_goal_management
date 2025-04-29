@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/task_card.dart';
 import '../../models/task.dart';
-import '../../services/task_service.dart';
 
 class TaskListWidget extends StatefulWidget {
   final List<Task> tasks;
@@ -20,8 +19,6 @@ class TaskListWidget extends StatefulWidget {
 }
 
 class _TaskListWidgetState extends State<TaskListWidget> {
-  final TaskService _taskService = TaskService();
-
   @override
   Widget build(BuildContext context) {
     return widget.tasks.isEmpty

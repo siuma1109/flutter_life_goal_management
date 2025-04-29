@@ -7,21 +7,21 @@ import 'package:flutter_life_goal_management/src/services/task_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/add_task_floating_button_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/task_list_widget.dart';
 
-class InboxScreen extends StatefulWidget {
+class CompletedScreen extends StatefulWidget {
   final User user;
-  const InboxScreen({super.key, required this.user});
+  const CompletedScreen({super.key, required this.user});
 
   @override
-  State<InboxScreen> createState() => _InboxScreenState();
+  State<CompletedScreen> createState() => _CompletedScreenState();
 }
 
-class _InboxScreenState extends State<InboxScreen> {
-  final List<Task> _tasks = [];
+class _CompletedScreenState extends State<CompletedScreen> {
+  List<Task> _tasks = [];
   bool _isLoading = false;
   int _page = 1;
   bool _hasMoreData = true;
   StreamSubscription? _taskChangedSubscription;
-  final ScrollController _scrollController = ScrollController();
+  ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -55,12 +55,20 @@ class _InboxScreenState extends State<InboxScreen> {
         }
       }
     });
+
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+              _scrollController.position.maxScrollExtent * 0.8 &&
+          !_isLoading &&
+          _hasMoreData) {
+        _loadTasks();
+      }
+    });
   }
 
   @override
   void dispose() {
     _taskChangedSubscription?.cancel();
-    _scrollController.dispose();
     super.dispose();
   }
 
@@ -68,7 +76,7 @@ class _InboxScreenState extends State<InboxScreen> {
     setState(() {
       _page = 1;
       _hasMoreData = true;
-      _tasks.clear();
+      _tasks = [];
     });
     await _loadTasks();
   }
@@ -82,7 +90,7 @@ class _InboxScreenState extends State<InboxScreen> {
 
     try {
       if (_hasMoreData) {
-        final tasks = await TaskService().getInboxTasks(
+        final tasks = await TaskService().getCompletedTasks(
           _page,
           userId: widget.user.id,
         );
@@ -98,9 +106,6 @@ class _InboxScreenState extends State<InboxScreen> {
           });
         }
       }
-    } catch (e) {
-      // 处理错误
-      print('Error loading tasks: $e');
     } finally {
       setState(() {
         _isLoading = false;
@@ -112,12 +117,12 @@ class _InboxScreenState extends State<InboxScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Inbox"),
+        title: const Text("Completed"),
       ),
       body: RefreshIndicator(
         onRefresh: _refreshTasks,
         child: _tasks.isEmpty
-            ? const Center(child: Text("No tasks in inbox"))
+            ? const Center(child: Text("No tasks completed"))
             : TaskListWidget(
                 tasks: _tasks,
                 scrollController: _scrollController,

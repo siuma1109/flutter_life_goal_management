@@ -3,13 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
 import 'package:flutter_life_goal_management/src/models/project.dart';
 import 'package:flutter_life_goal_management/src/models/task.dart';
+import 'package:flutter_life_goal_management/src/models/user.dart';
+import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/services/project_service.dart';
 import 'package:flutter_life_goal_management/src/services/task_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/task_list_widget.dart';
 
 class ProjectScreen extends StatefulWidget {
   final Project project;
-  const ProjectScreen({super.key, required this.project});
+  final User user;
+  const ProjectScreen({super.key, required this.project, required this.user});
 
   @override
   State<ProjectScreen> createState() => _ProjectScreenState();
@@ -83,8 +86,11 @@ class _ProjectScreenState extends State<ProjectScreen> {
     setState(() {
       _isLoading = true;
     });
-    final tasks =
-        await TaskService().getTasksByProjectId(widget.project.id ?? 0, _page);
+    final tasks = await TaskService().getTasksByProjectId(
+      widget.project.id ?? 0,
+      _page,
+      userId: widget.user.id,
+    );
     if (mounted) {
       if (tasks.isEmpty) {
         setState(() {
@@ -103,6 +109,9 @@ class _ProjectScreenState extends State<ProjectScreen> {
   }
 
   void _showDeleteConfirmationDialog(BuildContext context) {
+    if (_project?.userId != AuthService().getLoggedInUser()?.id) {
+      return;
+    }
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
@@ -143,26 +152,27 @@ class _ProjectScreenState extends State<ProjectScreen> {
       appBar: AppBar(
         title: Text(_project?.name ?? 'Project'),
         actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (value) {
-              if (value == 'delete') {
-                _showDeleteConfirmationDialog(context);
-              }
-            },
-            itemBuilder: (BuildContext context) => [
-              const PopupMenuItem<String>(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete, color: Colors.red),
-                    SizedBox(width: 8),
-                    Text('Delete Project'),
-                  ],
+          if (_project?.userId == AuthService().getLoggedInUser()?.id)
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              onSelected: (value) {
+                if (value == 'delete') {
+                  _showDeleteConfirmationDialog(context);
+                }
+              },
+              itemBuilder: (BuildContext context) => [
+                const PopupMenuItem<String>(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text('Delete Project'),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          )
+              ],
+            )
         ],
       ),
       body: RefreshIndicator(

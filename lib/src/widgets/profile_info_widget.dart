@@ -12,12 +12,14 @@ class ProfileInfoWidget extends StatefulWidget {
   final int taskCount;
   final bool isLoadingTaskCount;
   final TabController tabController;
+  final User user;
 
   const ProfileInfoWidget({
     super.key,
     required this.taskCount,
     required this.isLoadingTaskCount,
     required this.tabController,
+    required this.user,
   });
 
   @override
@@ -31,10 +33,12 @@ class _ProfileInfoWidgetState extends State<ProfileInfoWidget> {
   @override
   void initState() {
     super.initState();
-    _user = AuthService().getLoggedInUser();
-    _userChangedSubscription = UserBroadcast().userChangedStream.listen((_) {
-      _loadUser();
-    });
+    _user = widget.user;
+    if (_user?.id == AuthService().getLoggedInUser()?.id) {
+      _userChangedSubscription = UserBroadcast().userChangedStream.listen((_) {
+        _loadUser();
+      });
+    }
   }
 
   @override
@@ -154,30 +158,31 @@ class _ProfileInfoWidgetState extends State<ProfileInfoWidget> {
           SizedBox(height: 16),
           Row(
             children: [
-              OutlinedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => EditProfileScreen(
-                        user: _user,
-                        onUserUpdated: (User updatedUser) {
-                          setState(() {
-                            _user = updatedUser;
-                          });
-                        },
+              if (_user?.id == AuthService().getLoggedInUser()?.id)
+                OutlinedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditProfileScreen(
+                          user: _user,
+                          onUserUpdated: (User updatedUser) {
+                            setState(() {
+                              _user = updatedUser;
+                            });
+                          },
+                        ),
                       ),
+                    );
+                  },
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: Colors.black),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
                     ),
-                  );
-                },
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: Colors.black),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.0),
                   ),
+                  child: Text('Edit Profile'),
                 ),
-                child: Text('Edit Profile'),
-              ),
             ],
           ),
         ],

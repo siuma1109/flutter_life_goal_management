@@ -80,6 +80,7 @@ class UserFollowingListWidgetState extends State<UserFollowingListWidget> {
                 return UserListItemWidget(
                   key: Key(_users[index].id.toString()),
                   user: _users[index],
+                  seeingUser: widget.user,
                 );
               },
             ),

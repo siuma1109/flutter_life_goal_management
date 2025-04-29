@@ -11,9 +11,10 @@ import 'package:flutter_life_goal_management/src/widgets/profile_info_widget.dar
 import '../widgets/task/add_task_floating_button_widget.dart';
 
 class ProfileScreen extends StatefulWidget {
+  final User? user;
   final int? initialTabIndex;
 
-  const ProfileScreen({super.key, this.initialTabIndex});
+  const ProfileScreen({super.key, this.initialTabIndex, this.user});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -38,7 +39,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
     WidgetsBinding.instance.addObserver(this);
 
-    _user = AuthService().getLoggedInUser();
+    _user = widget.user ?? AuthService().getLoggedInUser();
     // Listen for task changes
     _taskChangedSubscription = TaskBroadcast().taskChangedStream.listen((_) {
       _loadTaskCount();
@@ -77,8 +78,12 @@ class _ProfileScreenState extends State<ProfileScreen>
     });
 
     try {
-      final getTasksCountResult = await TaskService().getTasksCount();
-      final inboxTaskCount = await TaskService().getInboxTasksCount();
+      final getTasksCountResult = await TaskService().getTasksCount(
+        userId: _user?.id,
+      );
+      final inboxTaskCount = await TaskService().getInboxTasksCount(
+        userId: _user?.id,
+      );
       if (mounted) {
         setState(() {
           _taskCount = getTasksCountResult['tasks_count'] ?? 0;
@@ -126,6 +131,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               isLoadingTaskCount: _isLoadingTaskCount,
               taskCount: _taskCount,
               tabController: _tabController,
+              user: _user!,
             ),
             TabBar(
               controller: _tabController,

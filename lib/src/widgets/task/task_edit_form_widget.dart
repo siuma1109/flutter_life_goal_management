@@ -25,6 +25,7 @@ class _TaskEditFormWidgetState extends State<TaskEditFormWidget> {
 
   @override
   Widget build(BuildContext context) {
+    print('task: ${_task.toJson()}');
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,

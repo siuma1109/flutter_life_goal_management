@@ -59,28 +59,32 @@ class _SubTaskListWidgetState extends State<SubTaskListWidget> {
             .map((index, subTask) => MapEntry(
                 index,
                 TaskRowWidget(
-                  icon: Checkbox(
-                    activeColor:
-                        TaskService().getPriorityColor(subTask.priority),
-                    side: BorderSide(
-                      color: TaskService().getPriorityColor(subTask.priority),
-                      width: 2.0,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(50),
-                      side: BorderSide(
-                        color: TaskService().getPriorityColor(subTask.priority),
-                        width: 2.0,
-                      ),
-                    ),
-                    value: subTask.isChecked,
-                    onChanged: (bool? newValue) {
-                      subTask.isChecked = !subTask.isChecked;
-                      setState(() {
-                        TaskService().updateTask(subTask);
-                      });
-                    },
-                  ),
+                  icon: _task.userId == _user.id
+                      ? Checkbox(
+                          activeColor:
+                              TaskService().getPriorityColor(subTask.priority),
+                          side: BorderSide(
+                            color: TaskService()
+                                .getPriorityColor(subTask.priority),
+                            width: 2.0,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(50),
+                            side: BorderSide(
+                              color: TaskService()
+                                  .getPriorityColor(subTask.priority),
+                              width: 2.0,
+                            ),
+                          ),
+                          value: subTask.isChecked,
+                          onChanged: (bool? newValue) {
+                            subTask.isChecked = !subTask.isChecked;
+                            setState(() {
+                              TaskService().updateTask(subTask);
+                            });
+                          },
+                        )
+                      : const SizedBox.shrink(),
                   content: GestureDetector(
                       onTap: () => showModalBottomSheet(
                           context: context,

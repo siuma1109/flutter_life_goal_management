@@ -81,7 +81,15 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           final index = _tasks.indexWhere((t) => t.id == task.id);
           if (index != -1) {
-            _tasks[index] = task;
+            if (task.parentId == null) {
+              _tasks[index] = task;
+            } else {
+              final subTaskIndex =
+                  _tasks[index].subTasks.indexWhere((t) => t.id == task.id);
+              if (subTaskIndex != -1) {
+                _tasks[index].subTasks[subTaskIndex] = task;
+              }
+            }
           } else {
             bool isForToday = false;
             if (task.startDate!.isBefore(endOfDate) &&
@@ -90,7 +98,15 @@ class _HomeScreenState extends State<HomeScreen> {
             }
 
             if (isForToday) {
-              if (!_tasks.any((t) => t.id == task.id)) {
+              if (task.parentId != null) {
+                final parentIndex =
+                    _tasks.indexWhere((t) => t.id == task.parentId);
+                if (parentIndex != -1) {
+                  _tasks[parentIndex].subTasks[parentIndex] = task;
+                } else {
+                  _tasks[parentIndex].subTasks.insert(0, task);
+                }
+              } else if (!_tasks.any((t) => t.id == task.id)) {
                 _tasks = [task, ..._tasks];
               }
             }
@@ -138,28 +154,30 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
-          IconButton(
-            icon: Stack(clipBehavior: Clip.none, children: [
-              Icon(Icons.chat),
-              if (_chatCount > 0)
-                Positioned(
-                  top: -12,
-                  right: -6,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      _chatCount.toString(),
-                      style: const TextStyle(color: Colors.white),
+          // todo: implment chat feature
+          if (false)
+            IconButton(
+              icon: Stack(clipBehavior: Clip.none, children: [
+                Icon(Icons.chat),
+                if (_chatCount > 0)
+                  Positioned(
+                    top: -12,
+                    right: -6,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        _chatCount.toString(),
+                        style: const TextStyle(color: Colors.white),
+                      ),
                     ),
                   ),
-                ),
-            ]),
-            onPressed: () {},
-          ),
+              ]),
+              onPressed: () {},
+            ),
         ],
       ),
       body: RefreshIndicator(

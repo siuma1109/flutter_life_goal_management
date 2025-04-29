@@ -65,19 +65,33 @@ class TaskService {
   }
 
   // Get All Tasks Count Without sub tasks
-  Future<Map<String, dynamic>> getTasksCount() async {
+  Future<Map<String, dynamic>> getTasksCount({int? userId}) async {
     final result = await HttpService().get('tasks_count', queryParameters: {
       'type': 'all_without_sub_tasks',
+      if (userId != null) 'user_id': userId,
     });
     //print("result: ${result.body}");
     return jsonDecode(result.body);
   }
 
   // Get Inbox Tasks
-  Future<List<Task>> getInboxTasks(int page) async {
+  Future<List<Task>> getInboxTasks(int page, {int? userId}) async {
     final result = await HttpService().get('tasks', queryParameters: {
       'type': 'inbox',
       'page': page,
+      if (userId != null) 'user_id': userId,
+    });
+    final body = jsonDecode(result.body);
+    final data = body['data'];
+    return List<Task>.from(data.map((e) => Task.fromJson(e)));
+  }
+
+  // Get Completed Tasks
+  Future<List<Task>> getCompletedTasks(int page, {int? userId}) async {
+    final result = await HttpService().get('tasks', queryParameters: {
+      'type': 'completed',
+      'page': page,
+      if (userId != null) 'user_id': userId,
     });
     final body = jsonDecode(result.body);
     final data = body['data'];
@@ -85,18 +99,21 @@ class TaskService {
   }
 
   // Get Inbox Tasks Count
-  Future<int> getInboxTasksCount() async {
+  Future<int> getInboxTasksCount({int? userId}) async {
     final result = await HttpService().get('tasks_count', queryParameters: {
       'type': 'inbox',
+      if (userId != null) 'user_id': userId,
     });
     return jsonDecode(result.body)['tasks_count'] ?? 0;
   }
 
   // Get tasks by project_id
-  Future<List<Task>> getTasksByProjectId(int projectId, int page) async {
+  Future<List<Task>> getTasksByProjectId(int projectId, int page,
+      {int? userId}) async {
     final result = await HttpService().get('tasks', queryParameters: {
       'project_id': projectId,
       'page': page,
+      if (userId != null) 'user_id': userId,
     });
     final body = jsonDecode(result.body);
     final data = body['data'];

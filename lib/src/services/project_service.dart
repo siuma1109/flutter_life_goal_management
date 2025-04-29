@@ -51,10 +51,11 @@ class ProjectService {
 
   // Get all projects by user id
   Future<List<Project>> getAllProjectsWithPagination(
-      {int page = 1, String? search}) async {
+      {int page = 1, String? search, int? userId}) async {
     final result = await HttpService().get('projects_list', queryParameters: {
       'page': page,
       if (search != null) 'search': search,
+      if (userId != null) 'user_id': userId,
       'per_page': 20,
     });
 

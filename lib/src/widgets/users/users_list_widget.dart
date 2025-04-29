@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/models/user.dart';
+import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/services/user_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/users/user_list_item_widget.dart';
 
@@ -56,7 +57,9 @@ class _UsersListWidgetState extends State<UsersListWidget> {
               itemCount: _users.length,
               itemBuilder: (context, index) {
                 return UserListItemWidget(
-                    key: Key(_users[index].id.toString()), user: _users[index]);
+                    key: Key(_users[index].id.toString()),
+                    user: _users[index],
+                    seeingUser: AuthService().getLoggedInUser()!);
               },
             ),
     );

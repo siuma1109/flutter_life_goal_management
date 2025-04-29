@@ -27,11 +27,13 @@ class UserFollowersListWidgetState extends State<UserFollowersListWidget> {
   final ScrollController _scrollController = ScrollController();
   String _search = '';
   StreamSubscription? _userChangedSubscription;
+  late User _seeingUser;
 
   @override
   void initState() {
     super.initState();
     _search = widget.search ?? '';
+    _seeingUser = widget.user;
     _getUserFollowers();
 
     // Add scroll listener for infinite scrolling
@@ -78,7 +80,9 @@ class UserFollowersListWidgetState extends State<UserFollowersListWidget> {
               itemCount: _users.length,
               itemBuilder: (context, index) {
                 return UserListItemWidget(
-                    key: Key(_users[index].id.toString()), user: _users[index]);
+                    key: Key(_users[index].id.toString()),
+                    user: _users[index],
+                    seeingUser: _seeingUser);
               },
             ),
     );

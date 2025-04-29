@@ -34,6 +34,8 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
   bool _isLoading = false; // Loading state
   StreamSubscription<void>? _taskChangedSubscription;
   Map<String, String> _errors = {};
+  DateTime _minDate = DateTime.now().subtract(Duration(days: 7));
+  DateTime _maxDate = DateTime.now().add(Duration(days: 365 * 3));
 
   @override
   void initState() {
@@ -46,6 +48,8 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
     _priority = widget.task.priority;
 
     _task = widget.task;
+    _minDate = (_startDate ?? DateTime.now()).subtract(Duration(days: 7));
+    _maxDate = (_endDate ?? DateTime.now()).add(Duration(days: 365 * 3));
   }
 
   @override
@@ -227,8 +231,8 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
                   child: CupertinoDatePicker(
                     initialDateTime: _startDate,
                     mode: CupertinoDatePickerMode.dateAndTime,
-                    minimumDate: DateTime.now().subtract(Duration(days: 7)),
-                    maximumDate: DateTime.now().add(Duration(days: 365 * 3)),
+                    minimumDate: _minDate,
+                    maximumDate: _maxDate,
                     onDateTimeChanged: (value) {
                       setState(() {
                         _startDate = value;
@@ -265,8 +269,8 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
                   child: CupertinoDatePicker(
                     initialDateTime: _endDate,
                     mode: CupertinoDatePickerMode.dateAndTime,
-                    minimumDate: DateTime.now().subtract(Duration(days: 7)),
-                    maximumDate: DateTime.now().add(Duration(days: 365 * 3)),
+                    minimumDate: _minDate,
+                    maximumDate: _maxDate,
                     onDateTimeChanged: (value) {
                       setState(() {
                         _endDate = value;
