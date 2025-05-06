@@ -136,11 +136,12 @@ class _AddTaskAIWidgetState extends State<AddTaskAIWidget> {
   }
 
   void _showAiResultPopup(BuildContext context, Map<String, dynamic> result) {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) => ShowAIResultWidget(
-        aiResult: result,
-        onAccept: widget.onAccept,
+    Navigator.of(context, rootNavigator: true).push(
+      MaterialPageRoute(
+        builder: (context) => ShowAIResultWidget(
+          aiResult: result,
+          onAccept: widget.onAccept,
+        ),
       ),
     );
   }
