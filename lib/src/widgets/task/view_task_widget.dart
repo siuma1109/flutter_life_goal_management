@@ -12,11 +12,13 @@ import 'package:intl/intl.dart';
 class ViewTaskWidget extends StatefulWidget {
   final Task task;
   final Function? onRefresh;
+  final String title;
 
   const ViewTaskWidget({
     super.key,
     required this.task,
     this.onRefresh,
+    this.title = 'View Task',
   });
 
   @override
@@ -36,7 +38,8 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
   Map<String, String> _errors = {};
   DateTime _minDate = DateTime.now().subtract(Duration(days: 7));
   DateTime _maxDate = DateTime.now().add(Duration(days: 365 * 3));
-
+  bool _showStartDate = false;
+  bool _showEndDate = false;
   @override
   void initState() {
     super.initState();
@@ -105,23 +108,58 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return _isLoading
-        ? const Center(child: CircularProgressIndicator())
-        : Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildHeader(),
-              _buildTaskContent(),
-              if (_task.userId == AuthService().getLoggedInUser()!.id)
-                const Divider(thickness: 5),
-              SubTaskListWidget(
-                task: _task,
-              ),
-              Padding(
-                padding: const EdgeInsets.all(16),
-              ),
-            ],
-          );
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+        actions: [
+          if (_task.userId == AuthService().getLoggedInUser()!.id)
+            IconButton(
+              onPressed: () async {
+                await _updateTask();
+                if (mounted && _errors.isEmpty) {
+                  Navigator.of(context).pop();
+                }
+              },
+              icon: const Icon(Icons.save),
+            ),
+          if (_task.userId == AuthService().getLoggedInUser()!.id)
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              onSelected: (value) {
+                if (value == 'delete') {
+                  _showDeleteConfirmationDialog(context);
+                }
+              },
+              itemBuilder: (BuildContext context) => [
+                const PopupMenuItem<String>(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text('Delete Task'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildHeader(),
+            _buildTaskContent(),
+            if (_task.userId == AuthService().getLoggedInUser()!.id)
+              const Divider(thickness: 5),
+            SubTaskListWidget(
+              task: _task,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildHeader() {
@@ -129,196 +167,271 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (value) {
-              if (value == 'delete') {
-                _showDeleteConfirmationDialog(context);
-              }
-            },
-            itemBuilder: (BuildContext context) => [
-              const PopupMenuItem<String>(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete, color: Colors.red),
-                    SizedBox(width: 8),
-                    Text('Delete Task'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
+        children: [],
       ),
     );
   }
 
   Widget _buildTaskContent() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Title with checkbox
-        TaskRowWidget(
-          icon: widget.task.userId == AuthService().getLoggedInUser()!.id
-              ? Checkbox(
-                  value: widget.task.isChecked,
-                  side: BorderSide(
+    // Define a consistent row height
+    const double rowHeight = 60.0;
+
+    return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Task completion status
+            SizedBox(
+              height: rowHeight,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Task Completed',
+                      style: TextStyle(
+                        fontSize: 18,
+                      )),
+                  _task.userId == AuthService().getLoggedInUser()!.id
+                      ? Checkbox(
+                          value: _task.isChecked,
+                          side: BorderSide(
+                            color: TaskService().getPriorityColor(_priority),
+                            width: 2.0,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(50),
+                            side: BorderSide(
+                              color: TaskService().getPriorityColor(_priority),
+                              width: 2.0,
+                            ),
+                          ),
+                          activeColor:
+                              TaskService().getPriorityColor(_priority),
+                          onChanged: (bool? newValue) {
+                            if (_task.userId ==
+                                AuthService().getLoggedInUser()!.id) {
+                              setState(() {
+                                _task.isChecked = !_task.isChecked;
+                              });
+                              _updateTask();
+                            }
+                          },
+                        )
+                      : Text(_task.isChecked ? 'Completed' : 'Incomplete',
+                          style: const TextStyle(
+                            fontSize: 18,
+                          )),
+                ],
+              ),
+            ),
+            // Task name
+            SizedBox(
+              height: rowHeight,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Task Name',
+                      style: TextStyle(
+                        fontSize: 18,
+                      )),
+                  _task.userId == AuthService().getLoggedInUser()!.id
+                      ? Expanded(
+                          child: TextField(
+                            controller: _titleController,
+                            style: const TextStyle(
+                              fontSize: 18,
+                            ),
+                            textAlign: TextAlign.right,
+                            decoration: InputDecoration(
+                              border: const OutlineInputBorder(
+                                  borderSide: BorderSide.none),
+                              errorText: _errors['title'],
+                            ),
+                          ),
+                        )
+                      : Text(_task.title,
+                          style: const TextStyle(
+                            fontSize: 18,
+                          )),
+                ],
+              ),
+            ),
+
+            // Description
+            if (widget.task.description != null &&
+                widget.task.description != '')
+              Container(
+                height: rowHeight,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Icon(Icons.description),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextField(
+                        controller: _descriptionController,
+                        decoration: const InputDecoration(
+                          border:
+                              OutlineInputBorder(borderSide: BorderSide.none),
+                        ),
+                        style: const TextStyle(
+                          fontSize: 18,
+                        ),
+                        minLines: 1,
+                        maxLines: 1,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            // Start date
+            SizedBox(
+              height: rowHeight,
+              child: InkWell(
+                onTap: () {
+                  if (_task.userId == AuthService().getLoggedInUser()!.id) {
+                    setState(() {
+                      _showStartDate = !_showStartDate;
+                    });
+                  }
+                },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Start Date',
+                        style: TextStyle(
+                          fontSize: 18,
+                        )),
+                    Row(
+                      children: [
+                        Text(
+                          _startDate == null
+                              ? 'No start date'
+                              : _dateFormat.format(_startDate!),
+                          style: const TextStyle(
+                            fontSize: 18,
+                          ),
+                        ),
+                        if (_task.userId == AuthService().getLoggedInUser()!.id)
+                          Icon(_showStartDate
+                              ? Icons.arrow_drop_up
+                              : Icons.arrow_drop_down),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (_task.userId == AuthService().getLoggedInUser()!.id)
+              SizedBox(
+                height: _showStartDate ? 216 : 0,
+                child: CupertinoDatePicker(
+                  initialDateTime: _startDate,
+                  mode: CupertinoDatePickerMode.dateAndTime,
+                  minimumDate: _minDate,
+                  maximumDate: _maxDate,
+                  onDateTimeChanged: (value) {
+                    setState(() {
+                      _startDate = value;
+                    });
+                  },
+                ),
+              ),
+            if (_errors['start_date'] != null)
+              Text(_errors['start_date']!,
+                  style: const TextStyle(color: Colors.red)),
+
+            // End date
+            SizedBox(
+              height: rowHeight,
+              child: InkWell(
+                onTap: () {
+                  if (_task.userId == AuthService().getLoggedInUser()!.id) {
+                    setState(() {
+                      _showEndDate = !_showEndDate;
+                    });
+                  }
+                },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('End Date',
+                        style: TextStyle(
+                          fontSize: 18,
+                        )),
+                    Row(
+                      children: [
+                        Text(
+                          _endDate == null
+                              ? 'No end date'
+                              : _dateFormat.format(_endDate!),
+                          style: const TextStyle(
+                            fontSize: 18,
+                          ),
+                        ),
+                        if (_task.userId == AuthService().getLoggedInUser()!.id)
+                          Icon(_showEndDate
+                              ? Icons.arrow_drop_up
+                              : Icons.arrow_drop_down),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (_task.userId == AuthService().getLoggedInUser()!.id)
+              SizedBox(
+                height: _showEndDate ? 216 : 0,
+                child: CupertinoDatePicker(
+                  initialDateTime: _endDate,
+                  mode: CupertinoDatePickerMode.dateAndTime,
+                  minimumDate: _minDate,
+                  maximumDate: _maxDate,
+                  onDateTimeChanged: (value) {
+                    setState(() {
+                      _endDate = value;
+                    });
+                  },
+                ),
+              ),
+            if (_errors['end_date'] != null)
+              Text(_errors['end_date']!,
+                  style: const TextStyle(color: Colors.red)),
+            // Priority
+            SizedBox(
+              height: rowHeight,
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.flag,
                     color: TaskService().getPriorityColor(_priority),
-                    width: 2.0,
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(50),
-                    side: BorderSide(
-                      color: TaskService().getPriorityColor(_priority),
-                      width: 2.0,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () {
+                        if (_task.userId ==
+                            AuthService().getLoggedInUser()!.id) {
+                          TaskService().showPriorityPopUp(context, _priority,
+                              (priority) {
+                            setState(() {
+                              _priority = priority;
+                            });
+                            _updateTask();
+                          });
+                        }
+                      },
+                      child: Text(
+                        'Priority $_priority',
+                        style: const TextStyle(fontSize: 16),
+                      ),
                     ),
                   ),
-                  activeColor: TaskService().getPriorityColor(_priority),
-                  onChanged: (bool? newValue) {
-                    setState(() {
-                      widget.task.isChecked = !widget.task.isChecked;
-                    });
-                    _updateTask();
-                  },
-                )
-              : const SizedBox.shrink(),
-          content: TextField(
-            controller: _titleController,
-            decoration: InputDecoration(
-              border: OutlineInputBorder(borderSide: BorderSide.none),
-              errorText: _errors['title'] ?? null,
-            ),
-          ),
-        ),
-
-        // Description
-        if (widget.task.description != null && widget.task.description != '')
-          TaskRowWidget(
-            icon: const Icon(Icons.description),
-            content: TextField(
-              controller: _descriptionController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(borderSide: BorderSide.none),
-              ),
-              minLines: 1,
-              maxLines: 3,
-            ),
-          ),
-
-        // Due date
-        Padding(
-          padding: EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Start Date',
-                      style: TextStyle(
-                        fontSize: 18,
-                      )),
-                  Text(_startDate == null
-                      ? 'No start date'
-                      : _dateFormat.format(_startDate!)),
                 ],
               ),
-              if (_task.userId == AuthService().getLoggedInUser()!.id)
-                SizedBox(
-                  height: 216,
-                  child: CupertinoDatePicker(
-                    initialDateTime: _startDate,
-                    mode: CupertinoDatePickerMode.dateAndTime,
-                    minimumDate: _minDate,
-                    maximumDate: _maxDate,
-                    onDateTimeChanged: (value) {
-                      setState(() {
-                        _startDate = value;
-                      });
-                    },
-                  ),
-                ),
-              if (_errors['start_date'] != null)
-                Text(_errors['start_date']!,
-                    style: TextStyle(color: Colors.red)),
-            ],
-          ),
-        ),
-        Padding(
-          padding: EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('End Date',
-                      style: TextStyle(
-                        fontSize: 18,
-                      )),
-                  Text(_endDate == null
-                      ? 'No end date'
-                      : _dateFormat.format(_endDate!)),
-                ],
-              ),
-              if (_task.userId == AuthService().getLoggedInUser()!.id)
-                SizedBox(
-                  height: 216,
-                  child: CupertinoDatePicker(
-                    initialDateTime: _endDate,
-                    mode: CupertinoDatePickerMode.dateAndTime,
-                    minimumDate: _minDate,
-                    maximumDate: _maxDate,
-                    onDateTimeChanged: (value) {
-                      setState(() {
-                        _endDate = value;
-                      });
-                    },
-                  ),
-                ),
-              if (_errors['end_date'] != null)
-                Text(_errors['end_date']!, style: TextStyle(color: Colors.red)),
-            ],
-          ),
-        ),
-        // Priority
-        TaskRowWidget(
-          icon: Icon(
-            Icons.flag,
-            color: TaskService().getPriorityColor(_priority),
-          ),
-          content: InkWell(
-            onTap: () {
-              if (_task.userId == AuthService().getLoggedInUser()!.id) {
-                TaskService().showPriorityPopUp(context, _priority, (priority) {
-                  setState(() {
-                    _priority = priority;
-                  });
-                  _updateTask();
-                });
-              }
-            },
-            child: Text(
-              'Priority $_priority',
-              style: const TextStyle(fontSize: 16),
             ),
-          ),
-        ),
-        if (_task.userId == AuthService().getLoggedInUser()!.id)
-          TaskRowWidget(
-            onTap: () async {
-              await _updateTask();
-              if (mounted && _errors.isEmpty) {
-                Navigator.of(context).pop();
-              }
-            },
-            icon: Icon(Icons.save),
-            content: Text('Save Task'),
-          ),
-      ],
-    );
+          ],
+        ));
   }
 
   void _showDeleteConfirmationDialog(BuildContext context) {

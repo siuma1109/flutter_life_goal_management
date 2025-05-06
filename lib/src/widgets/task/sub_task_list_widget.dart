@@ -86,23 +86,25 @@ class _SubTaskListWidgetState extends State<SubTaskListWidget> {
                         )
                       : const SizedBox.shrink(),
                   content: GestureDetector(
-                      onTap: () => showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          useRootNavigator: true,
-                          builder: (context) => TaskEditFormWidget(
-                              task: subTask,
-                              onRefresh: (returnSubTask) {
-                                if (returnSubTask == null) {
-                                  setState(() {
-                                    _task.subTasks.removeAt(index);
-                                  });
-                                } else {
-                                  setState(() {
-                                    _task.subTasks[index] = returnSubTask;
-                                  });
-                                }
-                              })),
+                      onTap: () =>
+                          Navigator.of(context, rootNavigator: true).push(
+                            MaterialPageRoute(
+                              builder: (context) => TaskEditFormWidget(
+                                task: subTask,
+                                onRefresh: (returnSubTask) {
+                                  if (returnSubTask == null) {
+                                    setState(() {
+                                      _task.subTasks.removeAt(index);
+                                    });
+                                  } else {
+                                    setState(() {
+                                      _task.subTasks[index] = returnSubTask;
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [

@@ -46,6 +46,8 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
   List<Project> _projects = [];
   int? _projectId;
   User? _user;
+  bool _showStartDate = false;
+  bool _showEndDate = false;
 
   @override
   void initState() {
@@ -260,22 +262,36 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text('Start Date',
-                                              style: TextStyle(
-                                                fontSize: 18,
-                                              )),
-                                          Text(_startDate == null
-                                              ? ''
-                                              : _dateFormat
-                                                  .format(_startDate!)),
-                                        ],
+                                      InkWell(
+                                        onTap: () {
+                                          setState(() {
+                                            _showStartDate = !_showStartDate;
+                                          });
+                                        },
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text('Start Date',
+                                                style: TextStyle(
+                                                  fontSize: 18,
+                                                )),
+                                            Row(
+                                              children: [
+                                                Text(_startDate == null
+                                                    ? ''
+                                                    : _dateFormat
+                                                        .format(_startDate!)),
+                                                Icon(_showStartDate
+                                                    ? Icons.arrow_drop_up
+                                                    : Icons.arrow_drop_down),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                       SizedBox(
-                                        height: 216,
+                                        height: _showStartDate ? 216 : 0,
                                         child: CupertinoDatePicker(
                                           initialDateTime: _startDate,
                                           mode: CupertinoDatePickerMode
@@ -299,21 +315,36 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text('End Date',
-                                              style: TextStyle(
-                                                fontSize: 18,
-                                              )),
-                                          Text(_endDate == null
-                                              ? ''
-                                              : _dateFormat.format(_endDate!)),
-                                        ],
+                                      InkWell(
+                                        onTap: () {
+                                          setState(() {
+                                            _showEndDate = !_showEndDate;
+                                          });
+                                        },
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text('End Date',
+                                                style: TextStyle(
+                                                  fontSize: 18,
+                                                )),
+                                            Row(
+                                              children: [
+                                                Text(_endDate == null
+                                                    ? ''
+                                                    : _dateFormat
+                                                        .format(_endDate!)),
+                                                Icon(_showEndDate
+                                                    ? Icons.arrow_drop_up
+                                                    : Icons.arrow_drop_down),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                       SizedBox(
-                                        height: 216,
+                                        height: _showEndDate ? 216 : 0,
                                         child: CupertinoDatePicker(
                                           initialDateTime: _endDate,
                                           mode: CupertinoDatePickerMode

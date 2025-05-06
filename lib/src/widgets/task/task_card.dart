@@ -39,17 +39,16 @@ class _TaskCardState extends State<TaskCard> {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          useRootNavigator: true,
-          builder: (context) => TaskEditFormWidget(
-            task: _task,
-            onRefresh: (Task? task) {
-              if (task != null) {
-                widget.onEdited?.call(task);
-              }
-            },
+        Navigator.of(context, rootNavigator: true).push(
+          MaterialPageRoute(
+            builder: (context) => TaskEditFormWidget(
+              task: _task,
+              onRefresh: (Task? task) {
+                if (task != null) {
+                  widget.onEdited?.call(task);
+                }
+              },
+            ),
           ),
         );
       },
