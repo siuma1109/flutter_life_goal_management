@@ -39,14 +39,13 @@ class _TodayTasksWidgetState extends State<TodayTasksWidget> {
   @override
   void didUpdateWidget(TodayTasksWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.tasks != oldWidget.tasks) {
-      setState(() {
-        _tasks = widget.tasks;
-      });
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _calculateItemHeight();
-      });
-    }
+    setState(() {
+      _tasks = widget.tasks;
+      print('tasks: ${_tasks.map((e) => e.toJson())}');
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _calculateItemHeight();
+    });
   }
 
   void _calculateItemHeight() {
@@ -115,7 +114,9 @@ class _TodayTasksWidgetState extends State<TodayTasksWidget> {
                               onEdited: (Task? task) {
                                 if (task != null) {
                                   setState(() {
-                                    _tasks[index] = task;
+                                    if (index < _tasks.length) {
+                                      _tasks[index] = task;
+                                    }
                                   });
                                 }
                               },

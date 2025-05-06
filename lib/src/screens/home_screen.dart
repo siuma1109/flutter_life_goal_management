@@ -76,12 +76,15 @@ class _HomeScreenState extends State<HomeScreen> {
         DateTime(today.year, today.month, today.day, 23, 59, 59);
     taskChangedSubscription =
         TaskBroadcast().taskChangedStream.listen((Task? task) {
+      print('task changed: ${task?.toJson()}');
       if (task != null && task.id != null && task.id != 0) {
-        //print('task: ${task.toJson()}');
         setState(() {
           final index = _tasks.indexWhere((t) => t.id == task.id);
           if (index != -1) {
             if (task.parentId == null) {
+              print('updated task: ${task.toJson()}');
+              print('index: $index');
+              print('tasks Index: ${_tasks[index].toJson()}');
               _tasks[index] = task;
             } else {
               final subTaskIndex =
@@ -92,7 +95,9 @@ class _HomeScreenState extends State<HomeScreen> {
             }
           } else {
             bool isForToday = false;
-            if (task.startDate!.isBefore(endOfDate) &&
+            if (task.startDate != null &&
+                task.endDate != null &&
+                task.startDate!.isBefore(endOfDate) &&
                 task.endDate!.isAfter(startOfDate)) {
               isForToday = true;
             }
@@ -102,9 +107,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 final parentIndex =
                     _tasks.indexWhere((t) => t.id == task.parentId);
                 if (parentIndex != -1) {
-                  _tasks[parentIndex].subTasks[parentIndex] = task;
-                } else {
-                  _tasks[parentIndex].subTasks.insert(0, task);
+                  final subTaskIndex = _tasks[parentIndex]
+                      .subTasks
+                      .indexWhere((t) => t.id == task.id);
+                  if (subTaskIndex != -1) {
+                    _tasks[parentIndex].subTasks[subTaskIndex] = task;
+                  } else {
+                    _tasks[parentIndex].subTasks.add(task);
+                  }
                 }
               } else if (!_tasks.any((t) => t.id == task.id)) {
                 _tasks = [task, ..._tasks];

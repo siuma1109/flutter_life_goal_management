@@ -45,6 +45,9 @@ class _TaskCardState extends State<TaskCard> {
               task: _task,
               onRefresh: (Task? task) {
                 if (task != null) {
+                  setState(() {
+                    _task = task;
+                  });
                   widget.onEdited?.call(task);
                 }
               },

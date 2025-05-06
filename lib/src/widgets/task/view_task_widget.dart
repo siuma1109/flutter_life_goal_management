@@ -4,7 +4,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/sub_task_list_widget.dart';
-import 'package:flutter_life_goal_management/src/widgets/task/task_row_widget.dart';
 import '../../models/task.dart';
 import '../../services/task_service.dart';
 import 'package:intl/intl.dart';
@@ -116,6 +115,7 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
             IconButton(
               onPressed: () async {
                 await _updateTask();
+
                 if (mounted && _errors.isEmpty) {
                   Navigator.of(context).pop();
                 }
