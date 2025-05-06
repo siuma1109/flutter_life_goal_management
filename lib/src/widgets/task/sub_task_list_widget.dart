@@ -143,11 +143,9 @@ class _SubTaskListWidgetState extends State<SubTaskListWidget> {
   Widget _buildAddSubtaskButton() {
     return InkWell(
       onTap: () {
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          builder: (BuildContext context) {
-            return TaskAddFormWidget(
+        Navigator.of(context, rootNavigator: true).push(
+          MaterialPageRoute(
+            builder: (context) => TaskAddFormWidget(
               task: Task(
                 parentId: _task.id,
                 title: "",
@@ -164,8 +162,9 @@ class _SubTaskListWidgetState extends State<SubTaskListWidget> {
                 if (_task.id != null) TaskService().insertTask(subTask),
               },
               isParentTask: false,
-            );
-          },
+              title: "Add Sub Task",
+            ),
+          ),
         );
       },
       child: TaskRowWidget(

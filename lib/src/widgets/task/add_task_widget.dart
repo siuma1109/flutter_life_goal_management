@@ -1,13 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
 import 'package:flutter_life_goal_management/src/models/project.dart';
 import 'package:flutter_life_goal_management/src/models/user.dart';
 import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/services/project_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/sub_task_list_widget.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../models/task.dart';
 import '../../services/task_service.dart';
 import '../../widgets/task/add_task_ai_widget.dart';
@@ -16,12 +14,14 @@ class AddTaskWidget extends StatefulWidget {
   final Task? task;
   final bool isParentTask;
   final Function? onRefresh;
+  final String title;
 
   const AddTaskWidget({
     super.key,
     this.task,
     this.isParentTask = true,
     this.onRefresh,
+    this.title = 'Add Task',
   });
 
   @override
@@ -150,322 +150,289 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Center(
-            child: Container(
-              margin: const EdgeInsets.only(top: 8, bottom: 16),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+        actions: [
+          IconButton(
+            onPressed: () => _showAIPopup(context),
+            icon: const Image(
+              image: AssetImage("assets/gemini_ai_icon.png"),
+              height: 24,
             ),
           ),
-          Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-              left: 8,
-              right: 8,
-            ),
-            child: Column(
-              children: [
-                _isLoading
-                    ? Center(child: CircularProgressIndicator())
-                    : SingleChildScrollView(
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              TextFormField(
-                                controller: _taskController,
-                                focusNode: _taskFocusNode,
-                                decoration: InputDecoration(
-                                    hintText: 'Task Name',
-                                    border: InputBorder.none,
-                                    contentPadding: const EdgeInsets.all(16.0)),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter a task name';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: 4),
-                              TextFormField(
-                                controller: _descriptionController,
-                                decoration: InputDecoration(
-                                  hintText: 'Description',
-                                  border: InputBorder.none,
-                                  contentPadding: const EdgeInsets.all(16.0),
-                                ),
-                                maxLines: 6,
-                                minLines: 1,
-                              ),
-                              Padding(
-                                padding: EdgeInsets.all(16),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text('Start Date',
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                            )),
-                                        Text(_startDate == null
-                                            ? ''
-                                            : _dateFormat.format(_startDate!)),
-                                      ],
-                                    ),
-                                    SizedBox(
-                                      height: 216,
-                                      child: CupertinoDatePicker(
-                                        initialDateTime: _startDate,
-                                        mode:
-                                            CupertinoDatePickerMode.dateAndTime,
-                                        minimumDate: DateTime.now()
-                                            .subtract(Duration(days: 7)),
-                                        maximumDate: DateTime.now()
-                                            .add(Duration(days: 365 * 3)),
-                                        onDateTimeChanged: (value) {
-                                          setState(() {
-                                            _startDate = value;
-                                          });
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding: EdgeInsets.all(16),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text('End Date',
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                            )),
-                                        Text(_endDate == null
-                                            ? ''
-                                            : _dateFormat.format(_endDate!)),
-                                      ],
-                                    ),
-                                    SizedBox(
-                                      height: 216,
-                                      child: CupertinoDatePicker(
-                                        initialDateTime: _endDate,
-                                        mode:
-                                            CupertinoDatePickerMode.dateAndTime,
-                                        minimumDate: DateTime.now()
-                                            .subtract(Duration(days: 7)),
-                                        maximumDate: DateTime.now()
-                                            .add(Duration(days: 365 * 3)),
-                                        onDateTimeChanged: (value) {
-                                          setState(() {
-                                            _endDate = value;
-                                          });
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  // ElevatedButton(
-                                  //   onPressed: () => {},
-                                  //   style: ElevatedButton.styleFrom(
-                                  //     backgroundColor: Colors.white,
-                                  //     shape: RoundedRectangleBorder(
-                                  //       borderRadius: BorderRadius.circular(8),
-                                  //     ),
-                                  //   ),
-                                  //   child: Row(
-                                  //     mainAxisSize: MainAxisSize.min,
-                                  //     children: [
-                                  //       Icon(
-                                  //         Icons.calendar_month,
-                                  //         color: _startDate != null
-                                  //             ? Colors.green
-                                  //             : Colors.black,
-                                  //       ),
-                                  //       const SizedBox(width: 4),
-                                  //       Text(
-                                  //         _startDate == null
-                                  //             ? 'Start Date'
-                                  //             : '${_dateFormat.format(_startDate!)}',
-                                  //         style: TextStyle(
-                                  //           color: _startDate != null
-                                  //               ? Colors.green
-                                  //               : Colors.black,
-                                  //         ),
-                                  //       ),
-                                  //       const SizedBox(width: 8),
-                                  //       if (_startDate != null)
-                                  //         SizedBox(
-                                  //           width: 12,
-                                  //           height: 24,
-                                  //           child: IconButton(
-                                  //             icon: const Icon(Icons.close,
-                                  //                 color: Colors.red),
-                                  //             padding: EdgeInsets.zero,
-                                  //             onPressed: () {
-                                  //               setState(() {
-                                  //                 _startDate = null;
-                                  //                 _dateInputController.clear();
-                                  //               });
-                                  //             },
-                                  //           ),
-                                  //         ),
-                                  //     ],
-                                  //   ),
-                                  // ),
-                                  // SizedBox(width: 10),
-                                  ElevatedButton(
-                                    onPressed: () => TaskService()
-                                        .showPriorityPopUp(context, _priority,
-                                            (priority) {
-                                      setState(() {
-                                        _priority = priority;
-                                      });
-                                    }),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          Icons.flag,
-                                          color: TaskService()
-                                              .getPriorityColor(_priority),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          'P$_priority',
-                                          style: TextStyle(
-                                            color: TaskService()
-                                                .getPriorityColor(_priority),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(
-                                height: 8,
-                              ),
-                              // Subtasks section
-                              SubTaskListWidget(task: _task),
-                              Divider(),
-                              Padding(
-                                padding: EdgeInsets.only(left: 18, right: 18),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        if (widget.isParentTask)
-                                          DropdownButton(
-                                              items: [
-                                                DropdownMenuItem(
-                                                  value: null,
-                                                  child: Text('Inbox'),
-                                                ),
-                                                ...List.generate(
-                                                  _projects.length,
-                                                  (index) => DropdownMenuItem(
-                                                    value: _projects[index].id,
-                                                    child: Text(
-                                                        _projects[index].name),
-                                                  ),
-                                                ),
-                                              ],
-                                              value: _projectId ??
-                                                  widget.task?.projectId,
-                                              onChanged: (value) {
-                                                setState(() {
-                                                  _projectId = value;
-                                                });
-                                              }),
-                                      ],
-                                    ),
-                                    Row(
-                                      children: [
-                                        SizedBox(
-                                          width: 50,
-                                          child: ElevatedButton(
-                                            onPressed: () =>
-                                                _showAIPopup(context),
-                                            style: ElevatedButton.styleFrom(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        vertical: 4,
-                                                        horizontal: 4),
-                                                backgroundColor: Colors.white,
-                                                shape: RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            8))),
-                                            child: const Image(
-                                              image: AssetImage(
-                                                  "assets/gemini_ai_icon.png"),
-                                              height: 24,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        SizedBox(
-                                          width: 50,
-                                          child: ElevatedButton(
-                                            onPressed: _submitForm,
-                                            style: ElevatedButton.styleFrom(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      vertical: 4,
-                                                      horizontal: 4),
-                                              backgroundColor: Colors.grey,
-                                              shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(8)),
-                                            ),
-                                            child: Icon(
-                                              Icons.send,
-                                              color: Colors.white,
-                                              size: 24,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
-                      ),
-              ],
+          IconButton(
+            onPressed: () => _submitForm(),
+            icon: Icon(
+              Icons.send,
+              size: 24,
             ),
           ),
         ],
+      ),
+      body: SingleChildScrollView(
+        child: Container(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                  left: 8,
+                  right: 8,
+                ),
+                child: Column(
+                  children: [
+                    _isLoading
+                        ? Center(child: CircularProgressIndicator())
+                        : Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                if (widget.isParentTask)
+                                  Padding(
+                                    padding: EdgeInsets.all(16),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text('Project',
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                            )),
+                                        DropdownButton(
+                                            items: [
+                                              DropdownMenuItem(
+                                                value: null,
+                                                child: Text('Inbox'),
+                                              ),
+                                              ...List.generate(
+                                                _projects.length,
+                                                (index) => DropdownMenuItem(
+                                                  value: _projects[index].id,
+                                                  child: Text(
+                                                      _projects[index].name),
+                                                ),
+                                              ),
+                                            ],
+                                            value: _projectId ??
+                                                widget.task?.projectId,
+                                            onChanged: (value) {
+                                              setState(() {
+                                                _projectId = value;
+                                              });
+                                            }),
+                                      ],
+                                    ),
+                                  ),
+                                TextFormField(
+                                  controller: _taskController,
+                                  focusNode: _taskFocusNode,
+                                  decoration: InputDecoration(
+                                      hintText: 'Task Name',
+                                      border: InputBorder.none,
+                                      contentPadding:
+                                          const EdgeInsets.all(16.0)),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Please enter a task name';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 4),
+                                TextFormField(
+                                  controller: _descriptionController,
+                                  decoration: InputDecoration(
+                                    hintText: 'Description',
+                                    border: InputBorder.none,
+                                    contentPadding: const EdgeInsets.all(16.0),
+                                  ),
+                                  maxLines: 6,
+                                  minLines: 1,
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.all(16),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text('Start Date',
+                                              style: TextStyle(
+                                                fontSize: 18,
+                                              )),
+                                          Text(_startDate == null
+                                              ? ''
+                                              : _dateFormat
+                                                  .format(_startDate!)),
+                                        ],
+                                      ),
+                                      SizedBox(
+                                        height: 216,
+                                        child: CupertinoDatePicker(
+                                          initialDateTime: _startDate,
+                                          mode: CupertinoDatePickerMode
+                                              .dateAndTime,
+                                          minimumDate: DateTime.now()
+                                              .subtract(Duration(days: 7)),
+                                          maximumDate: DateTime.now()
+                                              .add(Duration(days: 365 * 3)),
+                                          onDateTimeChanged: (value) {
+                                            setState(() {
+                                              _startDate = value;
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.all(16),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text('End Date',
+                                              style: TextStyle(
+                                                fontSize: 18,
+                                              )),
+                                          Text(_endDate == null
+                                              ? ''
+                                              : _dateFormat.format(_endDate!)),
+                                        ],
+                                      ),
+                                      SizedBox(
+                                        height: 216,
+                                        child: CupertinoDatePicker(
+                                          initialDateTime: _endDate,
+                                          mode: CupertinoDatePickerMode
+                                              .dateAndTime,
+                                          minimumDate: DateTime.now()
+                                              .subtract(Duration(days: 7)),
+                                          maximumDate: DateTime.now()
+                                              .add(Duration(days: 365 * 3)),
+                                          onDateTimeChanged: (value) {
+                                            setState(() {
+                                              _endDate = value;
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    // ElevatedButton(
+                                    //   onPressed: () => {},
+                                    //   style: ElevatedButton.styleFrom(
+                                    //     backgroundColor: Colors.white,
+                                    //     shape: RoundedRectangleBorder(
+                                    //       borderRadius: BorderRadius.circular(8),
+                                    //     ),
+                                    //   ),
+                                    //   child: Row(
+                                    //     mainAxisSize: MainAxisSize.min,
+                                    //     children: [
+                                    //       Icon(
+                                    //         Icons.calendar_month,
+                                    //         color: _startDate != null
+                                    //             ? Colors.green
+                                    //             : Colors.black,
+                                    //       ),
+                                    //       const SizedBox(width: 4),
+                                    //       Text(
+                                    //         _startDate == null
+                                    //             ? 'Start Date'
+                                    //             : '${_dateFormat.format(_startDate!)}',
+                                    //         style: TextStyle(
+                                    //           color: _startDate != null
+                                    //               ? Colors.green
+                                    //               : Colors.black,
+                                    //         ),
+                                    //       ),
+                                    //       const SizedBox(width: 8),
+                                    //       if (_startDate != null)
+                                    //         SizedBox(
+                                    //           width: 12,
+                                    //           height: 24,
+                                    //           child: IconButton(
+                                    //             icon: const Icon(Icons.close,
+                                    //                 color: Colors.red),
+                                    //             padding: EdgeInsets.zero,
+                                    //             onPressed: () {
+                                    //               setState(() {
+                                    //                 _startDate = null;
+                                    //                 _dateInputController.clear();
+                                    //               });
+                                    //             },
+                                    //           ),
+                                    //         ),
+                                    //     ],
+                                    //   ),
+                                    // ),
+                                    // SizedBox(width: 10),
+                                    ElevatedButton(
+                                      onPressed: () => TaskService()
+                                          .showPriorityPopUp(context, _priority,
+                                              (priority) {
+                                        setState(() {
+                                          _priority = priority;
+                                        });
+                                      }),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.flag,
+                                            color: TaskService()
+                                                .getPriorityColor(_priority),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'P$_priority',
+                                            style: TextStyle(
+                                              color: TaskService()
+                                                  .getPriorityColor(_priority),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(
+                                  height: 8,
+                                ),
+                                // Subtasks section
+                                SubTaskListWidget(task: _task),
+                              ],
+                            ),
+                          ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

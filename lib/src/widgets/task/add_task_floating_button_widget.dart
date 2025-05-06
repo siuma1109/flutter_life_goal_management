@@ -16,12 +16,17 @@ class _AddTaskFloatingButtonWidgetState
   Widget build(BuildContext context) {
     return FloatingActionButton(
       onPressed: () {
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          useRootNavigator: true,
-          builder: (context) => TaskAddFormWidget(),
+        Navigator.of(context, rootNavigator: true).push(
+          MaterialPageRoute(
+            builder: (context) => const TaskAddFormWidget(),
+          ),
         );
+        // showModalBottomSheet(
+        //   context: context,
+        //   isScrollControlled: true,
+        //   useRootNavigator: true,
+        //   builder: (context) => TaskAddFormWidget(),
+        // );
       },
       child: const Icon(Icons.add),
     );
