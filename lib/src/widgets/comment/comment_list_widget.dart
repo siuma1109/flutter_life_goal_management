@@ -27,7 +27,6 @@ class _CommentListWidgetState extends State<CommentListWidget> {
   int _page = 1;
   bool _hasMoreData = true;
   bool _isLoading = false;
-  final ScrollController _scrollController = ScrollController();
 
   final TextEditingController _commentController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
@@ -43,22 +42,12 @@ class _CommentListWidgetState extends State<CommentListWidget> {
     }
     _comments = <Comment>[];
     _loadComments();
-
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels >=
-              _scrollController.position.maxScrollExtent * 0.8 &&
-          !_isLoading &&
-          _hasMoreData) {
-        _loadComments();
-      }
-    });
   }
 
   @override
   void dispose() {
     _commentController.dispose();
     _focusNode.dispose();
-    _scrollController.dispose();
     super.dispose();
   }
 
@@ -128,15 +117,35 @@ class _CommentListWidgetState extends State<CommentListWidget> {
             Expanded(
               child: _comments.isEmpty
                   ? const Center(child: Text('No comments yet'))
-                  : ListView.builder(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      itemCount: _comments.length,
-                      itemBuilder: (context, index) {
-                        final comment = _comments[index];
-                        return CommentListItemWidget(
-                            key: Key(comment.id.toString()), comment: comment);
+                  : NotificationListener<ScrollNotification>(
+                      onNotification: (scrollNotification) {
+                        // Only check if we need to load more comments
+                        if (scrollNotification is ScrollUpdateNotification) {
+                          if (scrollNotification.metrics.pixels >=
+                                  scrollNotification.metrics.maxScrollExtent *
+                                      0.8 &&
+                              !_isLoading &&
+                              _hasMoreData) {
+                            _loadComments();
+                          }
+                        }
+
+                        // Don't handle overscroll here - let the parent sheet handle it
+                        return false;
                       },
+                      child: ListView.builder(
+                        primary: true, // Use the primary scroll controller
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        physics:
+                            const AlwaysScrollableScrollPhysics(), // Allow overscroll for the parent to detect
+                        itemCount: _comments.length,
+                        itemBuilder: (context, index) {
+                          final comment = _comments[index];
+                          return CommentListItemWidget(
+                              key: Key(comment.id.toString()),
+                              comment: comment);
+                        },
+                      ),
                     ),
             ),
             Container(

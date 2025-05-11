@@ -114,6 +114,9 @@ class _FeedListItemWidgetState extends State<FeedListItemWidget> {
         return DraggableBottomSheetWidget(
           minHeightFactor: 0.6,
           maxHeightFactor: 0.9,
+          onClose: () {
+            Navigator.of(context).pop();
+          },
           child: CommentListWidget(
             target: _feed,
             onCommentSubmit: (Comment insertedComment) {
