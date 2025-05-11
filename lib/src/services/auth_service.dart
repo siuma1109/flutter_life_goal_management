@@ -104,14 +104,22 @@ class AuthService {
     }
 
     // If we have a token, validate it by getting user info
-    final result = await UserService().getUser();
+    try {
+      final result = await UserService().getUser();
 
-    if (result != null) {
-      _isLoggedIn = true;
-      _loggedInUser = result;
-      return true;
-    } else {
-      // If token is invalid, delete it
+      if (result != null) {
+        _isLoggedIn = true;
+        _loggedInUser = result;
+        return true;
+      } else {
+        // If token is invalid, delete it
+        await deleteToken();
+        _loggedInUser = null;
+        _isLoggedIn = false;
+        return false;
+      }
+    } catch (e) {
+      print('Error: $e');
       await deleteToken();
       _loggedInUser = null;
       _isLoggedIn = false;
