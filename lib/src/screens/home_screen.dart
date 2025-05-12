@@ -31,6 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool taskHasMoreData = true;
   bool taskIsLoading = false;
   StreamSubscription<void>? taskChangedSubscription;
+  StreamSubscription<void>? projectChangedSubscription;
 
   List<Feed> _feeds = [];
   int feedPage = 1;
@@ -50,6 +51,11 @@ class _HomeScreenState extends State<HomeScreen> {
     notificationUnreadCountSubscription =
         NotificationBroadcast().notificationUnreadCountStream.listen((_) {
       _loadNotificationsUnreadCount();
+    });
+
+    projectChangedSubscription =
+        TaskBroadcast().projectChangedStream.listen((_) {
+      _refreshFeeds();
     });
 
     _scrollController.addListener(() {
@@ -213,17 +219,27 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _refresh() async {
+    await Future.wait([_refreshTasks(), _refreshFeeds()]);
+  }
+
+  Future<void> _refreshTasks() async {
     setState(() {
       taskPage = 1;
       _tasks = [];
       taskHasMoreData = true;
       taskIsLoading = false;
+    });
+    await _loadTasks();
+  }
+
+  Future<void> _refreshFeeds() async {
+    setState(() {
       feedPage = 1;
       _feeds = [];
       feedHasMoreData = true;
       feedIsLoading = false;
     });
-    await Future.wait([_loadTasks(), _loadFeeds()]);
+    await _loadFeeds();
   }
 
   Future<void> _loadTasks() async {
@@ -289,6 +305,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _scrollController.dispose();
     _tasksScrollController.dispose();
     taskChangedSubscription?.cancel();
+    projectChangedSubscription?.cancel();
     super.dispose();
   }
 

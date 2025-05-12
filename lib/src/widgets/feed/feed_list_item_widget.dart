@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/models/comment.dart';
 import 'package:flutter_life_goal_management/src/models/feed.dart';
+import 'package:flutter_life_goal_management/src/screens/Task/task_detail_screen.dart';
 import 'package:flutter_life_goal_management/src/services/feed_service.dart';
+import 'package:flutter_life_goal_management/src/utils/feed_utils.dart';
 import 'package:flutter_life_goal_management/src/widgets/comment/comment_list_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/draggable_bottom_sheet_widget.dart';
+import 'package:go_router/go_router.dart';
 
 class FeedListItemWidget extends StatefulWidget {
   final Feed feed;
@@ -70,10 +73,16 @@ class _FeedListItemWidgetState extends State<FeedListItemWidget> {
             ),
             SizedBox(height: 8),
             if (_feed.body != null) Text(_feed.body!),
-            // TextButton(
-            //   onPressed: () {},
-            //   child: Text('View details'),
-            // ),
+            InkWell(
+              onTap: () {
+                FeedUtils.handleFeedTap(context, _feed);
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text('View Details',
+                    style: TextStyle(color: Colors.blueGrey)),
+              ),
+            ),
             SizedBox(height: 8),
             Row(
               children: [

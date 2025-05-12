@@ -10,9 +10,13 @@ import 'package:flutter_life_goal_management/src/services/task_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/task_list_widget.dart';
 
 class ProjectScreen extends StatefulWidget {
-  final Project project;
+  final int projectId;
   final User user;
-  const ProjectScreen({super.key, required this.project, required this.user});
+  const ProjectScreen({
+    super.key,
+    required this.projectId,
+    required this.user,
+  });
 
   @override
   State<ProjectScreen> createState() => _ProjectScreenState();
@@ -55,7 +59,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
   }
 
   Future<void> _loadProject() async {
-    final project = await ProjectService().getProject(widget.project.id ?? 0);
+    final project = await ProjectService().getProject(widget.projectId);
 
     if (mounted) {
       if (project == null) {
@@ -87,7 +91,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
       _isLoading = true;
     });
     final tasks = await TaskService().getTasksByProjectId(
-      widget.project.id ?? 0,
+      widget.projectId,
       _page,
       userId: widget.user.id,
     );
@@ -125,8 +129,8 @@ class _ProjectScreenState extends State<ProjectScreen> {
             ),
             TextButton(
               onPressed: () async {
-                if (widget.project.id != null) {
-                  await ProjectService().deleteProject(widget.project.id!);
+                if (widget.projectId != null) {
+                  await ProjectService().deleteProject(widget.projectId!);
 
                   // Broadcast project change
                   TaskBroadcast().notifyProjectChanged();

@@ -181,7 +181,7 @@ class _ProjectListWidgetState extends State<ProjectListWidget> {
       context,
       MaterialPageRoute(
         builder: (context) => ProjectScreen(
-          project: project,
+          projectId: project.id ?? 0,
           user: widget.user == null
               ? AuthService().getLoggedInUser()!
               : widget.user!,
