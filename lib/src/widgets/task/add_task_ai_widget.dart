@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_life_goal_management/src/services/ai_service.dart';
+import 'package:flutter_life_goal_management/src/services/task_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/show_ai_result_widget.dart';
 
 class AddTaskAIWidget extends StatefulWidget {
@@ -105,7 +105,8 @@ class _AddTaskAIWidgetState extends State<AddTaskAIWidget> {
     });
 
     try {
-      final result = await AIService().fetchAIDetails(_goalPrompt.text);
+      //final result = await AIService().fetchAIDetails(_goalPrompt.text);
+      final result = await TaskService().getAiSuggestions(_goalPrompt.text);
 
       // Close input dialog first
       if (mounted) {

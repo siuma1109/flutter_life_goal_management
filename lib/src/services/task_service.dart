@@ -289,4 +289,14 @@ class TaskService {
   }
 
   // Comment Part End
+
+  // Ai suggestions Start
+  Future<Map<String, dynamic>> getAiSuggestions(String prompt) async {
+    final result =
+        await HttpService().get('task_suggestions', queryParameters: {
+      'prompt': prompt,
+    });
+    print('result: ${result.body}');
+    return jsonDecode(result.body);
+  }
 }
