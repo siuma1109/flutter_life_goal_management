@@ -33,7 +33,7 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
   int _priority = 4; // Default priority
   final _dateFormat = DateFormat('yyyy-MM-dd');
   bool _isLoading = false; // Loading state
-  StreamSubscription<void>? _taskChangedSubscription;
+
   Map<String, String> _errors = {};
   DateTime _minDate = DateTime.now().subtract(Duration(days: 7));
   DateTime _maxDate = DateTime.now().add(Duration(days: 365 * 3));
@@ -60,7 +60,6 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
     _descriptionController.dispose();
 
     super.dispose();
-    _taskChangedSubscription?.cancel();
   }
 
   Future<void> _updateTask() async {
@@ -155,6 +154,9 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
               const Divider(thickness: 5),
             SubTaskListWidget(
               task: _task,
+              onRefresh: (Task task) {
+                widget.onRefresh?.call(task);
+              },
             ),
           ],
         ),
@@ -214,6 +216,7 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
                                 _task.isChecked = !_task.isChecked;
                               });
                               _updateTask();
+                              widget.onRefresh?.call(_task);
                             }
                           },
                         )
@@ -258,32 +261,31 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
             ),
 
             // Description
-            if (widget.task.description != null &&
-                widget.task.description != '')
-              Container(
-                height: rowHeight,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Icon(Icons.description),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: TextField(
-                        controller: _descriptionController,
-                        decoration: const InputDecoration(
-                          border:
-                              OutlineInputBorder(borderSide: BorderSide.none),
-                        ),
-                        style: const TextStyle(
-                          fontSize: 18,
-                        ),
-                        minLines: 1,
-                        maxLines: 1,
-                      ),
-                    ),
-                  ],
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 16),
+                Text('Description',
+                    style: TextStyle(
+                      fontSize: 18,
+                    )),
+                TextField(
+                  controller: _descriptionController,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(borderSide: BorderSide.none),
+                    contentPadding:
+                        EdgeInsets.symmetric(vertical: 16, horizontal: 0),
+                    hintText: 'enter description...',
+                  ),
+                  style: const TextStyle(
+                    fontSize: 18,
+                  ),
+                  minLines: 1,
+                  maxLines: 4,
                 ),
-              ),
+              ],
+            ),
             // Start date
             SizedBox(
               height: rowHeight,

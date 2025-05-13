@@ -9,8 +9,13 @@ import 'package:flutter_life_goal_management/src/widgets/task/task_row_widget.da
 
 class SubTaskListWidget extends StatefulWidget {
   final Task task;
+  final Function? onRefresh;
 
-  const SubTaskListWidget({super.key, required this.task});
+  const SubTaskListWidget({
+    super.key,
+    required this.task,
+    this.onRefresh,
+  });
 
   @override
   State<SubTaskListWidget> createState() => _SubTaskListWidgetState();
@@ -82,6 +87,7 @@ class _SubTaskListWidgetState extends State<SubTaskListWidget> {
                             setState(() {
                               TaskService().updateTask(subTask);
                             });
+                            widget.onRefresh?.call(_task);
                           },
                         )
                       : const SizedBox.shrink(),
@@ -126,7 +132,11 @@ class _SubTaskListWidgetState extends State<SubTaskListWidget> {
                             ),
                           if (subTask.startDate != null)
                             Text(
-                                'Due: ${subTask.startDate!.toString().split(' ')[0]}'),
+                                'Start Date: ${subTask.startDate!.toString().split(' ')[0]}'),
+                          if (subTask.endDate != null)
+                            Text(
+                              'End Date: ${subTask.endDate!.toString().split(' ')[0]}',
+                            ),
                           Text(
                             'Priority: ${subTask.priority}',
                             style: TextStyle(
@@ -134,6 +144,14 @@ class _SubTaskListWidgetState extends State<SubTaskListWidget> {
                               color: Colors.grey,
                             ),
                           ),
+                          if (subTask.subTasks.isNotEmpty)
+                            Text(
+                              'Sub Tasks: ${subTask.subTasks.where((task) => task.isChecked).length}/${subTask.subTasks.length}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                            ),
                         ],
                       )),
                 )))

@@ -3,7 +3,12 @@ import 'package:flutter_life_goal_management/src/services/task_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/show_ai_result_widget.dart';
 
 class AddTaskAIWidget extends StatefulWidget {
-  final Function(String taskName, String description,
+  final Function(
+      String taskName,
+      String description,
+      int priority,
+      String startDate,
+      String endDate,
       List<Map<String, dynamic>> subTasks) onAccept;
 
   const AddTaskAIWidget({
@@ -114,7 +119,7 @@ class _AddTaskAIWidgetState extends State<AddTaskAIWidget> {
       }
 
       if (result != null && mounted) {
-        _showAiResultPopup(context, result);
+        _showAiResult(context, result);
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to get AI suggestions')),
@@ -136,14 +141,23 @@ class _AddTaskAIWidgetState extends State<AddTaskAIWidget> {
     }
   }
 
-  void _showAiResultPopup(BuildContext context, Map<String, dynamic> result) {
-    Navigator.of(context, rootNavigator: true).push(
-      MaterialPageRoute(
-        builder: (context) => ShowAIResultWidget(
-          aiResult: result,
-          onAccept: widget.onAccept,
-        ),
-      ),
+  void _showAiResult(BuildContext context, Map<String, dynamic> result) {
+    final subTasks = List<Map<String, dynamic>>.from(result['sub_tasks']);
+    widget.onAccept(
+      result['task_name'],
+      result['description'],
+      result['priority'],
+      result['start_date'],
+      result['end_date'],
+      subTasks,
     );
+    // Navigator.of(context, rootNavigator: true).push(
+    //   MaterialPageRoute(
+    //     builder: (context) => ShowAIResultWidget(
+    //       aiResult: result,
+    //       onAccept: widget.onAccept,
+    //     ),
+    //   ),
+    // );
   }
 }

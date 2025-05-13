@@ -474,35 +474,26 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
       isScrollControlled: true,
       builder: (BuildContext context) {
         return AddTaskAIWidget(
-          onAccept: (String taskName, String description,
+          onAccept: (String taskName,
+              String description,
+              int priority,
+              String startDate,
+              String endDate,
               List<Map<String, dynamic>> subTasks) {
             setState(() {
               _taskController.text = taskName;
               _descriptionController.text = description;
+              _startDate = DateTime.parse(startDate);
+              _endDate = DateTime.parse(endDate);
+              _priority = priority;
 
               // Clear existing subtasks
               _task.subTasks.clear();
 
               // Add new subtasks
-              final now = DateTime.now();
-              for (Map<String, dynamic> subTask in subTasks) {
-                final subtask = Task(
-                  id: null,
-                  parentId: null, // Will be set when the parent task is created
-                  userId: _user?.id ?? 0,
-                  projectId: _projectId,
-                  title: subTask['task_name'],
-                  description: subTask['description'],
-                  priority: _priority,
-                  startDate: _startDate,
-                  endDate: _endDate,
-                  createdAt: now,
-                  updatedAt: now,
-                  isChecked: false,
-                  subTasks: [],
-                );
-                _task.subTasks.add(subtask);
-              }
+              final subTasksList = recursiveTaskCreation(subTasks);
+              print('subTasksList: $subTasksList');
+              _task.subTasks.addAll(subTasksList);
             });
 
             // Show a success message
@@ -513,5 +504,31 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
         );
       },
     );
+  }
+
+  List<Task> recursiveTaskCreation(List<Map<String, dynamic>> subTasks) {
+    final subTasksList = <Task>[];
+    for (Map<String, dynamic> subTask in subTasks) {
+      if (subTask['sub_tasks'] != null) {
+        subTask['sub_tasks'] = recursiveTaskCreation(
+            List<Map<String, dynamic>>.from(subTask['sub_tasks']));
+      }
+      subTasksList.add(Task(
+        userId: _user?.id ?? 0,
+        projectId: _projectId,
+        title: subTask['task_name'],
+        description: subTask['description'],
+        priority: subTask['priority'] ?? _priority,
+        startDate: subTask['start_date'] != null
+            ? DateTime.parse(subTask['start_date'])
+            : _startDate,
+        endDate: subTask['end_date'] != null
+            ? DateTime.parse(subTask['end_date'])
+            : _endDate,
+        isChecked: false,
+        subTasks: subTask['sub_tasks'] ?? [],
+      ));
+    }
+    return subTasksList;
   }
 }
