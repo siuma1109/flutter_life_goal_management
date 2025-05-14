@@ -77,9 +77,34 @@ class _FeedListWidgetState extends State<FeedListWidget> {
     return Container(
       height: 200,
       alignment: Alignment.center,
-      child: const Text(
-        'No activity yet',
-        style: TextStyle(color: Colors.grey),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.local_activity_outlined,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No activity yet',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'New activity will be displayed here',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

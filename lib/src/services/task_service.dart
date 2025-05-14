@@ -211,6 +211,8 @@ class TaskService {
         return false;
       }
 
+      task.isDeleted = true;
+
       // Broadcast task changes
       TaskBroadcast().notifyTasksChanged(task);
 

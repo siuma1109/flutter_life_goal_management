@@ -439,30 +439,89 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
   void _showDeleteConfirmationDialog(BuildContext context) {
     showDialog(
       context: context,
+      barrierDismissible: !_isLoading, // Prevent dismissing during loading
       builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('Delete Task'),
-          content: const Text('Are you sure you want to delete this task?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                if (widget.task.id != null) {
-                  print("Deleting task: ${widget.task.id}");
-                  print("Deleting task projectId: ${widget.task.projectId}");
-                  await TaskService().deleteTask(widget.task);
-                }
-                widget.onRefresh?.call(null);
-                Navigator.of(dialogContext).pop(); // Close the dialog
-                Navigator.of(context).pop(); // Close the view task widget
-              },
-              child: const Text('Delete'),
-            ),
-          ],
-        );
+        return StatefulBuilder(builder: (context, setDialogState) {
+          return AlertDialog(
+            title: const Text('Delete Task'),
+            content: const Text('Are you sure you want to delete this task?'),
+            actions: [
+              TextButton(
+                onPressed:
+                    _isLoading ? null : () => Navigator.of(dialogContext).pop(),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: _isLoading
+                    ? null
+                    : () async {
+                        if (widget.task.id != null) {
+                          // Update both widget state and dialog state
+                          setState(() {
+                            _isLoading = true;
+                          });
+                          setDialogState(() {}); // Update dialog UI
+
+                          try {
+                            await TaskService().deleteTask(widget.task);
+
+                            // Notify parent about deletion
+                            widget.onRefresh?.call(null);
+
+                            // Close both dialog and view task screen
+                            if (mounted) {
+                              Navigator.of(dialogContext).pop(); // Close dialog
+                              Navigator.of(context)
+                                  .pop(); // Close view task widget
+                            }
+                          } catch (e) {
+                            // Handle error case
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text('Error deleting task: $e')),
+                              );
+
+                              setState(() {
+                                _isLoading = false;
+                              });
+                              setDialogState(() {}); // Update dialog UI
+                            }
+                          }
+                        }
+                      },
+                style: ButtonStyle(
+                  foregroundColor: MaterialStateProperty.resolveWith<Color>(
+                    (Set<MaterialState> states) {
+                      if (states.contains(MaterialState.disabled)) {
+                        return Colors.grey;
+                      }
+                      return Colors.red;
+                    },
+                  ),
+                ),
+                child: _isLoading
+                    ? Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.red),
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Text('Deleting...'),
+                        ],
+                      )
+                    : const Text('Delete'),
+              ),
+            ],
+          );
+        });
       },
     );
   }

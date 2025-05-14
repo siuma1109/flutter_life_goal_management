@@ -87,8 +87,21 @@ class _HomeScreenState extends State<HomeScreen> {
         DateTime(today.year, today.month, today.day, 23, 59, 59);
     taskChangedSubscription =
         TaskBroadcast().taskChangedStream.listen((Task? task) {
+      setState(() {
+        isRefreshing = true;
+      });
       print('task changed: ${task?.toJson()}');
-      if (task != null && task.id != null && task.id != 0) {
+      if (task?.isDeleted == true) {
+        final index = _tasks.indexWhere((t) => t.id == task?.id);
+        if (index != -1) {
+          _tasks.removeAt(index);
+        }
+      }
+
+      if (task != null &&
+          task.id != null &&
+          task.id != 0 &&
+          task.isDeleted == false) {
         setState(() {
           final index = _tasks.indexWhere((t) => t.id == task.id);
           if (index != -1) {
@@ -134,6 +147,12 @@ class _HomeScreenState extends State<HomeScreen> {
           }
         });
       }
+
+      _refreshFeeds();
+
+      setState(() {
+        isRefreshing = false;
+      });
     });
 
     // Trigger the loading indicator programmatically after the widget is built

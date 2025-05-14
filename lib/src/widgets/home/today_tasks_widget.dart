@@ -92,68 +92,70 @@ class _TodayTasksWidgetState extends State<TodayTasksWidget> {
 
     return widget.isRefreshing
         ? const TaskShimmerLoadingWidget()
-        : Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text('Today Tasks',
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              ),
-              SizedBox(
-                height: listViewHeight,
-                child: _tasks.isEmpty
-                    ? const Center(child: Text('No tasks'))
-                    : ListView.builder(
-                        controller: widget.scrollController,
-                        itemCount: _tasks.length,
-                        shrinkWrap: true,
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        itemBuilder: (context, index) {
-                          if (index < _tasks.length) {
-                            return TaskCard(
-                              key: Key(_tasks[index].id.toString()),
-                              task: _tasks[index],
-                              onEdited: (Task? task) {
-                                if (task != null) {
-                                  setState(() {
-                                    if (index < _tasks.length) {
-                                      _tasks[index] = task;
+        : _tasks.isEmpty
+            ? const SizedBox.shrink()
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text('Today Tasks',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
+                  ),
+                  SizedBox(
+                    height: listViewHeight,
+                    child: _tasks.isEmpty
+                        ? const Center(child: Text('No tasks'))
+                        : ListView.builder(
+                            controller: widget.scrollController,
+                            itemCount: _tasks.length,
+                            shrinkWrap: true,
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            itemBuilder: (context, index) {
+                              if (index < _tasks.length) {
+                                return TaskCard(
+                                  key: Key(_tasks[index].id.toString()),
+                                  task: _tasks[index],
+                                  onEdited: (Task? task) {
+                                    if (task != null) {
+                                      setState(() {
+                                        if (index < _tasks.length) {
+                                          _tasks[index] = task;
+                                        }
+                                      });
                                     }
-                                  });
-                                }
-                              },
-                            );
+                                  },
+                                );
+                              }
+                              return null;
+                            },
+                          ),
+                  ),
+                  if (!_showAllTasks && _tasks.length > 2)
+                    Center(
+                      child: TextButton(
+                        onPressed: () => setState(() {
+                          _showAllTasks = true;
+                          if (!widget.isLoading) {
+                            widget.loadTasks();
                           }
-                          return null;
-                        },
+                        }),
+                        child: const Text('Show more'),
                       ),
-              ),
-              if (!_showAllTasks && _tasks.length > 2)
-                Center(
-                  child: TextButton(
-                    onPressed: () => setState(() {
-                      _showAllTasks = true;
-                      if (!widget.isLoading) {
-                        widget.loadTasks();
-                      }
-                    }),
-                    child: const Text('Show more'),
-                  ),
-                ),
-              if (_showAllTasks)
-                Center(
-                  child: TextButton(
-                    onPressed: () => setState(() => _showAllTasks = false),
-                    child: const Text('Collapse'),
-                  ),
-                ),
-              if (widget.isLoading)
-                const Center(
-                  child: CircularProgressIndicator(),
-                ),
-            ],
-          );
+                    ),
+                  if (_showAllTasks)
+                    Center(
+                      child: TextButton(
+                        onPressed: () => setState(() => _showAllTasks = false),
+                        child: const Text('Collapse'),
+                      ),
+                    ),
+                  if (widget.isLoading)
+                    const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                ],
+              );
   }
 }

@@ -33,6 +33,7 @@ class Task {
   int? sharesCount;
   List<Comment> comments;
   bool? isLiked;
+  bool? isDeleted;
 
   static final dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
 
@@ -56,6 +57,7 @@ class Task {
     this.sharesCount,
     this.comments = const [],
     this.isLiked,
+    this.isDeleted = false,
   }) {
     createdAt = createdAt ?? DateTime.now();
     updatedAt = updatedAt ?? DateTime.now();
