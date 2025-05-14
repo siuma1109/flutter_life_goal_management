@@ -4,7 +4,7 @@ import 'package:flutter_life_goal_management/src/screens/Task/task_detail_screen
 import 'package:flutter_life_goal_management/src/screens/login_screen.dart';
 import 'package:flutter_life_goal_management/src/screens/forgot_password_screen.dart';
 import 'package:flutter_life_goal_management/src/screens/sign_up_screen.dart';
-import 'package:flutter_life_goal_management/src/screens/home_screen.dart';
+import 'package:flutter_life_goal_management/src/screens/Home/home_screen.dart';
 import 'package:flutter_life_goal_management/src/screens/explore_screen.dart';
 import 'package:flutter_life_goal_management/src/screens/calendar_screen.dart';
 import 'package:flutter_life_goal_management/src/widgets/scaffold_with_bottom_navbar_widget.dart';
@@ -25,7 +25,7 @@ final GoRouter router = GoRouter(
     final isPublicRoute = publicRoutes.contains(state.fullPath);
 
     // Check if token exists and is valid
-    final isLoggedIn = await AuthService().loggedIn();
+    final isLoggedIn = await AuthService().getLoggedInUserAsync() != null;
     print('isLoggedIn: $isLoggedIn, route: ${state.fullPath}');
 
     // If not logged in and trying to access a protected route

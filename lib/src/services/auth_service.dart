@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_life_goal_management/src/services/user_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
@@ -10,7 +12,23 @@ class AuthService {
     return _instance;
   }
 
-  AuthService._internal();
+  AuthService._internal() {
+    _initUser();
+  }
+
+  void _initUser() {
+    try {
+      // Try to load the user from SharedPreferences in a fire-and-forget way
+      SharedPreferences.getInstance().then((prefs) {
+        final userString = prefs.getString('loggedInUser');
+        if (userString != null) {
+          _loggedInUser = User.fromJson(jsonDecode(userString));
+        }
+      });
+    } catch (e) {
+      print('Error initializing user: $e');
+    }
+  }
 
   // This is a placeholder for the actual authentication state.
   // In a real application, this might be replaced with a more complex logic
@@ -36,6 +54,7 @@ class AuthService {
     _isLoggedIn = false;
     _loggedInUser = null;
     await deleteToken();
+    await deleteLoggedInUser();
   }
 
   // Save token to SharedPreferences
@@ -66,8 +85,25 @@ class AuthService {
     return _loggedInUser;
   }
 
-  void setLoggedInUser(User user) {
+  Future<User?> getLoggedInUserAsync() async {
+    final prefs = await SharedPreferences.getInstance();
+    final loggedInUserString = prefs.getString('loggedInUser');
+    if (loggedInUserString == null) return null;
+
+    // Parse the user and cache it
+    _loggedInUser = User.fromJson(jsonDecode(loggedInUserString));
+    return _loggedInUser;
+  }
+
+  Future<void> setLoggedInUser(User user) async {
     _loggedInUser = user;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('loggedInUser', jsonEncode(user.toJson()));
+  }
+
+  Future<void> deleteLoggedInUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('loggedInUser');
   }
 
   // Method to log in the user with credentials
@@ -78,6 +114,7 @@ class AuthService {
       _isLoggedIn = true;
       await setToken(token);
       _loggedInUser = await UserService().getUser();
+      await setLoggedInUser(_loggedInUser!);
       return true;
     }
     return false;
@@ -88,6 +125,8 @@ class AuthService {
     if (result != null) {
       _isLoggedIn = true;
       await setToken(result['token']);
+      _loggedInUser = await UserService().getUser();
+      await setLoggedInUser(_loggedInUser!);
       return true;
     }
     return false;

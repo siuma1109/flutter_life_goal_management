@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/models/task.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/task_card.dart';
+import 'package:flutter_life_goal_management/src/widgets/task/task_shimmer_loading_widget.dart';
 
 class TodayTasksWidget extends StatefulWidget {
   final List<Task> tasks;
   final Function loadTasks;
+  final bool isRefreshing;
   final bool isLoading;
   final ScrollController? scrollController;
 
@@ -13,6 +15,7 @@ class TodayTasksWidget extends StatefulWidget {
     required this.tasks,
     required this.loadTasks,
     required this.isLoading,
+    required this.isRefreshing,
     this.scrollController,
   });
 
@@ -87,8 +90,9 @@ class _TodayTasksWidgetState extends State<TodayTasksWidget> {
       listViewHeight = _showAllTasks ? 350 : 180;
     }
 
-    return _tasks.isNotEmpty
-        ? Column(
+    return widget.isRefreshing
+        ? const TaskShimmerLoadingWidget()
+        : Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
@@ -145,8 +149,11 @@ class _TodayTasksWidgetState extends State<TodayTasksWidget> {
                     child: const Text('Collapse'),
                   ),
                 ),
+              if (widget.isLoading)
+                const Center(
+                  child: CircularProgressIndicator(),
+                ),
             ],
-          )
-        : const SizedBox.shrink();
+          );
   }
 }

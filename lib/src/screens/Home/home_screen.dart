@@ -5,15 +5,14 @@ import 'package:flutter_life_goal_management/src/broadcasts/notification_broadca
 import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
 import 'package:flutter_life_goal_management/src/models/feed.dart';
 import 'package:flutter_life_goal_management/src/models/task.dart';
+import 'package:flutter_life_goal_management/src/screens/Home/home_shimmer_loading_widget.dart';
 import 'package:flutter_life_goal_management/src/screens/Notification/notification_screen.dart';
 import 'package:flutter_life_goal_management/src/services/notification_service.dart';
 import 'package:flutter_life_goal_management/src/services/task_service.dart';
 import 'package:flutter_life_goal_management/src/services/feed_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/feed/feed_list_widget.dart';
-import 'package:flutter_life_goal_management/src/widgets/feed/feed_shimmer_loading_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/home/today_tasks_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/add_task_floating_button_widget.dart';
-import 'package:flutter_life_goal_management/src/widgets/task/task_shimmer_loading_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   final String title;
@@ -31,11 +30,12 @@ class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
       GlobalKey<RefreshIndicatorState>();
 
+  bool isRefreshing = false;
+
   List<Task> _tasks = [];
   int taskPage = 1;
   bool taskHasMoreData = true;
   bool taskIsLoading = false;
-  bool isLoadingMoreTasks = false;
   StreamSubscription<void>? taskChangedSubscription;
   StreamSubscription<void>? projectChangedSubscription;
 
@@ -43,7 +43,6 @@ class _HomeScreenState extends State<HomeScreen> {
   int feedPage = 1;
   bool feedHasMoreData = true;
   bool feedIsLoading = false;
-  bool isLoadingMoreFeeds = false;
   bool _isInitialLoading = true;
   StreamSubscription<void>? notificationUnreadCountSubscription;
   int _notificationUnreadCount = 0;
@@ -69,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
               _scrollController.position.maxScrollExtent * 0.5 &&
           !feedIsLoading &&
           feedHasMoreData) {
-        _loadMoreFeeds();
+        _loadFeeds();
       }
     });
 
@@ -78,10 +77,9 @@ class _HomeScreenState extends State<HomeScreen> {
               _tasksScrollController.position.maxScrollExtent * 0.5 &&
           !taskIsLoading &&
           taskHasMoreData) {
-        _loadMoreTasks();
+        _loadTasks();
       }
     });
-
     DateTime today = DateTime.now();
     DateTime startOfDate =
         DateTime(today.year, today.month, today.day, 0, 0, 0);
@@ -211,16 +209,8 @@ class _HomeScreenState extends State<HomeScreen> {
       body: RefreshIndicator(
         key: _refreshIndicatorKey,
         onRefresh: _refresh,
-        child: _isInitialLoading
-            ? const SingleChildScrollView(
-                physics: AlwaysScrollableScrollPhysics(),
-                child: Column(
-                  children: [
-                    TaskShimmerLoadingWidget(),
-                    FeedShimmerLoadingWidget(),
-                  ],
-                ),
-              )
+        child: _isInitialLoading && _tasks.isEmpty && _feeds.isEmpty
+            ? const HomeShimmerLoadingWidget()
             : ListView(
                 controller: _scrollController,
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -228,25 +218,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   TodayTasksWidget(
                     tasks: _tasks,
                     loadTasks: _loadTasks,
+                    isRefreshing: isRefreshing,
                     isLoading: taskIsLoading,
                     scrollController: _tasksScrollController,
                   ),
                   FeedListWidget(
                     feeds: _feeds,
+                    isRefreshing: isRefreshing,
                     isLoading: feedIsLoading,
                   ),
-                  if (isLoadingMoreTasks || isLoadingMoreFeeds)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16.0),
-                      child: Column(
-                        children: [
-                          if (isLoadingMoreTasks)
-                            const TaskItemShimmerLoadingWidget(),
-                          if (isLoadingMoreFeeds)
-                            const FeedItemShimmerLoadingWidget(),
-                        ],
-                      ),
-                    )
                 ],
               ),
       ),
@@ -255,9 +235,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _refresh() async {
+    if (isRefreshing) return;
+    setState(() {
+      isRefreshing = true;
+    });
     await Future.wait([_refreshTasks(), _refreshFeeds()]);
     setState(() {
       _isInitialLoading = false;
+      isRefreshing = false;
     });
   }
 
@@ -313,20 +298,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _loadMoreTasks() async {
-    if (taskIsLoading || !taskHasMoreData) return;
-
-    setState(() {
-      isLoadingMoreTasks = true;
-    });
-
-    await _loadTasks();
-
-    setState(() {
-      isLoadingMoreTasks = false;
-    });
-  }
-
   Future<void> _loadFeeds() async {
     if (feedIsLoading) return;
     setState(() {
@@ -351,20 +322,6 @@ class _HomeScreenState extends State<HomeScreen> {
         feedIsLoading = false;
       });
     }
-  }
-
-  Future<void> _loadMoreFeeds() async {
-    if (feedIsLoading || !feedHasMoreData) return;
-
-    setState(() {
-      isLoadingMoreFeeds = true;
-    });
-
-    await _loadFeeds();
-
-    setState(() {
-      isLoadingMoreFeeds = false;
-    });
   }
 
   @override
