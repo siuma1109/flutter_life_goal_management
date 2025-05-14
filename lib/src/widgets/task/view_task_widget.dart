@@ -84,6 +84,14 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
       subTasks: widget.task.subTasks,
     );
 
+    if (updatedTask.id == null || updatedTask.id == 0) {
+      setState(() {
+        _isLoading = false;
+      });
+      widget.onRefresh?.call(Task.fromJson(updatedTask.toJson()));
+      return;
+    }
+
     final result = await TaskService().updateTask(updatedTask);
 
     if (result != null && result['errors'] != null) {
@@ -488,6 +496,10 @@ class _ViewTaskWidgetState extends State<ViewTaskWidget> {
                               setDialogState(() {}); // Update dialog UI
                             }
                           }
+                        } else {
+                          widget.onRefresh?.call(null);
+                          Navigator.of(dialogContext).pop();
+                          Navigator.of(context).pop();
                         }
                       },
                 style: ButtonStyle(
