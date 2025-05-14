@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_life_goal_management/src/widgets/explore/explore_shimmer_loading_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/projects/project_list_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/explore/explore_task_list_widget.dart';
 import 'package:flutter_life_goal_management/src/screens/search_screen.dart';
@@ -15,6 +16,7 @@ class SearchResultScreen extends StatefulWidget {
 class _SearchResultScreenState extends State<SearchResultScreen> {
   TextEditingController searchController = TextEditingController();
   FocusNode focusNode = FocusNode();
+  int _currentTabIndex = 0;
 
   @override
   void initState() {
@@ -83,12 +85,17 @@ class _SearchResultScreenState extends State<SearchResultScreen> {
             ? SizedBox.shrink()
             : Column(
                 children: [
-                  const TabBar(
-                    tabs: [
+                  TabBar(
+                    tabs: const [
                       Tab(text: 'Users'),
                       Tab(text: 'Projects'),
                       Tab(text: 'Tasks'),
                     ],
+                    onTap: (index) {
+                      setState(() {
+                        _currentTabIndex = index;
+                      });
+                    },
                   ),
                   Expanded(
                     child: TabBarView(

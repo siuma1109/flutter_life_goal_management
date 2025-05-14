@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/models/task.dart';
 import 'package:flutter_life_goal_management/src/services/task_service.dart';
+import 'package:flutter_life_goal_management/src/widgets/explore/explore_tasks_shimmer_loading_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/task_list_widget.dart';
 
 class ExploreTaskListWidget extends StatefulWidget {
@@ -16,6 +17,7 @@ class _ExploreTaskListWidgetState extends State<ExploreTaskListWidget> {
   int _page = 1;
   bool _isLoading = false;
   bool _hasMoreData = true;
+  bool _isInitialLoading = true;
   final ScrollController _scrollController = ScrollController();
   String _search = '';
 
@@ -38,13 +40,15 @@ class _ExploreTaskListWidgetState extends State<ExploreTaskListWidget> {
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: _refreshTasks,
-      child: _tasks.isEmpty
-          ? const Center(child: Text('No tasks found'))
-          : TaskListWidget(
-              tasks: _tasks,
-              showUser: true,
-              scrollController: _scrollController,
-            ),
+      child: _isInitialLoading
+          ? const ExploreTasksShimmerLoadingWidget()
+          : _tasks.isEmpty
+              ? const Center(child: Text('No tasks found'))
+              : TaskListWidget(
+                  tasks: _tasks,
+                  showUser: true,
+                  scrollController: _scrollController,
+                ),
     );
   }
 
@@ -53,6 +57,7 @@ class _ExploreTaskListWidgetState extends State<ExploreTaskListWidget> {
       _page = 1;
       _tasks.clear();
       _hasMoreData = true;
+      _isInitialLoading = true;
     });
     await _loadTasks();
   }
@@ -76,13 +81,14 @@ class _ExploreTaskListWidgetState extends State<ExploreTaskListWidget> {
             _page++;
           }
           _isLoading = false;
+          _isInitialLoading = false;
         });
       }
     } catch (e) {
       print(e);
-    } finally {
       setState(() {
         _isLoading = false;
+        _isInitialLoading = false;
       });
     }
   }

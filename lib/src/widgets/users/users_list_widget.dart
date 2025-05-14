@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/models/user.dart';
 import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/services/user_service.dart';
+import 'package:flutter_life_goal_management/src/widgets/explore/users_shimmer_loading_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/users/user_list_item_widget.dart';
 
 class UsersListWidget extends StatefulWidget {
@@ -20,6 +21,7 @@ class _UsersListWidgetState extends State<UsersListWidget> {
   int _page = 1;
   bool _isLoading = false;
   bool _hasMoreData = true;
+  bool _isInitialLoading = true;
   final ScrollController _scrollController = ScrollController();
   String _search = '';
 
@@ -50,18 +52,20 @@ class _UsersListWidgetState extends State<UsersListWidget> {
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: _refreshUsers,
-      child: _users.isEmpty
-          ? const Center(child: Text('No users found'))
-          : ListView.builder(
-              controller: _scrollController,
-              itemCount: _users.length,
-              itemBuilder: (context, index) {
-                return UserListItemWidget(
-                    key: Key(_users[index].id.toString()),
-                    user: _users[index],
-                    seeingUser: AuthService().getLoggedInUser()!);
-              },
-            ),
+      child: _isInitialLoading
+          ? const UsersShimmerLoadingWidget()
+          : _users.isEmpty
+              ? const Center(child: Text('No users found'))
+              : ListView.builder(
+                  controller: _scrollController,
+                  itemCount: _users.length,
+                  itemBuilder: (context, index) {
+                    return UserListItemWidget(
+                        key: Key(_users[index].id.toString()),
+                        user: _users[index],
+                        seeingUser: AuthService().getLoggedInUser()!);
+                  },
+                ),
     );
   }
 
@@ -70,6 +74,7 @@ class _UsersListWidgetState extends State<UsersListWidget> {
       _page = 1;
       _users.clear();
       _hasMoreData = true;
+      _isInitialLoading = true;
     });
     await _getUsers();
   }
@@ -85,21 +90,21 @@ class _UsersListWidgetState extends State<UsersListWidget> {
         search: _search,
       );
       print('Users: $users');
-      if (users.isNotEmpty) {
-        setState(() {
-          if (users.isEmpty) {
-            _hasMoreData = false;
-          } else {
-            _users.addAll(users);
-            _page++;
-          }
-          _isLoading = false;
-        });
-      }
+      setState(() {
+        if (users.isEmpty) {
+          _hasMoreData = false;
+        } else {
+          _users.addAll(users);
+          _page++;
+        }
+        _isLoading = false;
+        _isInitialLoading = false;
+      });
     } catch (e) {
       print('Error loading users: $e');
       setState(() {
         _isLoading = false;
+        _isInitialLoading = false;
       });
     }
   }

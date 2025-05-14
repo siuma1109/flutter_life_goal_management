@@ -7,6 +7,7 @@ import 'package:flutter_life_goal_management/src/models/user.dart';
 import 'package:flutter_life_goal_management/src/screens/Project/project_screen.dart';
 import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/services/project_service.dart';
+import 'package:flutter_life_goal_management/src/widgets/explore/projects_shimmer_loading_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/projects/AddProjectWidget.dart';
 
 class ProjectListWidget extends StatefulWidget {
@@ -27,6 +28,7 @@ class _ProjectListWidgetState extends State<ProjectListWidget> {
   int _page = 1;
   bool _isLoading = false;
   bool _hasMoreData = true;
+  bool _isInitialLoading = true;
   final ScrollController _scrollController = ScrollController();
   String _search = '';
   StreamSubscription? _projectChangedSubscription;
@@ -59,79 +61,86 @@ class _ProjectListWidgetState extends State<ProjectListWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return _search.isNotEmpty && _projects.isEmpty
-        ? const Center(child: Text('No projects found'))
-        : RefreshIndicator(
-            onRefresh: _refreshProjects,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (widget.search == null)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text("Projects", style: TextStyle(fontSize: 16)),
-                        if (widget.user?.id ==
-                            AuthService().getLoggedInUser()?.id)
-                          GestureDetector(
-                            onTap: _addProject,
-                            child: const Icon(
-                              Icons.add,
-                              size: 20,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                Expanded(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: _projects.length,
-                    controller: _scrollController,
-                    itemBuilder: (context, index) => Padding(
-                      key: Key(_projects[index].id.toString()),
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                      child: GestureDetector(
-                        onTap: () => _openProject(_projects[index]),
-                        child: Container(
-                          padding: const EdgeInsets.only(top: 10),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: Colors.transparent,
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
+    return _isInitialLoading
+        ? const ProjectsShimmerLoadingWidget()
+        : _search.isNotEmpty && _projects.isEmpty
+            ? const Center(child: Text('No projects found'))
+            : RefreshIndicator(
+                onRefresh: _refreshProjects,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (widget.search == null)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text("Projects",
+                                style: TextStyle(fontSize: 16)),
+                            if (widget.user?.id ==
+                                AuthService().getLoggedInUser()?.id)
+                              GestureDetector(
+                                onTap: _addProject,
+                                child: const Icon(
+                                  Icons.add,
+                                  size: 20,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    Expanded(
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: _projects.length,
+                        controller: _scrollController,
+                        itemBuilder: (context, index) => Padding(
+                          key: Key(_projects[index].id.toString()),
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                          child: GestureDetector(
+                            onTap: () => _openProject(_projects[index]),
+                            child: Container(
+                              padding: const EdgeInsets.only(top: 10),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: Colors.transparent,
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  const Icon(
-                                    Icons.tag,
-                                    size: 20,
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.tag,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Text(_projects[index].name,
+                                          style: const TextStyle(fontSize: 16)),
+                                    ],
                                   ),
-                                  const SizedBox(width: 10),
-                                  Text(_projects[index].name,
-                                      style: const TextStyle(fontSize: 16)),
+                                  Text(_projects[index].tasksCount.toString(),
+                                      style: const TextStyle(fontSize: 14)),
                                 ],
                               ),
-                              Text(_projects[index].tasksCount.toString(),
-                                  style: const TextStyle(fontSize: 14)),
-                            ],
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
-          );
+              );
   }
 
   Future<void> _refreshProjects() async {
-    _projects = [];
-    _page = 1;
+    setState(() {
+      _projects = [];
+      _page = 1;
+      _isInitialLoading = true;
+    });
     _loadProjects();
   }
 
@@ -152,10 +161,13 @@ class _ProjectListWidgetState extends State<ProjectListWidget> {
       setState(() {
         _projects.addAll(projects);
         _page++;
+        _isLoading = false;
+        _isInitialLoading = false;
       });
-    } finally {
+    } catch (e) {
       setState(() {
         _isLoading = false;
+        _isInitialLoading = false;
       });
     }
   }

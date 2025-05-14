@@ -11,7 +11,7 @@ class FeedShimmerLoadingWidget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Padding(
-          padding: EdgeInsets.all(16.0),
+          padding: EdgeInsets.symmetric(vertical: 8.0),
           child: ShimmerLoadingWidget(height: 24, width: 120, borderRadius: 4),
         ),
         ListView.builder(
