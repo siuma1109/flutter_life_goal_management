@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/broadcasts/task_broadcast.dart';
+import 'package:flutter_life_goal_management/src/models/task.dart';
 import 'package:flutter_life_goal_management/src/models/user.dart';
 import 'package:flutter_life_goal_management/src/screens/setting_screen.dart';
 import 'package:flutter_life_goal_management/src/services/auth_service.dart';
@@ -31,7 +32,8 @@ class _ProfileScreenState extends State<ProfileScreen>
   int _inboxTaskCount = 0;
   StreamSubscription? _taskChangedSubscription;
   User? _user;
-  bool _isLoadingTaskCount = false;
+  bool _isLoading = false;
+  bool _isInitialLoading = true;
 
   @override
   void initState() {
@@ -41,7 +43,8 @@ class _ProfileScreenState extends State<ProfileScreen>
 
     _user = widget.user ?? AuthService().getLoggedInUser();
     // Listen for task changes
-    _taskChangedSubscription = TaskBroadcast().taskChangedStream.listen((_) {
+    _taskChangedSubscription =
+        TaskBroadcast().taskChangedStream.listen((Task? task) {
       _loadTaskCount();
     });
 
@@ -74,7 +77,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Future<void> _loadTaskCount() async {
     setState(() {
-      _isLoadingTaskCount = true;
+      _isLoading = true;
     });
 
     try {
@@ -95,7 +98,8 @@ class _ProfileScreenState extends State<ProfileScreen>
     } finally {
       if (mounted) {
         setState(() {
-          _isLoadingTaskCount = false;
+          _isLoading = false;
+          _isInitialLoading = false;
         });
       }
     }
@@ -128,7 +132,8 @@ class _ProfileScreenState extends State<ProfileScreen>
           children: [
             // Profile Section
             ProfileInfoWidget(
-              isLoadingTaskCount: _isLoadingTaskCount,
+              isInitialLoading: _isInitialLoading,
+              isLoading: _isLoading,
               taskCount: _taskCount,
               tabController: _tabController,
               user: _user!,
@@ -149,11 +154,14 @@ class _ProfileScreenState extends State<ProfileScreen>
                 controller: _tabController,
                 children: [
                   DashboardWidget(
-                    isLoadingTaskCount: _isLoadingTaskCount,
+                    isInitialLoading: _isInitialLoading,
+                    isLoading: _isLoading,
                     finishedTaskCount: _finishedTaskCount,
                     pendingTaskCount: _pendingTaskCount,
                   ),
                   ProfileMenuWidget(
+                    isInitialLoading: _isInitialLoading,
+                    isLoading: _isLoading,
                     inboxTaskCount: _inboxTaskCount,
                     finishedTaskCount: _finishedTaskCount,
                     user: _user!,

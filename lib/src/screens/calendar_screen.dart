@@ -7,6 +7,7 @@ import 'package:flutter_life_goal_management/src/models/task_date_count.dart';
 import 'package:flutter_life_goal_management/src/services/task_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/add_task_floating_button_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/task/task_list_widget.dart';
+import 'package:flutter_life_goal_management/src/widgets/task/task_shimmer_loading_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 
@@ -29,6 +30,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Map<String, bool> _hasMoreData = <String, bool>{};
   Map<String, List<Task>> _tasks = <String, List<Task>>{};
   LoadingState _loadingState = LoadingState.idle;
+  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
+      GlobalKey<RefreshIndicatorState>();
 
   String _dateToKey(DateTime date) {
     return '${date.year}-${date.month}-${date.day}';
@@ -55,6 +58,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
         // If it's a subtask
         _handleSubTaskChanged(task);
       }
+    });
+    // Trigger the loading indicator programmatically after the widget is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshIndicatorKey.currentState?.show();
     });
   }
 
@@ -142,6 +149,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           return true;
         },
         child: RefreshIndicator(
+          key: _refreshIndicatorKey,
           onRefresh: refreshTasks,
           child: SingleChildScrollView(
             child: Column(
@@ -149,7 +157,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 if (_loadingState == LoadingState.loading &&
                     (_tasks[selectedDayKey] == null ||
                         _tasks[selectedDayKey]!.isEmpty))
-                  const Center(child: CircularProgressIndicator())
+                  TaskShimmerLoadingWidget(
+                    showTitle: false,
+                  )
                 else
                   TaskListWidget(
                     tasks: _tasks[selectedDayKey] ?? [],

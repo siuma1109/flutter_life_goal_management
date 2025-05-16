@@ -229,10 +229,12 @@ class TaskService {
   }
 
   // Like a task
-  Future<bool> likeTask(Task task) async {
-    final result = await HttpService().post('tasks/${task.id}/like');
+  Future<bool> likeTask(Task task, bool isLiked) async {
+    final result = await HttpService().post('tasks/${task.id}/like',
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'is_liked': isLiked}));
     if (result.statusCode == 200) {
-      task.likesCount = task.likesCount! + 1;
+      task.likesCount = task.likesCount! + (isLiked ? 1 : -1);
       TaskBroadcast().notifyTasksChanged(task);
       return true;
     }

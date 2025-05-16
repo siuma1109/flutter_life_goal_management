@@ -49,7 +49,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text('Edit Profile')),
+      appBar: AppBar(
+        title: Text('Edit Profile'),
+        actions: [
+          IconButton(
+            onPressed: () {
+              _save();
+            },
+            icon: _isLoading ? Text("Saving...") : Icon(Icons.save),
+          ),
+        ],
+      ),
       body: Form(
         key: _formKey,
         child: Column(
@@ -134,84 +144,65 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
                 title: Text(_showMessage, style: TextStyle(color: Colors.blue)),
               ),
-            ListTile(
-              tileColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              onTap: _isLoading
-                  ? null
-                  : () async {
-                      setState(() {
-                        _isLoading = true;
-                        _showMessage = '';
-                        _errors = {};
-                      });
-                      if (_formKey.currentState!.validate()) {
-                        _formKey.currentState!.save();
-                        _user!.name = _nameController.text;
-                        _user!.email = _emailController.text;
-                        _user!.currentPassword =
-                            _currentPasswordController.text.isEmpty
-                                ? null
-                                : _currentPasswordController.text;
-                        _user!.password = _newPasswordController.text.isEmpty
-                            ? null
-                            : _newPasswordController.text;
-
-                        final result = await UserService().updateUser(_user!);
-                        print('result: $result');
-                        if (result != null && result['errors'] != null) {
-                          setState(() {
-                            print('error: ${result['errors']}');
-                            _errors = result['errors']
-                                .map((key, value) =>
-                                    MapEntry(key, value.join('\n')))
-                                .cast<String, String>();
-                            _showMessage = 'Error updating profile';
-                          });
-                        }
-
-                        if (_errors.isEmpty) {
-                          final user = result;
-
-                          if (user != null) {
-                            _user = User.fromJson(user);
-                            _nameController.text = _user!.name;
-                            _emailController.text = _user!.email;
-                            _currentPasswordController.clear();
-                            _newPasswordController.clear();
-                          }
-                          setState(() {
-                            _showMessage = 'Profile updated successfully';
-                          });
-                          widget.onUserUpdated(_user!);
-                          AuthService().setLoggedInUser(_user!);
-                        }
-                      }
-                      setState(() {
-                        _isLoading = false;
-                      });
-                      // out focus form
-                      if (mounted) {
-                        FocusScope.of(context).unfocus();
-                      }
-                      UserBroadcast().notifyUserChanged();
-                    },
-              leading: Icon(Icons.save, color: Theme.of(context).primaryColor),
-              title: _isLoading
-                  ? Text('Saving...',
-                      style: TextStyle(
-                        color: Theme.of(context).primaryColor,
-                      ))
-                  : Text('Save',
-                      style: TextStyle(
-                        color: Theme.of(context).primaryColor,
-                      )),
-            ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _save() async {
+    setState(() {
+      _isLoading = true;
+      _showMessage = '';
+      _errors = {};
+    });
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      _user!.name = _nameController.text;
+      _user!.email = _emailController.text;
+      _user!.currentPassword = _currentPasswordController.text.isEmpty
+          ? null
+          : _currentPasswordController.text;
+      _user!.password = _newPasswordController.text.isEmpty
+          ? null
+          : _newPasswordController.text;
+
+      final result = await UserService().updateUser(_user!);
+      print('result: $result');
+      if (result != null && result['errors'] != null) {
+        setState(() {
+          print('error: ${result['errors']}');
+          _errors = result['errors']
+              .map((key, value) => MapEntry(key, value.join('\n')))
+              .cast<String, String>();
+          _showMessage = 'Error updating profile';
+        });
+      }
+
+      if (_errors.isEmpty) {
+        final user = result;
+
+        if (user != null) {
+          _user = User.fromJson(user);
+          _nameController.text = _user!.name;
+          _emailController.text = _user!.email;
+          _currentPasswordController.clear();
+          _newPasswordController.clear();
+        }
+        setState(() {
+          _showMessage = 'Profile updated successfully';
+        });
+        widget.onUserUpdated(_user!);
+        AuthService().setLoggedInUser(_user!);
+      }
+    }
+    setState(() {
+      _isLoading = false;
+    });
+    // out focus form
+    if (mounted) {
+      FocusScope.of(context).unfocus();
+    }
+    UserBroadcast().notifyUserChanged(user: _user);
   }
 }

@@ -6,6 +6,7 @@ import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/services/feed_service.dart';
 import 'package:flutter_life_goal_management/src/services/task_service.dart';
 import 'package:flutter_life_goal_management/src/widgets/comment/comment_list_item_widget.dart';
+import 'package:flutter_life_goal_management/src/widgets/common/shimmer_loading_widget.dart';
 
 class CommentListWidget extends StatefulWidget {
   final Object target;
@@ -42,6 +43,7 @@ class _CommentListWidgetState extends State<CommentListWidget> {
     }
     _comments = <Comment>[];
     _loadComments();
+    _focusNode.requestFocus();
   }
 
   @override
@@ -115,38 +117,50 @@ class _CommentListWidgetState extends State<CommentListWidget> {
               ),
             ),
             Expanded(
-              child: _comments.isEmpty
-                  ? const Center(child: Text('No comments yet'))
-                  : NotificationListener<ScrollNotification>(
-                      onNotification: (scrollNotification) {
-                        // Only check if we need to load more comments
-                        if (scrollNotification is ScrollUpdateNotification) {
-                          if (scrollNotification.metrics.pixels >=
-                                  scrollNotification.metrics.maxScrollExtent *
-                                      0.8 &&
-                              !_isLoading &&
-                              _hasMoreData) {
-                            _loadComments();
-                          }
-                        }
-
-                        // Don't handle overscroll here - let the parent sheet handle it
-                        return false;
+              child: _isLoading
+                  ? ListView.builder(
+                      itemCount: 10,
+                      itemBuilder: (context, index) {
+                        return ShimmerLoadingWidget(
+                          height: 40,
+                          width: 140,
+                        );
                       },
-                      child: ListView.builder(
-                        primary: true, // Use the primary scroll controller
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        physics:
-                            const AlwaysScrollableScrollPhysics(), // Allow overscroll for the parent to detect
-                        itemCount: _comments.length,
-                        itemBuilder: (context, index) {
-                          final comment = _comments[index];
-                          return CommentListItemWidget(
-                              key: Key(comment.id.toString()),
-                              comment: comment);
-                        },
-                      ),
-                    ),
+                    )
+                  : _comments.isEmpty
+                      ? const Center(child: Text('No comments yet'))
+                      : NotificationListener<ScrollNotification>(
+                          onNotification: (scrollNotification) {
+                            // Only check if we need to load more comments
+                            if (scrollNotification
+                                is ScrollUpdateNotification) {
+                              if (scrollNotification.metrics.pixels >=
+                                      scrollNotification
+                                              .metrics.maxScrollExtent *
+                                          0.8 &&
+                                  !_isLoading &&
+                                  _hasMoreData) {
+                                _loadComments();
+                              }
+                            }
+
+                            // Don't handle overscroll here - let the parent sheet handle it
+                            return false;
+                          },
+                          child: ListView.builder(
+                            primary: true, // Use the primary scroll controller
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            physics:
+                                const AlwaysScrollableScrollPhysics(), // Allow overscroll for the parent to detect
+                            itemCount: _comments.length,
+                            itemBuilder: (context, index) {
+                              final comment = _comments[index];
+                              return CommentListItemWidget(
+                                  key: Key(comment.id.toString()),
+                                  comment: comment);
+                            },
+                          ),
+                        ),
             ),
             Container(
               decoration: BoxDecoration(

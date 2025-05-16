@@ -72,7 +72,7 @@ class UserService {
   Future<bool> followUser(User user) async {
     final result = await _httpService.post('users/${user.id}/follow');
     if (result.statusCode == 200) {
-      UserBroadcast().notifyUserChanged();
+      UserBroadcast().notifyUserChanged(user: user);
       return true;
     }
 

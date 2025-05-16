@@ -132,6 +132,10 @@ class _TodayTasksWidgetState extends State<TodayTasksWidget> {
                             },
                           ),
                   ),
+                  if (widget.isLoading)
+                    const Center(
+                      child: CircularProgressIndicator(),
+                    ),
                   if (!_showAllTasks && _tasks.length > 2)
                     Center(
                       child: TextButton(
@@ -150,10 +154,6 @@ class _TodayTasksWidgetState extends State<TodayTasksWidget> {
                         onPressed: () => setState(() => _showAllTasks = false),
                         child: const Text('Collapse'),
                       ),
-                    ),
-                  if (widget.isLoading)
-                    const Center(
-                      child: CircularProgressIndicator(),
                     ),
                 ],
               );

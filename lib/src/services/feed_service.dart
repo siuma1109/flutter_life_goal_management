@@ -52,8 +52,10 @@ class FeedService {
     return List<Comment>.from(data.map((e) => Comment.fromJson(e)));
   }
 
-  Future<bool> likeFeed(Feed feed) async {
-    final result = await HttpService().post('feeds/${feed.id}/like');
+  Future<bool> likeFeed(Feed feed, bool isLiked) async {
+    final result = await HttpService().post('feeds/${feed.id}/like',
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'is_liked': isLiked}));
     return result.statusCode == 200;
   }
 }

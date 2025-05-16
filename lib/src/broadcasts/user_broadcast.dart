@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter_life_goal_management/src/models/user.dart';
+
 /// A broadcast service for user-related events throughout the app
 class UserBroadcast {
   // Singleton pattern
@@ -8,15 +10,15 @@ class UserBroadcast {
   UserBroadcast._internal();
 
   // Stream controllers for various events
-  final _userChangedController = StreamController<void>.broadcast();
+  final _userChangedController = StreamController<User?>.broadcast();
 
   // Streams that other widgets can listen to
-  Stream<void> get userChangedStream => _userChangedController.stream;
+  Stream<User?> get userChangedStream => _userChangedController.stream;
 
   // Method to notify that user has changed
-  void notifyUserChanged() {
+  void notifyUserChanged({User? user}) {
     print("notifyUserChanged");
-    _userChangedController.add(null);
+    _userChangedController.add(user);
   }
 
   // Clean up resources

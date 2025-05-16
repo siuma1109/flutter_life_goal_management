@@ -106,14 +106,12 @@ class _UserListItemWidgetState extends State<UserListItemWidget> {
   }
 
   Future<void> _followUser() async {
-    final result = await UserService().followUser(widget.user);
-    if (result) {
-      setState(() {
-        widget.user.followersCount = widget.user.isFollowed == 0
-            ? widget.user.followersCount! + 1
-            : widget.user.followersCount! - 1;
-        widget.user.isFollowed = widget.user.isFollowed == 0 ? 1 : 0;
-      });
-    }
+    setState(() {
+      widget.user.followersCount = widget.user.isFollowed == 0
+          ? widget.user.followersCount! + 1
+          : widget.user.followersCount! - 1;
+      widget.user.isFollowed = widget.user.isFollowed == 0 ? 1 : 0;
+    });
+    await UserService().followUser(widget.user);
   }
 }

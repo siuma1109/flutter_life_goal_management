@@ -89,13 +89,12 @@ class _FeedListItemWidgetState extends State<FeedListItemWidget> {
                 IconButton(
                     icon: Icon(Icons.thumb_up,
                         color: _isLiked ? Colors.blue : Colors.grey),
-                    onPressed: () async {
-                      if (await FeedService().likeFeed(_feed)) {
-                        setState(() {
-                          _isLiked = !_isLiked;
-                          _likesCount = _likesCount! + (_isLiked ? 1 : -1);
-                        });
-                      }
+                    onPressed: () {
+                      setState(() {
+                        _isLiked = !_isLiked;
+                        _likesCount = _likesCount! + (_isLiked ? 1 : -1);
+                      });
+                      FeedService().likeFeed(_feed, _isLiked);
                     }),
                 Text(_likesCount!.toString()),
                 IconButton(

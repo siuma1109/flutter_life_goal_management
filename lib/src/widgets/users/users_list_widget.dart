@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_life_goal_management/src/broadcasts/user_broadcast.dart';
 import 'package:flutter_life_goal_management/src/models/user.dart';
 import 'package:flutter_life_goal_management/src/services/auth_service.dart';
 import 'package:flutter_life_goal_management/src/services/user_service.dart';
@@ -24,6 +27,7 @@ class _UsersListWidgetState extends State<UsersListWidget> {
   bool _isInitialLoading = true;
   final ScrollController _scrollController = ScrollController();
   String _search = '';
+  StreamSubscription? _userChangedSubscription;
 
   @override
   void initState() {
@@ -40,11 +44,25 @@ class _UsersListWidgetState extends State<UsersListWidget> {
         _getUsers();
       }
     });
+
+    _userChangedSubscription = UserBroadcast().userChangedStream.listen((user) {
+      setState(() {
+        if (user != null) {
+          final index = _users.indexWhere((element) => element.id == user.id);
+          if (index != -1) {
+            setState(() {
+              _users[index] = user;
+            });
+          }
+        }
+      });
+    });
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _userChangedSubscription?.cancel();
     super.dispose();
   }
 

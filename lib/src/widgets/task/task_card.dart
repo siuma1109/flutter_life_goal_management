@@ -117,7 +117,9 @@ class _TaskCardState extends State<TaskCard> {
                           TaskService().getPriorityColor(_task.priority),
                       value: _task.isChecked,
                       onChanged: (_) {
-                        _task.isChecked = !_task.isChecked;
+                        setState(() {
+                          _task.isChecked = !_task.isChecked;
+                        });
 
                         _updateTask(_task);
                       },
@@ -143,12 +145,11 @@ class _TaskCardState extends State<TaskCard> {
                   IconButton(
                     icon: Icon(Icons.thumb_up),
                     onPressed: () async {
-                      if (await TaskService().likeTask(_task)) {
-                        setState(() {
-                          _isLiked = !_isLiked;
-                          _likesCount = _likesCount! + (_isLiked ? 1 : -1);
-                        });
-                      }
+                      setState(() {
+                        _isLiked = !_isLiked;
+                        _likesCount = _likesCount! + (_isLiked ? 1 : -1);
+                      });
+                      TaskService().likeTask(_task, _isLiked);
                     },
                     color: _isLiked ? Colors.blue : Colors.grey,
                   ),

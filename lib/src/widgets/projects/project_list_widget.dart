@@ -23,7 +23,11 @@ class ProjectListWidget extends StatefulWidget {
   _ProjectListWidgetState createState() => _ProjectListWidgetState();
 }
 
-class _ProjectListWidgetState extends State<ProjectListWidget> {
+class _ProjectListWidgetState extends State<ProjectListWidget>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   List<Project> _projects = [];
   int _page = 1;
   bool _isLoading = false;
@@ -61,6 +65,8 @@ class _ProjectListWidgetState extends State<ProjectListWidget> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     return _isInitialLoading
         ? const ProjectsShimmerLoadingWidget()
         : _search.isNotEmpty && _projects.isEmpty

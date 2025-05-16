@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/broadcasts/user_broadcast.dart';
 import 'package:flutter_life_goal_management/src/models/user.dart';
 import 'package:flutter_life_goal_management/src/services/user_service.dart';
+import 'package:flutter_life_goal_management/src/widgets/explore/users_shimmer_loading_widget.dart';
 import 'package:flutter_life_goal_management/src/widgets/users/user_list_item_widget.dart';
 
 class UserFollowersListWidget extends StatefulWidget {
@@ -28,6 +29,9 @@ class UserFollowersListWidgetState extends State<UserFollowersListWidget> {
   String _search = '';
   StreamSubscription? _userChangedSubscription;
   late User _seeingUser;
+  bool _isInitialLoading = true;
+  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
+      GlobalKey<RefreshIndicatorState>();
 
   @override
   void initState() {
@@ -48,6 +52,10 @@ class UserFollowersListWidgetState extends State<UserFollowersListWidget> {
 
     _userChangedSubscription = UserBroadcast().userChangedStream.listen((_) {
       //_refreshUsers();
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshIndicatorKey.currentState?.show();
     });
   }
 
@@ -72,19 +80,22 @@ class UserFollowersListWidgetState extends State<UserFollowersListWidget> {
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
+      key: _refreshIndicatorKey,
       onRefresh: _refreshUsers,
-      child: _users.isEmpty
-          ? const Center(child: Text('No users found'))
-          : ListView.builder(
-              controller: _scrollController,
-              itemCount: _users.length,
-              itemBuilder: (context, index) {
-                return UserListItemWidget(
-                    key: Key(_users[index].id.toString()),
-                    user: _users[index],
-                    seeingUser: _seeingUser);
-              },
-            ),
+      child: _isInitialLoading
+          ? UsersShimmerLoadingWidget()
+          : _users.isEmpty
+              ? const Center(child: Text('No users found'))
+              : ListView.builder(
+                  controller: _scrollController,
+                  itemCount: _users.length,
+                  itemBuilder: (context, index) {
+                    return UserListItemWidget(
+                        //key: Key(_users[index].id.toString()),
+                        user: _users[index],
+                        seeingUser: _seeingUser);
+                  },
+                ),
     );
   }
 
@@ -127,5 +138,8 @@ class UserFollowersListWidgetState extends State<UserFollowersListWidget> {
         _isLoading = false;
       });
     }
+    setState(() {
+      _isInitialLoading = false;
+    });
   }
 }
