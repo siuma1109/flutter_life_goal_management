@@ -213,8 +213,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
         if (tasksByDay[normalizedDate] == null) {
           tasksByDay[normalizedDate] = [];
         }
-        for (int i = 0; i < row.count; i++) {
-          tasksByDay[normalizedDate]!.add(i.toString());
+        // Instead of using index numbers, add a placeholder with the count
+        // This will display the correct number of bullets in the calendar
+        for (int i = 0; i < row.ids.length; i++) {
+          tasksByDay[normalizedDate]!.add(row.ids[i].toString());
         }
       }
 
@@ -233,7 +235,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 if (tasksByDay[date] == null) {
                   tasksByDay[date] = [];
                 }
-                // Only add if not already counted for this date
+
                 if (!tasksByDay[date]!.contains(task.id.toString())) {
                   tasksByDay[date]!.add(task.id.toString());
                 }
@@ -247,6 +249,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         setState(() {
           _tasksByDay = tasksByDay;
         });
+        //print('Tasks By Day: ${_tasksByDay}');
       }
     } catch (e) {
       print('Error loading tasks: $e');
@@ -480,7 +483,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         if (taskCount > 0) {
           // If there are tasks, update the task list for this date
           _tasksByDay[normalizedDate] =
-              List.generate(taskCount, (i) => i.toString());
+              _tasks[dayKey]!.map((task) => task.id.toString()).toList();
         } else {
           // If there are no tasks, remove the task list for this date
           _tasksByDay.remove(normalizedDate);
