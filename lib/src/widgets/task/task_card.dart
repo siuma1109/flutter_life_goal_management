@@ -26,6 +26,7 @@ class _TaskCardState extends State<TaskCard> {
   late Task _task;
   bool _isLiked = false;
   int? _likesCount;
+  bool _isOwner = false;
 
   @override
   void initState() {
@@ -33,6 +34,13 @@ class _TaskCardState extends State<TaskCard> {
     _task = widget.task;
     _likesCount = _task.likesCount;
     _isLiked = _task.isLiked ?? false;
+    _checkIsOwner();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _checkIsOwner();
   }
 
   @override
@@ -100,7 +108,7 @@ class _TaskCardState extends State<TaskCard> {
                           _task.isChecked ? TextDecoration.lineThrough : null,
                     ),
                   ),
-                  if (_task.user?.id == AuthService().getLoggedInUser()?.id)
+                  if (_isOwner)
                     Checkbox(
                       side: BorderSide(
                         color: TaskService().getPriorityColor(_task.priority),
@@ -204,5 +212,15 @@ class _TaskCardState extends State<TaskCard> {
     //print("task: ${task.toJson()}");
     await TaskService().updateTask(task);
     widget.onEdited?.call(task);
+  }
+
+  Future<void> _checkIsOwner() async {
+    final user = await AuthService().getLoggedInUserAsync();
+    if (mounted) {
+      setState(() {
+        _isOwner =
+            user != null && _task.user != null && _task.user?.id == user.id;
+      });
+    }
   }
 }

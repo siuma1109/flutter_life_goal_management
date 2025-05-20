@@ -147,32 +147,32 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: _isLoading
-                        ? null
-                        : () async {
-                            await _handleLogin(
-                                'admin@example.com', 'password123');
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Text(
-                      'Auto Login',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Theme.of(context).colorScheme.onPrimary,
-                      ),
-                    ),
-                  ),
-                ),
+                // const SizedBox(height: 16),
+                // SizedBox(
+                //   width: double.infinity,
+                //   height: 50,
+                //   child: ElevatedButton(
+                //     onPressed: _isLoading
+                //         ? null
+                //         : () async {
+                //             await _handleLogin(
+                //                 'admin@example.com', 'password123');
+                //           },
+                //     style: ElevatedButton.styleFrom(
+                //       backgroundColor: Theme.of(context).colorScheme.primary,
+                //       shape: RoundedRectangleBorder(
+                //         borderRadius: BorderRadius.circular(12),
+                //       ),
+                //     ),
+                //     child: Text(
+                //       'Auto Login',
+                //       style: TextStyle(
+                //         fontSize: 16,
+                //         color: Theme.of(context).colorScheme.onPrimary,
+                //       ),
+                //     ),
+                //   ),
+                // ),
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,

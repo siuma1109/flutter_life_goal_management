@@ -97,7 +97,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     }
 
     if (_task == null) {
-      return const Center(child: Text('没有数据'));
+      return const Center(child: Text('No Data'));
     }
 
     return SingleChildScrollView(
@@ -115,7 +115,6 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               }
             },
           ),
-          // 这里可以添加更多关于任务的详细信息，例如评论列表、相关任务等
         ],
       ),
     );
