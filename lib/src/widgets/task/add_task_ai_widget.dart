@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_life_goal_management/src/services/task_service.dart';
-import 'package:flutter_life_goal_management/src/widgets/task/show_ai_result_widget.dart';
+//import 'package:flutter_life_goal_management/src/widgets/task/show_ai_result_widget.dart';
 
 class AddTaskAIWidget extends StatefulWidget {
   final Function(

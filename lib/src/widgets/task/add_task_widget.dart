@@ -293,6 +293,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                                       SizedBox(
                                         height: _showStartDate ? 216 : 0,
                                         child: CupertinoDatePicker(
+                                          key: ValueKey(_startDate.toString()),
                                           initialDateTime: _startDate,
                                           mode: CupertinoDatePickerMode
                                               .dateAndTime,
@@ -346,6 +347,7 @@ class _AddTaskWidgetState extends State<AddTaskWidget> {
                                       SizedBox(
                                         height: _showEndDate ? 216 : 0,
                                         child: CupertinoDatePicker(
+                                          key: ValueKey(_endDate.toString()),
                                           initialDateTime: _endDate,
                                           mode: CupertinoDatePickerMode
                                               .dateAndTime,

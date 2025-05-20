@@ -151,26 +151,24 @@ class _CalendarScreenState extends State<CalendarScreen> {
         child: RefreshIndicator(
           key: _refreshIndicatorKey,
           onRefresh: refreshTasks,
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                if (_loadingState == LoadingState.loading &&
-                    (_tasks[selectedDayKey] == null ||
-                        _tasks[selectedDayKey]!.isEmpty))
-                  TaskShimmerLoadingWidget(
-                    showTitle: false,
-                  )
-                else
-                  TaskListWidget(
-                    tasks: _tasks[selectedDayKey] ?? [],
-                  ),
-                if (_loadingState == LoadingState.loadingMore)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16.0),
-                    child: Center(child: CircularProgressIndicator()),
-                  )
-              ],
-            ),
+          child: Stack(
+            children: [
+              if (_loadingState == LoadingState.loading &&
+                  (_tasks[selectedDayKey] == null ||
+                      _tasks[selectedDayKey]!.isEmpty))
+                TaskShimmerLoadingWidget(
+                  showTitle: false,
+                )
+              else
+                TaskListWidget(
+                  tasks: _tasks[selectedDayKey] ?? [],
+                ),
+              if (_loadingState == LoadingState.loadingMore)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16.0),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+            ],
           ),
         ),
       ),
